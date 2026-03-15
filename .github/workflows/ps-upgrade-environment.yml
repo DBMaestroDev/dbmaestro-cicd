@@ -73,7 +73,7 @@ jobs:
       packages-list: ${{ steps.detect.outputs.packages-list }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -94,7 +94,7 @@ jobs:
       packages-list: ${{ steps.detect-pr.outputs.packages-list }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -112,7 +112,7 @@ jobs:
     needs: detect_changed_packages_pr
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Post PR Comment
         uses: ./.github/actions/powershell/pr-comment
@@ -135,7 +135,7 @@ jobs:
         item: ${{ fromJson(needs.detect_changed_packages.outputs.matrix) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

@@ -66,7 +66,7 @@ jobs:
         item: ${{ fromJson(inputs.packages-matrix) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create Package using Action
         uses: ./.github/actions/linux/create-package
@@ -92,7 +92,7 @@ jobs:
         item: ${{ fromJson(inputs.packages-matrix) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Precheck Package using Action
         uses: ./.github/actions/linux/precheck-package
