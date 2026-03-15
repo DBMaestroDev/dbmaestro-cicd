@@ -1,0 +1,104 @@
+name: 'Upgrade Environment'
+description: 'Upgrades a target environment with a specific package using DBmaestro'
+inputs:
+  package_name:
+    description: 'Package name to upgrade'
+    required: true
+  target_environment:
+    description: 'Target environment for upgrade'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  agent_jar_path:
+    description: 'Path to DBmaestro Agent JAR file'
+    required: true
+  use_ssl:
+    description: 'Use SSL for DBmaestro connection'
+    required: false
+    default: 'True'
+  dbmaestro_server:
+    description: 'DBmaestro server URL'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
+  dbmaestro_password:
+    description: 'DBmaestro password'
+    required: true
+  auth_type:
+    description: 'DBmaestro authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+runs:
+  using: 'composite'
+  steps:
+    - name: Normalize Environment Name
+      id: env_name
+      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
+      run: |
+        $envName = "${{ inputs.target_environment }}"
+        Write-Host "Original environment name: $envName"
+
+        # Normalize environment names (replace underscores with spaces)
+        $envName = $envName -replace '_', ' '
+        Write-Host "Normalized environment name: $envName"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "TARGET_ENVIRONMENT=$envName"
+
+    - name: Summary
+      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
+      run: |
+        $package = "${{ inputs.package_name }}"
+        $targetEnv = "${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        $projectName = "${{ inputs.project_name }}"
+
+        $summary = @"
+        ## :rocket: Environment Upgrade Summary
+
+        | Property | Value |
+        |----------|-------|
+        | **Environment** | $targetEnv |
+        | **Project Name** | $projectName |
+        | **Package Name** | $package |
+        | **Triggered By** | ${{ github.actor }} |
+        | **Timestamp** | $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC') |
+        "@
+
+        Write-Host $summary
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary
+
+    - name: Execute Upgrade
+      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
+      run: |
+        # ===== Upgrade Environment =====
+        $ErrorActionPreference = 'Stop'
+        $targetEnv = "${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        $package = "${{ inputs.package_name }}"
+        $agentJar = "${{ inputs.agent_jar_path }}"
+        $projectName = "${{ inputs.project_name }}"
+
+        if ($package -eq "" -or -Not $package) {
+          Write-Host "No package to process"
+          exit 1
+        }
+
+        Write-Host "==== Upgrade package on $targetEnv environment... ===="
+        Write-Host "==== Package name: $package ===="
+        Write-Host "==== Project name: $projectName ===="
+        Write-Host "==== Agent JAR: $agentJar ===="
+
+        & java -jar "$agentJar" -Upgrade `
+          -ProjectName "$projectName" `
+          -EnvName "$targetEnv" `
+          -PackageName "$package" `
+          -Server "${{ inputs.dbmaestro_server }}" `
+          -UseSSL "${{ inputs.use_ssl }}" `
+          -AuthType "${{ inputs.auth_type }}" `
+          -UserName "${{ inputs.dbmaestro_user }}" `
+          -Password "${{ inputs.dbmaestro_password }}"
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "==== Upgrade failed for package: $package ===="
+          exit 1
+        }
+        Write-Host "==== Upgrade package on $targetEnv environment completed successfully ===="

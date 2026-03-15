@@ -1,0 +1,148 @@
+name: 'Detect Changed Packages'
+description: 'Detects changed packages from git commits or manual input (Linux/bash)'
+inputs:
+  package_name:
+    description: 'Package name list to upgrade (comma-separated for multiple packages)'
+    required: false
+    default: ''
+  detect_from_push:
+    description: 'Detect changed packages from git push (true/false)'
+    required: false
+    default: 'false'
+  is_pull_request:
+    description: 'Is this a pull request event (true/false)'
+    required: false
+    default: 'false'
+  base_ref:
+    description: 'Base reference for PR comparison'
+    required: false
+    default: ''
+outputs:
+  matrix:
+    description: 'JSON matrix for packages'
+    value: ${{ steps.detect-packages.outputs.matrix }}
+  has-packages:
+    description: 'Whether packages were detected'
+    value: ${{ steps.detect-packages.outputs.has-packages }}
+  packages:
+    description: 'JSON array of packages'
+    value: ${{ steps.detect-packages.outputs.packages }}
+  packages-list:
+    description: 'Comma-separated list of packages'
+    value: ${{ steps.detect-packages.outputs.packages-list }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect Packages
+      id: detect-packages
+      shell: bash
+      run: |
+        set -e
+        
+        declare -a packages
+        is_pull_request="${{ inputs.is_pull_request }}"
+
+        if [[ "$is_pull_request" == "true" ]]; then
+          # Handle Pull Request - detect changed files between base and head
+          echo "Detecting packages for Pull Request"
+          base_ref="${{ inputs.base_ref }}"
+          if [[ -n "$base_ref" ]]; then
+            changed_files=$(git diff --name-only "origin/$base_ref" HEAD)
+          else
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          fi
+          echo "Changed files: $changed_files"
+
+          # Extract unique package names from changed files
+          while IFS= read -r file; do
+            if [[ "$file" =~ ^packages/([^/]+) ]]; then
+              package_name="${BASH_REMATCH[1]}"
+              # Check if package not already in array
+              if [[ ! " ${packages[@]} " =~ " ${package_name} " ]]; then
+                packages+=("$package_name")
+              fi
+            fi
+          done <<< "$changed_files"
+
+        elif [[ -n "${{ inputs.package_name }}" ]]; then
+          # Handle manual input with comma-separated package names
+          package_input="${{ inputs.package_name }}"
+          echo "Package input: $package_input"
+          IFS=',' read -ra pkg_array <<< "$package_input"
+          for pkg in "${pkg_array[@]}"; do
+            # Trim whitespace
+            pkg=$(echo "$pkg" | xargs)
+            if [[ -n "$pkg" ]]; then
+              packages+=("$pkg")
+            fi
+          done
+
+        elif [[ "${{ inputs.detect_from_push }}" == "true" ]]; then
+          # Handle push event - detect changed files in packages/ folder
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files: $changed_files"
+
+          # Extract unique package names from changed files
+          while IFS= read -r file; do
+            if [[ "$file" =~ ^packages/([^/]+) ]]; then
+              package_name="${BASH_REMATCH[1]}"
+              # Check if package not already in array
+              if [[ ! " ${packages[@]} " =~ " ${package_name} " ]]; then
+                packages+=("$package_name")
+              fi
+            fi
+          done <<< "$changed_files"
+        fi
+
+        # Sort packages alphabetically
+        if [[ ${#packages[@]} -gt 0 ]]; then
+          IFS=$'\n' packages=($(sort <<<"${packages[*]}"))
+          unset IFS
+        fi
+
+        if [[ ${#packages[@]} -eq 0 ]]; then
+          echo "No packages detected"
+          echo "has-packages=false" >> "$GITHUB_OUTPUT"
+          echo "packages-list=None" >> "$GITHUB_OUTPUT"
+          # Empty matrix with single empty entry
+          matrix='[{"package":""}]'
+          packages_json="[]"
+        else
+          echo "Detected packages: ${packages[*]}"
+          echo "has-packages=true" >> "$GITHUB_OUTPUT"
+          
+          # Create comma-separated packages list
+          packages_list=$(IFS=', '; echo "${packages[*]}")
+          echo "packages-list=$packages_list" >> "$GITHUB_OUTPUT"
+          
+          # Create JSON matrix for jobs
+          matrix="["
+          first=true
+          for pkg in "${packages[@]}"; do
+            if [[ "$first" == "true" ]]; then
+              first=false
+            else
+              matrix+=","
+            fi
+            matrix+="{\"package\":\"$pkg\"}"
+          done
+          matrix+="]"
+          
+          # Create JSON array of packages
+          packages_json="["
+          first=true
+          for pkg in "${packages[@]}"; do
+            if [[ "$first" == "true" ]]; then
+              first=false
+            else
+              packages_json+=","
+            fi
+            packages_json+="\"$pkg\""
+          done
+          packages_json+="]"
+        fi
+
+        echo "matrix=$matrix"
+        echo "packages=$packages_json"
+        echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+        echo "packages=$packages_json" >> "$GITHUB_OUTPUT"

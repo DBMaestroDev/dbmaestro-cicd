@@ -1,0 +1,58 @@
+name: 'Precheck DBmaestro Package'
+description: 'Validates a DBmaestro package using precheck operation'
+inputs:
+  package-name:
+    description: 'Name of the package to validate'
+    required: true
+  project-name:
+    description: 'DBmaestro project name'
+    required: true
+  agent-jar-path:
+    description: 'Path to DBmaestro agent JAR file'
+    required: true
+  dbmaestro-server:
+    description: 'DBmaestro server hostname'
+    required: true
+  use-ssl:
+    description: 'Use SSL for connection'
+    required: false
+    default: 'True'
+  auth-type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  username:
+    description: 'DBmaestro username'
+    required: true
+  password:
+    description: 'DBmaestro password or token'
+    required: true
+outputs:
+  validation-passed:
+    description: 'Whether validation passed'
+    value: ${{ steps.precheck.outputs.success }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Run precheck validation
+      id: precheck
+      shell: bash
+      run: |
+        echo "Pre-checking package ${{ inputs.package-name }}"
+        java -jar "${{ inputs.agent-jar-path }}" -PreCheck \
+          -ProjectName "${{ inputs.project-name }}" \
+          -PackageName "${{ inputs.package-name }}" \
+          -Server "${{ inputs.dbmaestro-server }}" \
+          -UseSSL "${{ inputs.use-ssl }}" \
+          -AuthType "${{ inputs.auth-type }}" \
+          -UserName "${{ inputs.username }}" \
+          -Password "${{ inputs.password }}"
+        
+        if [ $? -eq 0 ]; then
+          echo "Precheck validation passed"
+          echo "success=true" >> $GITHUB_OUTPUT
+        else
+          echo "Precheck validation failed"
+          echo "success=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi

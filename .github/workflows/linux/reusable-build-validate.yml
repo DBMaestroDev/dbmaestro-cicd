@@ -1,0 +1,107 @@
+# Reusable workflow for building and validating DBmaestro packages
+# Can be called from other workflows with different configurations
+# Accepts a list of packages to build and validate
+
+name: Build and Validate Packages (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'DBmaestro project name'
+        required: true
+        type: string
+      packages-matrix:
+        description: 'JSON array of packages to build (e.g., [{"package":"V15"},{"package":"V16"}])'
+        required: true
+        type: string
+      packages-folder:
+        description: 'Root folder containing packages'
+        required: false
+        type: string
+        default: 'packages'
+      agent-jar-path:
+        description: 'Path to DBmaestro agent JAR file'
+        required: false
+        type: string
+        default: '/home/runner/DBmaestroAgent.jar'
+      use-ssl:
+        description: 'Use SSL for DBmaestro connection'
+        required: false
+        type: string
+        default: 'True'
+      auth-type:
+        description: 'Authentication type'
+        required: false
+        type: string
+        default: 'DBmaestroAccount'
+      package-type:
+        description: 'Package type (Regular or AdHoc)'
+        required: false
+        type: string
+        default: 'Regular'
+      runner:
+        description: 'Runner type (ubuntu-latest or self-hosted)'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+    secrets:
+      dbmaestro-server:
+        description: 'DBmaestro server hostname'
+        required: true
+      dbmaestro-user:
+        description: 'DBmaestro username'
+        required: true
+      dbmaestro-password:
+        description: 'DBmaestro password or token'
+        required: true
+
+jobs:
+  create_package:
+    name: Create Package
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        item: ${{ fromJson(inputs.packages-matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Package using Action
+        uses: ./.github/actions/linux/create-package
+        with:
+          package-name: ${{ matrix.item.package }}
+          project-name: ${{ inputs.project-name }}
+          packages-folder: ${{ inputs.packages-folder }}
+          agent-jar-path: ${{ inputs.agent-jar-path }}
+          dbmaestro-server: ${{ secrets.dbmaestro-server }}
+          use-ssl: ${{ inputs.use-ssl }}
+          auth-type: ${{ inputs.auth-type }}
+          username: ${{ secrets.dbmaestro-user }}
+          password: ${{ secrets.dbmaestro-password }}
+          package-type: ${{ inputs.package-type }}
+
+  validate_package:
+    name: Validate Package
+    runs-on: ${{ inputs.runner }}
+    needs: create_package
+    strategy:
+      max-parallel: 1
+      matrix:
+        item: ${{ fromJson(inputs.packages-matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Precheck Package using Action
+        uses: ./.github/actions/linux/precheck-package
+        with:
+          package-name: ${{ matrix.item.package }}
+          project-name: ${{ inputs.project-name }}
+          agent-jar-path: ${{ inputs.agent-jar-path }}
+          dbmaestro-server: ${{ secrets.dbmaestro-server }}
+          use-ssl: ${{ inputs.use-ssl }}
+          auth-type: ${{ inputs.auth-type }}
+          username: ${{ secrets.dbmaestro-user }}
+          password: ${{ secrets.dbmaestro-password }}

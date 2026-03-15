@@ -1,0 +1,121 @@
+name: 'Detect Changed Packages'
+description: 'Detects changed packages from git commits or manual input'
+inputs:
+  package_name:
+    description: 'Package name list to upgrade (comma-separated for multiple packages)'
+    required: false
+    default: ''
+  detect_from_push:
+    description: 'Detect changed packages from git push (true/false)'
+    required: false
+    default: 'false'
+  is_pull_request:
+    description: 'Is this a pull request event (true/false)'
+    required: false
+    default: 'false'
+  base_ref:
+    description: 'Base reference for PR comparison'
+    required: false
+    default: ''
+outputs:
+  matrix:
+    description: 'JSON matrix for packages'
+    value: ${{ steps.detect-packages.outputs.matrix }}
+  has-packages:
+    description: 'Whether packages were detected'
+    value: ${{ steps.detect-packages.outputs.has-packages }}
+  packages:
+    description: 'JSON array of packages'
+    value: ${{ steps.detect-packages.outputs.packages }}
+  packages-list:
+    description: 'Comma-separated list of packages'
+    value: ${{ steps.detect-packages.outputs.packages-list }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect Packages
+      id: detect-packages
+      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
+      run: |
+        $packages = @()
+        $isPullRequest = "${{ inputs.is_pull_request }}" -eq "true"
+
+        if ($isPullRequest) {
+          # Handle Pull Request - detect changed files between base and head
+          Write-Host "Detecting packages for Pull Request"
+          $baseRef = "${{ inputs.base_ref }}"
+          if ($baseRef) {
+            $changedFiles = git diff --name-only origin/$baseRef HEAD
+          } else {
+            $changedFiles = git diff --name-only HEAD~1 HEAD
+          }
+          Write-Host "Changed files: $($changedFiles -join ', ')"
+
+          foreach ($file in $changedFiles) {
+            if ($file -match '^packages/([^/]+)') {
+              $packageName = $matches[1]
+              if ($packageName -notin $packages) {
+                $packages += $packageName
+              }
+            }
+          }
+        } elseif ("${{ inputs.package_name }}" -ne "") {
+          # Handle manual input with comma-separated package names
+          $packageInput = "${{ inputs.package_name }}"
+          Write-Host "Package input: $packageInput"
+          $packages = $packageInput -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+        } elseif ("${{ inputs.detect_from_push }}" -eq "true") {
+          # Handle push event - detect changed files in packages/ folder
+          $changedFiles = git diff --name-only HEAD~1 HEAD
+          Write-Host "Changed files: $($changedFiles -join ', ')"
+
+          foreach ($file in $changedFiles) {
+            if ($file -match '^packages/([^/]+)') {
+              $packageName = $matches[1]
+              if ($packageName -notin $packages) {
+                $packages += $packageName
+              }
+            }
+          }
+        }
+
+        # Sort alphabetically
+        $packages = $packages | Sort-Object
+
+        if ($packages.Count -eq 0) {
+          Write-Host "No packages detected"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "has-packages=false"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "packages-list=None"
+          $matrix = @([PSCustomObject]@{package = ""})
+          $packagesJson = "[]"
+        } else {
+          Write-Host "Detected packages: $($packages -join ', ')"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "has-packages=true"
+          
+          # Create packages list
+          $packagesList = $packages -join ", "
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "packages-list=$packagesList"
+          
+          # Create matrix for jobs
+          $matrix = $packages | Sort-Object | ForEach-Object { [PSCustomObject]@{package = $_} }
+          
+          # Create packages JSON array
+          if ($packages.Count -eq 1) {
+            $packagesJson = "[$($packages[0] | ConvertTo-Json -Compress)]"
+          } else {
+            $packagesJson = $packages | ConvertTo-Json -Compress
+          }
+        }
+
+        # Convert matrix to JSON (compatible with PowerShell 5.1)
+        if (@($matrix).Count -eq 1) {
+          $matrixJson = @($matrix) | ConvertTo-Json -Compress
+          $matrixJson = "[$matrixJson]"
+        } else {
+          $matrixJson = @($matrix) | ConvertTo-Json -Compress
+        }
+        
+        Write-Host "matrix=$matrixJson"
+        Write-Host "packages=$packagesJson"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "matrix=$matrixJson"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "packages=$packagesJson"

@@ -1,0 +1,110 @@
+name: 'Upgrade Environment'
+description: 'Upgrades a target environment with a specific package using DBmaestro (Linux/bash)'
+inputs:
+  package_name:
+    description: 'Package name to upgrade'
+    required: true
+  target_environment:
+    description: 'Target environment for upgrade'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  agent_jar_path:
+    description: 'Path to DBmaestro Agent JAR file'
+    required: true
+  use_ssl:
+    description: 'Use SSL for DBmaestro connection'
+    required: false
+    default: 'True'
+  dbmaestro_server:
+    description: 'DBmaestro server URL'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
+  dbmaestro_password:
+    description: 'DBmaestro password'
+    required: true
+  auth_type:
+    description: 'DBmaestro authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+runs:
+  using: 'composite'
+  steps:
+    - name: Normalize Environment Name
+      id: env_name
+      shell: bash
+      run: |
+        set -e
+        
+        env_name="${{ inputs.target_environment }}"
+        echo "Original environment name: $env_name"
+
+        # Normalize environment names (replace underscores with spaces)
+        normalized_env="${env_name//_/ }"
+        echo "Normalized environment name: $normalized_env"
+        echo "TARGET_ENVIRONMENT=$normalized_env" >> "$GITHUB_OUTPUT"
+
+    - name: Summary
+      shell: bash
+      run: |
+        set -e
+        
+        package="${{ inputs.package_name }}"
+        target_env="${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        project_name="${{ inputs.project_name }}"
+        timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+        cat >> "$GITHUB_STEP_SUMMARY" << EOF
+        ## :rocket: Environment Upgrade Summary
+
+        | Property | Value |
+        |----------|-------|
+        | **Environment** | $target_env |
+        | **Project Name** | $project_name |
+        | **Package Name** | $package |
+        | **Triggered By** | ${{ github.actor }} |
+        | **Timestamp** | $timestamp |
+        EOF
+
+        echo "Summary written to GitHub Step Summary"
+
+    - name: Execute Upgrade
+      shell: bash
+      run: |
+        set -e
+        
+        # ===== Upgrade Environment =====
+        target_env="${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        package="${{ inputs.package_name }}"
+        agent_jar="${{ inputs.agent_jar_path }}"
+        project_name="${{ inputs.project_name }}"
+
+        if [[ -z "$package" ]]; then
+          echo "No package to process"
+          exit 1
+        fi
+
+        echo "==== Upgrade package on $target_env environment... ===="
+        echo "==== Package name: $package ===="
+        echo "==== Project name: $project_name ===="
+        echo "==== Agent JAR: $agent_jar ===="
+
+        java -jar "$agent_jar" -Upgrade \
+          -ProjectName "$project_name" \
+          -EnvName "$target_env" \
+          -PackageName "$package" \
+          -Server "${{ inputs.dbmaestro_server }}" \
+          -UseSSL "${{ inputs.use_ssl }}" \
+          -AuthType "${{ inputs.auth_type }}" \
+          -UserName "${{ inputs.dbmaestro_user }}" \
+          -Password "${{ inputs.dbmaestro_password }}"
+
+        exit_code=$?
+        if [[ $exit_code -ne 0 ]]; then
+          echo "==== Upgrade failed for package: $package ===="
+          exit 1
+        fi
+        echo "==== Upgrade package on $target_env environment completed successfully ===="

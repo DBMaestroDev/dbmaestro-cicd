@@ -1,0 +1,35 @@
+name: 'PR Comment'
+description: 'Posts a comment on a pull request with detected package information'
+inputs:
+  packages_list:
+    description: 'Comma-separated list of detected packages'
+    required: true
+  environment_name:
+    description: 'Target environment name'
+    required: true
+  github_token:
+    description: 'GitHub token for API access'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Post PR Comment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const packages = '${{ inputs.packages_list }}';
+          const envName = '${{ inputs.environment_name }}';
+          const comment = `## 📦 Changed Packages Detected
+
+          **Modified Packages:** ${packages}
+
+          This pull request affects the following packages in the \`/packages\` folder.
+          Will upgrade **${envName}** with these packages (in order) upon merging.`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

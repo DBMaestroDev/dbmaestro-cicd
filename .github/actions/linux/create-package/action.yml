@@ -1,0 +1,99 @@
+name: 'Create DBmaestro Package'
+description: 'Creates a DBmaestro package from a folder with manifest, tar archive, and package creation'
+inputs:
+  package-name:
+    description: 'Name of the package to create'
+    required: true
+  project-name:
+    description: 'DBmaestro project name'
+    required: true
+  packages-folder:
+    description: 'Root folder containing packages'
+    required: false
+    default: 'packages'
+  agent-jar-path:
+    description: 'Path to DBmaestro agent JAR file'
+    required: true
+  dbmaestro-server:
+    description: 'DBmaestro server hostname'
+    required: true
+  use-ssl:
+    description: 'Use SSL for connection'
+    required: false
+    default: 'True'
+  auth-type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  username:
+    description: 'DBmaestro username'
+    required: true
+  password:
+    description: 'DBmaestro password or token'
+    required: true
+  package-type:
+    description: 'Package type (Regular or AdHoc)'
+    required: false
+    default: 'Regular'
+  ignore-script-warnings:
+    description: 'Ignore script warnings during package creation'
+    required: false
+    default: 'True'
+outputs:
+  package-created:
+    description: 'Whether package was created successfully'
+    value: ${{ steps.create.outputs.success }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate package folder exists
+      shell: bash
+      run: |
+        if [ ! -d "${{ inputs.packages-folder }}/${{ inputs.package-name }}" ]; then
+          echo "ERROR: Folder ${{ inputs.package-name }} does not exist in ${{ inputs.packages-folder }}"
+          exit 1
+        else
+          echo "Found package folder: ${{ inputs.package-name }}"
+        fi
+
+    - name: Create manifest file
+      shell: bash
+      run: |
+        echo "Creating manifest for package ${{ inputs.package-name }}"
+        java -jar "${{ inputs.agent-jar-path }}" -CreateManifestFile \
+          -PathToScriptsFolder "${{ inputs.packages-folder }}/${{ inputs.package-name }}" \
+          -Operation "CreateOrUpdate" \
+          -PackageType "${{ inputs.package-type }}"
+
+    - name: Create tar archive
+      shell: bash
+      run: |
+        echo "Creating tar archive from ${{ inputs.package-name }}"
+        cd "${{ inputs.packages-folder }}"
+        tar -cf "../${{ inputs.package-name }}.tar" "${{ inputs.package-name }}"
+        cd ..
+        echo "Tar archive created: ${{ inputs.package-name }}.tar"
+
+    - name: Create package in DBmaestro
+      id: create
+      shell: bash
+      run: |
+        echo "Creating package ${{ inputs.package-name }} in DBmaestro"
+        java -jar "${{ inputs.agent-jar-path }}" -Package \
+          -ProjectName "${{ inputs.project-name }}" \
+          -IgnoreScriptWarnings ${{ inputs.ignore-script-warnings }} \
+          -FilePath "${{ inputs.package-name }}.tar" \
+          -Server "${{ inputs.dbmaestro-server }}" \
+          -UseSSL "${{ inputs.use-ssl }}" \
+          -AuthType "${{ inputs.auth-type }}" \
+          -UserName "${{ inputs.username }}" \
+          -Password "${{ inputs.password }}"
+        
+        if [ $? -eq 0 ]; then
+          echo "Package created successfully"
+          echo "success=true" >> $GITHUB_OUTPUT
+        else
+          echo "Failed to create package"
+          echo "success=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi

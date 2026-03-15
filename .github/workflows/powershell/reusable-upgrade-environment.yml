@@ -1,0 +1,148 @@
+# Reusable Workflow for Environment Upgrade
+# Can be called from other workflows to upgrade environments
+# Packages must be built and validated prior to upgrade
+
+name: Reusable Upgrade Environment
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        description: 'Package name list to upgrade (comma-separated for multiple packages)'
+        required: false
+        type: string
+        default: ''
+      target_environment:
+        description: 'Target environment for upgrade'
+        required: true
+        type: string
+      project_name:
+        description: 'DBmaestro project name'
+        required: false
+        type: string
+        default: 'Demo-PSQL'
+      agent_jar_path:
+        description: 'Path to DBmaestro Agent JAR file'
+        required: false
+        type: string
+        default: 'C:\Program Files (x86)\DBmaestro\DOP Server\Agent\DBmaestroAgent.jar'
+      use_ssl:
+        description: 'Use SSL for DBmaestro connection'
+        required: false
+        type: string
+        default: 'True'
+      detect_from_push:
+        description: 'Detect changed packages from git push (true/false)'
+        required: false
+        type: boolean
+        default: false
+      is_pull_request:
+        description: 'Is this a pull request event (true/false)'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      DBMAESTRO_SERVER:
+        required: true
+      DBMAESTRO_USER:
+        required: true
+      DBMAESTRO_PASSWORD:
+        required: true
+    outputs:
+      upgraded_packages:
+        description: 'List of packages that were upgraded'
+        value: ${{ jobs.detect_changed_packages.outputs.packages-list }}
+
+env:
+  GIT_DEPTH: 1
+  DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+
+jobs:
+  # Detect changed packages from push or workflow input
+  detect_changed_packages:
+    name: Detect Changed Packages
+    runs-on: self-hosted
+    if: ${{ !inputs.is_pull_request }}
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has-packages: ${{ steps.detect.outputs.has-packages }}
+      packages-list: ${{ steps.detect.outputs.packages-list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed Packages
+        id: detect
+        uses: ./.github/actions/powershell/detect-changed-packages
+        with:
+          package_name: ${{ inputs.package_name }}
+          detect_from_push: ${{ inputs.detect_from_push }}
+
+  # Detect changed packages for pull requests
+  detect_changed_packages_pr:
+    name: Detect Changed Packages (Pull Request)
+    runs-on: self-hosted
+    if: ${{ inputs.is_pull_request }}
+    outputs:
+      packages: ${{ steps.detect-pr.outputs.packages }}
+      packages-list: ${{ steps.detect-pr.outputs.packages-list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed Folders in packages/
+        id: detect-pr
+        uses: ./.github/actions/powershell/detect-changed-packages
+        with:
+          is_pull_request: true
+
+  # Comment on PR with detected packages
+  comment_pr:
+    name: Comment PR with Detected Changed Packages
+    runs-on: ubuntu-latest
+    if: ${{ inputs.is_pull_request }}
+    needs: detect_changed_packages_pr
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Post PR Comment
+        uses: ./.github/actions/powershell/pr-comment
+        with:
+          packages_list: ${{ needs.detect_changed_packages_pr.outputs.packages-list }}
+          environment_name: ${{ inputs.target_environment }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Upgrade environment with detected packages
+  upgrade_environment:
+    name: Upgrade Environment
+    runs-on: self-hosted
+    needs: detect_changed_packages
+    if: |
+      !inputs.is_pull_request &&
+      needs.detect_changed_packages.outputs.has-packages == 'true'
+    strategy:
+      max-parallel: 1
+      matrix:
+        item: ${{ fromJson(needs.detect_changed_packages.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Upgrade Package
+        uses: ./.github/actions/powershell/upgrade-environment
+        with:
+          package_name: ${{ matrix.item.package }}
+          target_environment: ${{ inputs.target_environment }}
+          project_name: ${{ inputs.project_name }}
+          agent_jar_path: ${{ inputs.agent_jar_path }}
+          use_ssl: ${{ inputs.use_ssl }}
+          dbmaestro_server: ${{ secrets.DBMAESTRO_SERVER }}
+          dbmaestro_user: ${{ secrets.DBMAESTRO_USER }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
