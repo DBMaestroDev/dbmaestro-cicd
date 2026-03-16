@@ -92,14 +92,14 @@ runs:
         } else {
           Write-Host "Detected packages: $($packages -join ', ')"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "has-packages=true"
-          
+
           # Create packages list
           $packagesList = $packages -join ", "
           Add-Content -Path $env:GITHUB_OUTPUT -Value "packages-list=$packagesList"
-          
+
           # Create matrix for jobs
           $matrix = $packages | Sort-Object | ForEach-Object { [PSCustomObject]@{package = $_} }
-          
+
           # Create packages JSON array
           if ($packages.Count -eq 1) {
             $packagesJson = "[$($packages[0] | ConvertTo-Json -Compress)]"
@@ -115,7 +115,7 @@ runs:
         } else {
           $matrixJson = @($matrix) | ConvertTo-Json -Compress
         }
-        
+
         Write-Host "matrix=$matrixJson"
         Write-Host "packages=$packagesJson"
         Add-Content -Path $env:GITHUB_OUTPUT -Value "matrix=$matrixJson"

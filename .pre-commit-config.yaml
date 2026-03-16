@@ -1,0 +1,69 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: mixed-line-ending
+        name: Fix line endings
+        args: ['--fix=lf']  # Use LF for Unix, or '--fix=crlf' for Windows
+
+      - id: check-yaml
+        name: Check YAML syntax
+        description: This hook checks yaml files for parseable syntax.
+        entry: check-yaml
+        language: python
+        files: \.(yaml|yml)$
+        args: [--multi, --unsafe]
+
+      - id: end-of-file-fixer
+        name: Fix End of Files
+        description: Ensures that a file is either empty or ends with one newline.
+        entry: end-of-file-fixer
+        language: python
+        files: \.(yaml|yml|sql)$
+
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        description: This hook trims trailing whitespace.
+        entry: trailing-whitespace-fixer
+        language: python
+        files: \.(yaml|yml)$
+
+      # JSON checks
+      - id: check-json
+        name: Check JSON syntax
+        files: \.json$
+
+      - id: pretty-format-json
+        name: Pretty format JSON (autofix)
+        files: \.json$
+        args: [--autofix, --no-sort-keys, --indent, '2']
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        name: YAML Lint
+        description: This hook runs yamllint.
+        entry: yamllint
+        language: python
+        files: \.(yaml|yml)$
+        args: [--format, parsable, --strict]
+
+  # SQL linting with sqlfluff
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.4.2
+    hooks:
+      - id: sqlfluff-lint
+        name: SQLFluff Lint
+        files: \.sql$
+        args: [--dialect, postgres]
+
+  - repo: local
+    hooks:
+      - id: gitlab-ci-lint
+        name: GitLab CI Lint
+        description: Validate GitLab CI YAML syntax
+        entry: powershell.exe
+        language: system
+        files: \.gitlab-ci\.yml$
+        args: [-Command, "if (Get-Content '.gitlab-ci.yml' | Select-String '\\$\\{env:') { Write-Error 'Found invalid variable syntax in GitLab CI file. Use $VAR_NAME instead of ${env:VAR_NAME}'; exit 1 } else { Write-Host 'GitLab CI syntax check passed' }"]

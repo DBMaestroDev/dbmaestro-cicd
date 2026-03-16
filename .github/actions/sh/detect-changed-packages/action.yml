@@ -39,7 +39,7 @@ runs:
       shell: bash
       run: |
         set -e
-        
+
         declare -a packages
         is_pull_request="${{ inputs.is_pull_request }}"
 
@@ -111,11 +111,11 @@ runs:
         else
           echo "Detected packages: ${packages[*]}"
           echo "has-packages=true" >> "$GITHUB_OUTPUT"
-          
+
           # Create comma-separated packages list
           packages_list=$(IFS=', '; echo "${packages[*]}")
           echo "packages-list=$packages_list" >> "$GITHUB_OUTPUT"
-          
+
           # Create JSON matrix for jobs
           matrix="["
           first=true
@@ -128,7 +128,7 @@ runs:
             matrix+="{\"package\":\"$pkg\"}"
           done
           matrix+="]"
-          
+
           # Create JSON array of packages
           packages_json="["
           first=true

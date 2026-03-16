@@ -51,11 +51,11 @@ runs:
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
       run: |
         $ErrorActionPreference = 'Stop'
-        
+
         $packagesFolder = "${{ inputs.packages-folder }}"
         $packageName = "${{ inputs.package-name }}"
         $packagePath = Join-Path -Path $packagesFolder -ChildPath $packageName
-        
+
         if (-not (Test-Path -Path $packagePath -PathType Container)) {
           Write-Host "ERROR: Folder $packageName does not exist in $packagesFolder"
           exit 1
@@ -67,20 +67,20 @@ runs:
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
       run: |
         $ErrorActionPreference = 'Stop'
-        
+
         $packageName = "${{ inputs.package-name }}"
         $packagesFolder = "${{ inputs.packages-folder }}"
         $agentJarPath = "${{ inputs.agent-jar-path }}"
         $packageType = "${{ inputs.package-type }}"
         $scriptsFolder = Join-Path -Path $packagesFolder -ChildPath $packageName
-        
+
         Write-Host "Creating manifest for package $packageName"
-        
+
         & java -jar "$agentJarPath" -CreateManifestFile `
           -PathToScriptsFolder "$scriptsFolder" `
           -Operation "CreateOrUpdate" `
           -PackageType "$packageType"
-        
+
         if ($LASTEXITCODE -ne 0) {
           Write-Host "ERROR: Failed to create manifest file"
           exit 1
@@ -90,23 +90,23 @@ runs:
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
       run: |
         $ErrorActionPreference = 'Stop'
-        
+
         $packageName = "${{ inputs.package-name }}"
         $packagesFolder = "${{ inputs.packages-folder }}"
         $zipFile = "$packageName.zip"
         $sourcePath = Join-Path -Path $packagesFolder -ChildPath $packageName
         $destinationPath = Join-Path -Path (Get-Location) -ChildPath $zipFile
-        
+
         Write-Host "Creating zip archive from $packageName"
-        
+
         # Remove existing zip file if it exists
         if (Test-Path -Path $destinationPath) {
           Remove-Item -Path $destinationPath -Force
         }
-        
+
         # Create zip archive using Compress-Archive
         Compress-Archive -Path "$sourcePath\*" -DestinationPath $destinationPath -CompressionLevel Optimal
-        
+
         if (Test-Path -Path $destinationPath) {
           $fileSize = (Get-Item -Path $destinationPath).Length
           Write-Host "Zip archive created: $zipFile (Size: $fileSize bytes)"
@@ -120,14 +120,14 @@ runs:
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
       run: |
         $ErrorActionPreference = 'Stop'
-        
+
         $packageName = "${{ inputs.package-name }}"
         $projectName = "${{ inputs.project-name }}"
         $agentJarPath = "${{ inputs.agent-jar-path }}"
         $zipFile = "$packageName.zip"
-        
+
         Write-Host "Creating package $packageName in DBmaestro"
-        
+
         & java -jar "$agentJarPath" -Package `
           -ProjectName "$projectName" `
           -IgnoreScriptWarnings "${{ inputs.ignore-script-warnings }}" `
@@ -137,7 +137,7 @@ runs:
           -AuthType "${{ inputs.auth-type }}" `
           -UserName "${{ inputs.username }}" `
           -Password "${{ inputs.password }}"
-        
+
         if ($LASTEXITCODE -eq 0) {
           Write-Host "Package created successfully"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "success=true"

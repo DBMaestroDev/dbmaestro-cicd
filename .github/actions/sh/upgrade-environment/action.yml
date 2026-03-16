@@ -39,7 +39,7 @@ runs:
       shell: bash
       run: |
         set -e
-        
+
         env_name="${{ inputs.target_environment }}"
         echo "Original environment name: $env_name"
 
@@ -52,7 +52,7 @@ runs:
       shell: bash
       run: |
         set -e
-        
+
         package="${{ inputs.package_name }}"
         target_env="${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
         project_name="${{ inputs.project_name }}"
@@ -76,7 +76,7 @@ runs:
       shell: bash
       run: |
         set -e
-        
+
         # ===== Upgrade Environment =====
         target_env="${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
         package="${{ inputs.package_name }}"

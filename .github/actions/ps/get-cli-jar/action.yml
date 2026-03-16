@@ -23,15 +23,15 @@ runs:
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
       run: |
         $ErrorActionPreference = 'Stop'
-        
+
         $version = "${{ inputs.version }}"
         $jarPath = "${{ inputs.jar-path }}"
         $jarUrl = "https://raw.githubusercontent.com/DBMaestroDev/dbm_jar/refs/tags/v${version}/DBmaestroAgent.jar"
-        
+
         Write-Host "Downloading DBmaestro Agent JAR version $version"
         Write-Host "From: $jarUrl"
         Write-Host "To: $jarPath"
-        
+
         try {
           # Create directory if it doesn't exist
           $jarDir = Split-Path -Path $jarPath -Parent
@@ -39,11 +39,11 @@ runs:
             Write-Host "Creating directory: $jarDir"
             New-Item -ItemType Directory -Path $jarDir -Force | Out-Null
           }
-          
+
           # Download the JAR file
           Write-Host "Downloading file..."
           Invoke-WebRequest -Uri $jarUrl -OutFile $jarPath -UseBasicParsing
-          
+
           # Verify the file exists and is not empty
           if (Test-Path -Path $jarPath) {
             $fileInfo = Get-Item -Path $jarPath

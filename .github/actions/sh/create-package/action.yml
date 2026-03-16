@@ -89,7 +89,7 @@ runs:
           -AuthType "${{ inputs.auth-type }}" \
           -UserName "${{ inputs.username }}" \
           -Password "${{ inputs.password }}"
-        
+
         if [ $? -eq 0 ]; then
           echo "Package created successfully"
           echo "success=true" >> $GITHUB_OUTPUT

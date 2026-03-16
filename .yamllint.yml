@@ -1,0 +1,33 @@
+extends: default
+
+rules:
+  # Allow longer lines for GitLab CI commands
+  line-length:
+    max: 300
+    level: warning
+
+  # Allow empty values for GitLab CI variables
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false
+
+  # Be more lenient with indentation for GitLab CI
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Allow truthy values (True/False) commonly used in GitLab CI
+  truthy:
+    allowed-values: ['true', 'false', 'True', 'False']
+    check-keys: false
+
+  # Allow comments at the end of lines
+  comments:
+    min-spaces-from-content: 1
+
+  # Don't require document start markers
+  document-start: disable
+
+  # Allow duplicate keys (sometimes needed in GitLab CI for overrides)
+  key-duplicates: disable

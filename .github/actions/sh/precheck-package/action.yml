@@ -48,7 +48,7 @@ runs:
           -AuthType "${{ inputs.auth-type }}" \
           -UserName "${{ inputs.username }}" \
           -Password "${{ inputs.password }}"
-        
+
         if [ $? -eq 0 ]; then
           echo "Precheck validation passed"
           echo "success=true" >> $GITHUB_OUTPUT
