@@ -34,23 +34,11 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Normalize Environment Name
-      id: env_name
-      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
-      run: |
-        $envName = "${{ inputs.target_environment }}"
-        Write-Host "Original environment name: $envName"
-
-        # Normalize environment names (replace underscores with spaces)
-        $envName = $envName -replace '_', ' '
-        Write-Host "Normalized environment name: $envName"
-        Add-Content -Path $env:GITHUB_OUTPUT -Value "TARGET_ENVIRONMENT=$envName"
-
     - name: Summary
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
       run: |
         $package = "${{ inputs.package_name }}"
-        $targetEnv = "${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        $targetEnv = "${{ inputs.target_environment }}"
         $projectName = "${{ inputs.project_name }}"
 
         $summary = @"
@@ -73,7 +61,7 @@ runs:
       run: |
         # ===== Upgrade Environment =====
         $ErrorActionPreference = 'Stop'
-        $targetEnv = "${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        $targetEnv = "${{ inputs.target_environment }}"
         $package = "${{ inputs.package_name }}"
         $agentJar = "${{ inputs.agent_jar_path }}"
         $projectName = "${{ inputs.project_name }}"

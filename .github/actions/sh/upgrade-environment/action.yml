@@ -34,27 +34,13 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Normalize Environment Name
-      id: env_name
-      shell: bash
-      run: |
-        set -e
-
-        env_name="${{ inputs.target_environment }}"
-        echo "Original environment name: $env_name"
-
-        # Normalize environment names (replace underscores with spaces)
-        normalized_env="${env_name//_/ }"
-        echo "Normalized environment name: $normalized_env"
-        echo "TARGET_ENVIRONMENT=$normalized_env" >> "$GITHUB_OUTPUT"
-
     - name: Summary
       shell: bash
       run: |
         set -e
 
         package="${{ inputs.package_name }}"
-        target_env="${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        target_env="${{ inputs.target_environment }}"
         project_name="${{ inputs.project_name }}"
         timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
 
@@ -78,7 +64,7 @@ runs:
         set -e
 
         # ===== Upgrade Environment =====
-        target_env="${{ steps.env_name.outputs.TARGET_ENVIRONMENT }}"
+        target_env="${{ inputs.target_environment }}"
         package="${{ inputs.package_name }}"
         agent_jar="${{ inputs.agent_jar_path }}"
         project_name="${{ inputs.project_name }}"
