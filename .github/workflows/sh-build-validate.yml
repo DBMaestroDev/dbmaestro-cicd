@@ -21,9 +21,11 @@ on:
       dbmaestro_server:
         description: 'DBmaestro server hostname'
         required: true
+        type: string
       dbmaestro_user:
         description: 'DBmaestro username'
         required: true
+        type: string
       package_type:
         description: 'Package type (Regular or AdHoc)'
         required: false

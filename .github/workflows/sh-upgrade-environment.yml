@@ -20,8 +20,12 @@ on:
         default: 'DBmaestroAccount'
       dbmaestro_server:
         required: true
+        description: 'DBmaestro server URL'
+        type: string
       dbmaestro_user:
+        description: 'DBmaestro username'
         required: true
+        type: string
       detect_from_push:
         description: 'Detect changed packages from git push (true/false)'
         required: false
