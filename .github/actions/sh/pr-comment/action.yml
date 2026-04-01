@@ -1,4 +1,4 @@
-# Version: v1.7
+# Version: v1.11
 name: 'PR Comment'
 description: 'Posts a comment on a pull request with detected package information'
 inputs:
