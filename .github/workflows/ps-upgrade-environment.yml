@@ -8,30 +8,20 @@ name: Reusable Upgrade Environment
 on:
   workflow_call:
     inputs:
-      package_name:
-        description: 'Package name list to upgrade (comma-separated for multiple packages)'
-        required: false
-        type: string
-        default: ''
-      target_environment:
-        description: 'Target environment for upgrade'
-        required: true
-        type: string
-      project_name:
-        description: 'DBmaestro project name'
-        required: false
-        type: string
-        default: 'Demo-PSQL'
       agent_jar_path:
         description: 'Path to DBmaestro Agent JAR file'
         required: false
         type: string
         default: 'C:\Program Files (x86)\DBmaestro\DOP Server\Agent\DBmaestroAgent.jar'
-      use_ssl:
-        description: 'Use SSL for DBmaestro connection'
+      auth_type:
+        description: 'Authentication type'
         required: false
         type: string
-        default: 'True'
+        default: 'DBmaestroAccount'
+      dbmaestro_server:
+        required: true
+      dbmaestro_user:
+        required: true
       detect_from_push:
         description: 'Detect changed packages from git push (true/false)'
         required: false
@@ -42,15 +32,25 @@ on:
         required: false
         type: boolean
         default: false
-      auth_type:
-        description: 'Authentication type'
+      package_name:
+        description: 'Package name list to upgrade (comma-separated for multiple packages)'
         required: false
         type: string
-        default: 'DBmaestroAccount'
-      dbmaestro_server:
+        default: ''
+      project_name:
+        description: 'DBmaestro project name'
+        required: false
+        type: string
+        default: 'Demo-PSQL'
+      target_environment:
+        description: 'Target environment for upgrade'
         required: true
-      dbmaestro_user:
-        required: true
+        type: string
+      use_ssl:
+        description: 'Use SSL for DBmaestro connection'
+        required: false
+        type: string
+        default: 'True'
     secrets:
       DBMAESTRO_PASSWORD:
         required: true

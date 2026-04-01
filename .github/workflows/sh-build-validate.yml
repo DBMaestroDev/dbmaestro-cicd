@@ -8,50 +8,50 @@ name: Build and Validate Packages (Reusable)
 on:
   workflow_call:
     inputs:
-      project_name:
-        description: 'DBmaestro project name'
-        required: true
-        type: string
-      packages_matrix:
-        description: 'JSON array of packages to build (e.g., [{"package":"V15"},{"package":"V16"}])'
-        required: true
-        type: string
-      packages_folder:
-        description: 'Root folder containing packages'
-        required: false
-        type: string
-        default: 'packages'
       agent_jar_path:
         description: 'Path to DBmaestro agent JAR file'
         required: false
         type: string
         default: '/home/runner/DBmaestroAgent.jar'
-      use_ssl:
-        description: 'Use SSL for DBmaestro connection'
-        required: false
-        type: string
-        default: 'True'
       auth_type:
         description: 'Authentication type'
         required: false
         type: string
         default: 'DBmaestroAccount'
-      package_type:
-        description: 'Package type (Regular or AdHoc)'
-        required: false
-        type: string
-        default: 'Regular'
-      runner:
-        description: 'Runner type (ubuntu-latest or self-hosted)'
-        required: false
-        type: string
-        default: 'ubuntu-latest'
       dbmaestro_server:
         description: 'DBmaestro server hostname'
         required: true
       dbmaestro_user:
         description: 'DBmaestro username'
         required: true
+      package_type:
+        description: 'Package type (Regular or AdHoc)'
+        required: false
+        type: string
+        default: 'Regular'
+      packages_folder:
+        description: 'Root folder containing packages'
+        required: false
+        type: string
+        default: 'packages'
+      packages_matrix:
+        description: 'JSON array of packages to build (e.g., [{"package":"V15"},{"package":"V16"}])'
+        required: true
+        type: string
+      project_name:
+        description: 'DBmaestro project name'
+        required: true
+        type: string
+      runner:
+        description: 'Runner type (ubuntu-latest or self-hosted)'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+      use_ssl:
+        description: 'Use SSL for DBmaestro connection'
+        required: false
+        type: string
+        default: 'True'
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password or token'
