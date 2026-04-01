@@ -4,41 +4,41 @@ description: 'Build a DBmaestro package from source control (Tasks or Specific C
 author: 'DBmaestro'
 
 inputs:
-  package-name:
+  package_name:
     description: 'Name of the package to build'
     required: true
-  project-name:
+  project_name:
     description: 'DBmaestro project name'
     required: true
   environment-name:
     description: 'Development environment name'
     required: true
-  version-type:
+  version_type:
     description: 'Version type: Tasks or Specific Commit'
     required: false
     default: ''
-  additional-information:
+  additional_information:
     description: 'Tasks list (comma-separated) or specific commit hash'
     required: false
     default: ''
-  agent-jar-path:
+  agent_jar_path:
     description: 'Path to DBmaestro Agent JAR file'
     required: true
-  dbmaestro-server:
+  dbmaestro_server:
     description: 'DBmaestro server URL'
     required: true
-  use-ssl:
+  use_ssl:
     description: 'Use SSL for connection'
     required: false
     default: 'True'
-  auth-type:
+  auth_type:
     description: 'Authentication type'
     required: false
     default: 'DBmaestroAccount'
-  username:
+  dbmaestro_user:
     description: 'DBmaestro username'
     required: true
-  password:
+  dbmaestro_password:
     description: 'DBmaestro password'
     required: true
 
@@ -54,28 +54,28 @@ runs:
       id: build
       shell: bash
       run: |
-        echo "==== Building package: ${{ inputs.package-name }} ===="
-        echo "Project: ${{ inputs.project-name }}"
+        echo "==== Building package: ${{ inputs.package_name }} ===="
+        echo "Project: ${{ inputs.project_name }}"
         echo "Environment: ${{ inputs.environment-name }}"
-        echo "Version Type: ${{ inputs.version-type }}"
-        echo "Additional Information: ${{ inputs.additional-information }}"
+        echo "Version Type: ${{ inputs.version_type }}"
+        echo "Additional Information: ${{ inputs.additional_information }}"
         
-        java -jar "${{ inputs.agent-jar-path }}" -Build \
-          -ProjectName "${{ inputs.project-name }}" \
+        java -jar "${{ inputs.agent_jar_path }}" -Build \
+          -ProjectName "${{ inputs.project_name }}" \
           -EnvName "${{ inputs.environment-name }}" \
-          -VersionType "${{ inputs.version-type }}" \
-          -AdditionalInformation "${{ inputs.additional-information }}" \
+          -VersionType "${{ inputs.version_type }}" \
+          -AdditionalInformation "${{ inputs.additional_information }}" \
           -CreatePackage True \
-          -PackageName "${{ inputs.package-name }}" \
-          -Server "${{ inputs.dbmaestro-server }}" \
-          -UseSSL "${{ inputs.use-ssl }}" \
-          -AuthType "${{ inputs.auth-type }}" \
+          -PackageName "${{ inputs.package_name }}" \
+          -Server "${{ inputs.dbmaestro_server }}" \
+          -UseSSL "${{ inputs.use_ssl }}" \
+          -AuthType "${{ inputs.auth_type }}" \
           -UserName "${{ inputs.username }}" \
           -Password "${{ inputs.password }}"
         
         if [ $? -ne 0 ]; then
-          echo "::error::Failed to build package ${{ inputs.package-name }}"
+          echo "::error::Failed to build package ${{ inputs.package_name }}"
           exit 1
         fi
         
-        echo "✅ Package ${{ inputs.package-name }} built successfully"
+        echo "✅ Package ${{ inputs.package_name }} built successfully"

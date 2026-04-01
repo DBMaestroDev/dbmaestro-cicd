@@ -8,11 +8,11 @@ name: Build from Source Control (Linux)
 on:
   workflow_call:
     inputs:
-      package-name:
+      package_name:
         description: 'Name of the package to build'
         required: true
         type: string
-      project-name:
+      project_name:
         description: 'DBmaestro project name'
         required: true
         type: string
@@ -21,27 +21,27 @@ on:
         required: false
         type: string
         default: 'Dev_Env_1'
-      version-type:
+      version_type:
         description: 'Version type: Tasks, Specific Commit, or empty'
         required: false
         type: string
         default: ''
-      additional-information:
+      additional_information:
         description: 'Tasks list (comma-separated) or specific commit hash'
         required: false
         type: string
         default: ''
-      agent-jar-path:
+      agent_jar_path:
         description: 'Path to DBmaestro Agent JAR file'
         required: false
         type: string
         default: '/home/runner/DBmaestroAgent.jar'
-      use-ssl:
+      use_ssl:
         description: 'Use SSL for DBmaestro connection'
         required: false
         type: string
         default: 'True'
-      auth-type:
+      auth_type:
         description: 'Authentication type'
         required: false
         type: string
@@ -51,14 +51,14 @@ on:
         required: false
         type: string
         default: 'dbmaestro-linux'
-    secrets:
-      dbmaestro-server:
+      dbmaestro_server:
         description: 'DBmaestro server URL'
         required: true
-      dbmaestro-user:
+      dbmaestro_user:
         description: 'DBmaestro username'
         required: true
-      dbmaestro-password:
+    secrets:
+      DBMAESTRO_PASSWORD:
         description: 'DBmaestro password'
         required: true
 
@@ -75,27 +75,27 @@ jobs:
           
           | Property | Value |
           |----------|-------|
-          | **Package Name** | ${{ inputs.package-name }} |
-          | **Project Name** | ${{ inputs.project-name }} |
+          | **Package Name** | ${{ inputs.package_name }} |
+          | **Project Name** | ${{ inputs.project_name }} |
           | **Environment** | ${{ inputs.environment-name }} |
-          | **Version Type** | ${{ inputs.version-type }} |
-          | **Additional Info** | ${{ inputs.additional-information }} |
+          | **Version Type** | ${{ inputs.version_type }} |
+          | **Additional Info** | ${{ inputs.additional_information }} |
           EOF
 
       - name: Build from Source Control
         uses: DBMaestroDev/github/.github/actions/sh/build-from-source-control@main
         with:
-          package-name: ${{ inputs.package-name }}
-          project-name: ${{ inputs.project-name }}
+          package_name: ${{ inputs.package_name }}
+          project_name: ${{ inputs.project_name }}
           environment-name: ${{ inputs.environment-name }}
-          version-type: ${{ inputs.version-type }}
-          additional-information: ${{ inputs.additional-information }}
-          agent-jar-path: ${{ inputs.agent-jar-path }}
-          dbmaestro-server: ${{ secrets.dbmaestro-server }}
-          use-ssl: ${{ inputs.use-ssl }}
-          auth-type: ${{ inputs.auth-type }}
-          username: ${{ secrets.dbmaestro-user }}
-          password: ${{ secrets.dbmaestro-password }}
+          version_type: ${{ inputs.version_type }}
+          additional_information: ${{ inputs.additional_information }}
+          agent_jar_path: ${{ inputs.agent_jar_path }}
+          dbmaestro_server: ${{ inputs.dbmaestro_server }}
+          use_ssl: ${{ inputs.use_ssl }}
+          auth_type: ${{ inputs.auth_type }}
+          dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
 
   precheck_package:
     name: Validate Package
@@ -105,11 +105,11 @@ jobs:
       - name: Precheck Package
         uses: DBMaestroDev/github/.github/actions/sh/precheck-package@main
         with:
-          package-name: ${{ inputs.package-name }}
-          project-name: ${{ inputs.project-name }}
-          agent-jar-path: ${{ inputs.agent-jar-path }}
-          dbmaestro-server: ${{ secrets.dbmaestro-server }}
-          use-ssl: ${{ inputs.use-ssl }}
-          auth-type: ${{ inputs.auth-type }}
-          username: ${{ secrets.dbmaestro-user }}
-          password: ${{ secrets.dbmaestro-password }}
+          package_name: ${{ inputs.package_name }}
+          project_name: ${{ inputs.project_name }}
+          agent_jar_path: ${{ inputs.agent_jar_path }}
+          dbmaestro_server: ${{ inputs.dbmaestro_server }}
+          use_ssl: ${{ inputs.use_ssl }}
+          auth_type: ${{ inputs.auth_type }}
+          dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}

@@ -42,22 +42,22 @@ on:
         required: false
         type: boolean
         default: false
-      auth-type:
+      auth_type:
         description: 'Authentication type'
         required: false
         type: string
         default: 'DBmaestroAccount'
+      dbmaestro_server:
+        required: true
+      dbmaestro_user:
+        required: true
     secrets:
-      DBMAESTRO_SERVER:
-        required: true
-      DBMAESTRO_USER:
-        required: true
       DBMAESTRO_PASSWORD:
         required: true
     outputs:
       upgraded_packages:
         description: 'List of packages that were upgraded'
-        value: ${{ jobs.detect_changed_packages.outputs.packages-list }}
+        value: ${{ jobs.detect_changed_packages.outputs.packages_list }}
 
 env:
   GIT_DEPTH: 1
@@ -70,8 +70,8 @@ jobs:
     if: ${{ !inputs.is_pull_request }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
-      has-packages: ${{ steps.detect.outputs.has-packages }}
-      packages-list: ${{ steps.detect.outputs.packages-list }}
+      has_packages: ${{ steps.detect.outputs.has_packages }}
+      packages_list: ${{ steps.detect.outputs.packages_list }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -92,7 +92,7 @@ jobs:
     if: ${{ inputs.is_pull_request }}
     outputs:
       packages: ${{ steps.detect-pr.outputs.packages }}
-      packages-list: ${{ steps.detect-pr.outputs.packages-list }}
+      packages_list: ${{ steps.detect-pr.outputs.packages_list }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -118,7 +118,7 @@ jobs:
       - name: Post PR Comment
         uses: DBMaestroDev/github/.github/actions/ps/pr-comment@v1
         with:
-          packages_list: ${{ needs.detect_changed_packages_pr.outputs.packages-list }}
+          packages_list: ${{ needs.detect_changed_packages_pr.outputs.packages_list }}
           environment_name: ${{ inputs.target_environment }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -129,7 +129,7 @@ jobs:
     needs: detect_changed_packages
     if: |
       !inputs.is_pull_request &&
-      needs.detect_changed_packages.outputs.has-packages == 'true'
+      needs.detect_changed_packages.outputs.has_packages == 'true'
     strategy:
       max-parallel: 1
       matrix:
@@ -148,7 +148,7 @@ jobs:
           project_name: ${{ inputs.project_name }}
           agent_jar_path: ${{ inputs.agent_jar_path }}
           use_ssl: ${{ inputs.use_ssl }}
-          auth_type: ${{ inputs.auth-type }}
-          dbmaestro_server: ${{ secrets.DBMAESTRO_SERVER }}
-          dbmaestro_user: ${{ secrets.DBMAESTRO_USER }}
-          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+          auth_type: ${{ inputs.auth_type }}
+          dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+          dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+          DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}

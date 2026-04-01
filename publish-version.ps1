@@ -12,14 +12,14 @@ function Write-ColorOutput($ForegroundColor) {
     $fc = $host.UI.RawUI.ForegroundColor
     $host.UI.RawUI.ForegroundColor = $ForegroundColor
     if ($args) {
-        Write-Output $args
+        Write-Host $args
     }
     $host.UI.RawUI.ForegroundColor = $fc
 }
 
 function Get-LatestVersionTag {
     # Get all tags that match semantic versioning pattern
-    $tags = git tag -l "v*.*.*" 2>$null | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' }
+    $tags = git tag -l "v*.*" 2>$null | Where-Object { $_ -match '^v\d+\.\d+$' }
     
     if (-not $tags) {
         return $null
@@ -27,15 +27,14 @@ function Get-LatestVersionTag {
     
     # Parse and sort tags by semantic version
     $sortedTags = $tags | ForEach-Object {
-        if ($_ -match '^v(\d+)\.(\d+)\.(\d+)$') {
+        if ($_ -match '^v(\d+)\.(\d+)$') {
             [PSCustomObject]@{
                 Tag = $_
                 Major = [int]$Matches[1]
                 Minor = [int]$Matches[2]
-                Patch = [int]$Matches[3]
             }
         }
-    } | Sort-Object Major, Minor, Patch -Descending
+    } | Sort-Object Major, Minor -Descending
     
     if ($sortedTags) {
         return $sortedTags[0].Tag
@@ -46,15 +45,15 @@ function Get-LatestVersionTag {
 function Get-IncrementedMinorVersion {
     param([string]$CurrentTag)
     
-    if ($CurrentTag -match '^v(\d+)\.(\d+)\.(\d+)$') {
+    if ($CurrentTag -match '^v(\d+)\.(\d+)$') {
         $major = [int]$Matches[1]
         $minor = [int]$Matches[2]
         $newMinor = $minor + 1
-        return "v$major.$newMinor.0"
+        return "v$major.$newMinor"
     }
     
     # Fallback if no valid tag found
-    return "v0.1.0"
+    return "v0.1"
 }
 
 function Get-ChangedYmlFiles {
@@ -105,11 +104,11 @@ function Update-YmlVersions {
             # Read the file content
             $content = Get-Content $file -Raw
             
-            # Check if file has version comment
-            if ($content -match '^# Version: v\d+\.\d+\.\d+') {
+            # Check if file has version comment (match both vX.Y and vX.Y.Z formats)
+            if ($content -match '^# Version: v\d+\.\d+(\.\d+)?') {
                 # Update the version
                 $oldContent = $content
-                $newContent = $content -replace '^# Version: v\d+\.\d+\.\d+', "# Version: $NewVersion"
+                $newContent = $content -replace '^# Version: v\d+\.\d+(\.\d+)?', "# Version: $NewVersion"
                 
                 if ($oldContent -ne $newContent) {
                     # Write the updated content back
@@ -130,12 +129,12 @@ function Show-Help {
     Write-Host ""
     Write-ColorOutput Yellow "DESCRIPTION:"
     Write-Host "  Creates and manages version tags in a git repository."
-    Write-Host "  This script creates a full version tag (e.g., v1.0.0) and a major"
+    Write-Host "  This script creates a full version tag (e.g., v1.0) and a major"
     Write-Host "  version tag (e.g., v1) pointing to the same commit."
     Write-Host "  If no version is specified, it auto-detects the latest tag and"
     Write-Host "  increments the minor version."
     Write-Host "  Automatically updates version numbers in changed yml/yaml files that"
-    Write-Host "  contain '# Version: vX.Y.Z' comments."
+    Write-Host "  contain '# Version: vX.Y' comments."
     Write-Host ""
     Write-ColorOutput Yellow "SYNTAX:"
     Write-Host "  ./publish-version.ps1 [[-VersionTag] <string>] [[-Force]] [[-Help]]"
@@ -144,7 +143,7 @@ function Show-Help {
     Write-Host "  -VersionTag <string> (optional)"
     Write-Host "    The version tag to create. If omitted, automatically detects"
     Write-Host "    the latest tag and increments the minor version."
-    Write-Host "    Format: vX.Y.Z (e.g., v1.0.0, v1.5.0, v2.0.1)"
+    Write-Host "    Format: vX.Y (e.g., v1.0, v1.5, v2.1)"
     Write-Host ""
     Write-Host "  -Force"
     Write-Host "    Skip confirmation prompt and execute immediately"
@@ -159,11 +158,11 @@ function Show-Help {
     Write-Host "  # Auto-detect and increment without confirmation:"
     Write-Host "  ./publish-version.ps1 -Force"
     Write-Host ""
-    Write-Host "  # Create specific version tag v1.0.0 with confirmation:"
-    Write-Host "  ./publish-version.ps1 -VersionTag v1.0.0"
+    Write-Host "  # Create specific version tag v1.5 with confirmation:"
+    Write-Host "  ./publish-version.ps1 -VersionTag v1.5"
     Write-Host ""
-    Write-Host "  # Create version tag v2.5.1 without confirmation:"
-    Write-Host "  ./publish-version.ps1 -VersionTag v2.5.1 -Force"
+    Write-Host "  # Create version tag v2.1 without confirmation:"
+    Write-Host "  ./publish-version.ps1 -VersionTag v2.1 -Force"
     Write-Host ""
     Write-Host "  # Display help:"
     Write-Host "  ./publish-version.ps1 -Help"
@@ -200,21 +199,21 @@ if ([string]::IsNullOrWhiteSpace($VersionTag)) {
         $VersionTag = Get-IncrementedMinorVersion $latestTag
         Write-ColorOutput Green "New version will be: $VersionTag"
     } else {
-        Write-ColorOutput Yellow "No existing version tags found. Starting with v0.1.0"
-        $VersionTag = "v0.1.0"
+        Write-ColorOutput Yellow "No existing version tags found. Starting with v0.1"
+        $VersionTag = "v0.1"
     }
 }
 
-# Validate version tag format (should be like v1.0.0, v2.3.1, etc.)
-if ($VersionTag -notmatch '^v\d+\.\d+\.\d+$') {
-    Write-ColorOutput Red "Error: Version tag must be in format 'vX.Y.Z' (e.g., v1.0.0, v2.5.1)"
+# Validate version tag format (should be like v1.0, v2.3, etc.)
+if ($VersionTag -notmatch '^v\d+\.\d+$') {
+    Write-ColorOutput Red "Error: Version tag must be in format 'vX.Y' (e.g., v1.0, v2.5)"
     Write-Host ""
     Write-Host "Run './publish-version.ps1 -Help' for more information."
     exit 1
 }
 
-# Extract the major version from the version tag (e.g., v1.0.0 -> v1, v2.5.1 -> v2)
-$MajorTag = $VersionTag -replace '\.\d+\.\d+$', ''
+# Extract the major version from the version tag (e.g., v1.0 -> v1, v2.5 -> v2)
+$MajorTag = $VersionTag -replace '\.\d+$', ''
 
 Write-ColorOutput Cyan "`nVersion tag: $VersionTag"
 Write-ColorOutput Cyan "Major tag:   $MajorTag"

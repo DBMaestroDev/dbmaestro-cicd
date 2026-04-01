@@ -22,15 +22,15 @@ outputs:
   matrix:
     description: 'JSON matrix for packages'
     value: ${{ steps.detect-packages.outputs.matrix }}
-  has-packages:
+  has_packages:
     description: 'Whether packages were detected'
-    value: ${{ steps.detect-packages.outputs.has-packages }}
+    value: ${{ steps.detect-packages.outputs.has_packages }}
   packages:
     description: 'JSON array of packages'
     value: ${{ steps.detect-packages.outputs.packages }}
-  packages-list:
+  packages_list:
     description: 'Comma-separated list of packages'
-    value: ${{ steps.detect-packages.outputs.packages-list }}
+    value: ${{ steps.detect-packages.outputs.packages_list }}
 runs:
   using: 'composite'
   steps:
@@ -85,17 +85,17 @@ runs:
 
         if ($packages.Count -eq 0) {
           Write-Host "No packages detected"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "has-packages=false"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "packages-list=None"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "has_packages=false"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "packages_list=None"
           $matrix = @([PSCustomObject]@{package = ""})
           $packagesJson = "[]"
         } else {
           Write-Host "Detected packages: $($packages -join ', ')"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "has-packages=true"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "has_packages=true"
 
           # Create packages list
           $packagesList = $packages -join ", "
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "packages-list=$packagesList"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "packages_list=$packagesList"
 
           # Create matrix for jobs
           $matrix = $packages | Sort-Object | ForEach-Object { [PSCustomObject]@{package = $_} }

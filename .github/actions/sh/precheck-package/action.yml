@@ -2,30 +2,30 @@
 name: 'Precheck DBmaestro Package'
 description: 'Validates a DBmaestro package using precheck operation'
 inputs:
-  package-name:
+  package_name:
     description: 'Name of the package to validate'
     required: true
-  project-name:
+  project_name:
     description: 'DBmaestro project name'
     required: true
-  agent-jar-path:
+  agent_jar_path:
     description: 'Path to DBmaestro agent JAR file'
     required: true
-  dbmaestro-server:
+  dbmaestro_server:
     description: 'DBmaestro server hostname'
     required: true
-  use-ssl:
+  use_ssl:
     description: 'Use SSL for connection'
     required: false
     default: 'True'
-  auth-type:
+  auth_type:
     description: 'Authentication type'
     required: false
     default: 'DBmaestroAccount'
-  username:
+  dbmaestro_user:
     description: 'DBmaestro username'
     required: true
-  password:
+  dbmaestro_password:
     description: 'DBmaestro password or token'
     required: true
 outputs:
@@ -39,13 +39,13 @@ runs:
       id: precheck
       shell: bash
       run: |
-        echo "Pre-checking package ${{ inputs.package-name }}"
-        java -jar "${{ inputs.agent-jar-path }}" -PreCheck \
-          -ProjectName "${{ inputs.project-name }}" \
-          -PackageName "${{ inputs.package-name }}" \
-          -Server "${{ inputs.dbmaestro-server }}" \
-          -UseSSL "${{ inputs.use-ssl }}" \
-          -AuthType "${{ inputs.auth-type }}" \
+        echo "Pre-checking package ${{ inputs.package_name }}"
+        java -jar "${{ inputs.agent_jar_path }}" -PreCheck \
+          -ProjectName "${{ inputs.project_name }}" \
+          -PackageName "${{ inputs.package_name }}" \
+          -Server "${{ inputs.dbmaestro_server }}" \
+          -UseSSL "${{ inputs.use_ssl }}" \
+          -AuthType "${{ inputs.auth_type }}" \
           -UserName "${{ inputs.username }}" \
           -Password "${{ inputs.password }}"
 

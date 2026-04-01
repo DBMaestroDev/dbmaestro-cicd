@@ -2,41 +2,41 @@
 name: 'Create DBmaestro Package'
 description: 'Creates a DBmaestro package from a folder with manifest, tar archive, and package creation'
 inputs:
-  package-name:
+  package_name:
     description: 'Name of the package to create'
     required: true
-  project-name:
+  project_name:
     description: 'DBmaestro project name'
     required: true
-  packages-folder:
+  packages_folder:
     description: 'Root folder containing packages'
     required: false
     default: 'packages'
-  agent-jar-path:
+  agent_jar_path:
     description: 'Path to DBmaestro agent JAR file'
     required: true
-  dbmaestro-server:
+  dbmaestro_server:
     description: 'DBmaestro server hostname'
     required: true
-  use-ssl:
+  use_ssl:
     description: 'Use SSL for connection'
     required: false
     default: 'True'
-  auth-type:
+  auth_type:
     description: 'Authentication type'
     required: false
     default: 'DBmaestroAccount'
-  username:
+  dbmaestro_user:
     description: 'DBmaestro username'
     required: true
-  password:
+  dbmaestro_password:
     description: 'DBmaestro password or token'
     required: true
-  package-type:
+  package_type:
     description: 'Package type (Regular or AdHoc)'
     required: false
     default: 'Regular'
-  ignore-script-warnings:
+  ignore_script_warnings:
     description: 'Ignore script warnings during package creation'
     required: false
     default: 'True'
@@ -52,8 +52,8 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
 
-        $packagesFolder = "${{ inputs.packages-folder }}"
-        $packageName = "${{ inputs.package-name }}"
+        $packagesFolder = "${{ inputs.packages_folder }}"
+        $packageName = "${{ inputs.package_name }}"
         $packagePath = Join-Path -Path $packagesFolder -ChildPath $packageName
 
         if (-not (Test-Path -Path $packagePath -PathType Container)) {
@@ -68,10 +68,10 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
 
-        $packageName = "${{ inputs.package-name }}"
-        $packagesFolder = "${{ inputs.packages-folder }}"
-        $agentJarPath = "${{ inputs.agent-jar-path }}"
-        $packageType = "${{ inputs.package-type }}"
+        $packageName = "${{ inputs.package_name }}"
+        $packagesFolder = "${{ inputs.packages_folder }}"
+        $agentJarPath = "${{ inputs.agent_jar_path }}"
+        $packageType = "${{ inputs.package_type }}"
         $scriptsFolder = Join-Path -Path $packagesFolder -ChildPath $packageName
 
         Write-Host "Creating manifest for package $packageName"
@@ -91,8 +91,8 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
 
-        $packageName = "${{ inputs.package-name }}"
-        $packagesFolder = "${{ inputs.packages-folder }}"
+        $packageName = "${{ inputs.package_name }}"
+        $packagesFolder = "${{ inputs.packages_folder }}"
         $zipFile = "$packageName.zip"
         $sourcePath = Join-Path -Path $packagesFolder -ChildPath $packageName
         $destinationPath = Join-Path -Path (Get-Location) -ChildPath $zipFile
@@ -121,20 +121,20 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
 
-        $packageName = "${{ inputs.package-name }}"
-        $projectName = "${{ inputs.project-name }}"
-        $agentJarPath = "${{ inputs.agent-jar-path }}"
+        $packageName = "${{ inputs.package_name }}"
+        $projectName = "${{ inputs.project_name }}"
+        $agentJarPath = "${{ inputs.agent_jar_path }}"
         $zipFile = "$packageName.zip"
 
         Write-Host "Creating package $packageName in DBmaestro"
 
         & java -jar "$agentJarPath" -Package `
           -ProjectName "$projectName" `
-          -IgnoreScriptWarnings "${{ inputs.ignore-script-warnings }}" `
+          -IgnoreScriptWarnings "${{ inputs.ignore_script_warnings }}" `
           -FilePath "$zipFile" `
-          -Server "${{ inputs.dbmaestro-server }}" `
-          -UseSSL "${{ inputs.use-ssl }}" `
-          -AuthType "${{ inputs.auth-type }}" `
+          -Server "${{ inputs.dbmaestro_server }}" `
+          -UseSSL "${{ inputs.use_ssl }}" `
+          -AuthType "${{ inputs.auth_type }}" `
           -UserName "${{ inputs.username }}" `
           -Password "${{ inputs.password }}"
 

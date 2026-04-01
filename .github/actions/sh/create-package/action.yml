@@ -2,41 +2,41 @@
 name: 'Create DBmaestro Package'
 description: 'Creates a DBmaestro package from a folder with manifest, tar archive, and package creation'
 inputs:
-  package-name:
+  package_name:
     description: 'Name of the package to create'
     required: true
-  project-name:
+  project_name:
     description: 'DBmaestro project name'
     required: true
-  packages-folder:
+  packages_folder:
     description: 'Root folder containing packages'
     required: false
     default: 'packages'
-  agent-jar-path:
+  agent_jar_path:
     description: 'Path to DBmaestro agent JAR file'
     required: true
-  dbmaestro-server:
+  dbmaestro_server:
     description: 'DBmaestro server hostname'
     required: true
-  use-ssl:
+  use_ssl:
     description: 'Use SSL for connection'
     required: false
     default: 'True'
-  auth-type:
+  auth_type:
     description: 'Authentication type'
     required: false
     default: 'DBmaestroAccount'
-  username:
+  dbmaestro_user:
     description: 'DBmaestro username'
     required: true
-  password:
+  dbmaestro_password:
     description: 'DBmaestro password or token'
     required: true
-  package-type:
+  package_type:
     description: 'Package type (Regular or AdHoc)'
     required: false
     default: 'Regular'
-  ignore-script-warnings:
+  ignore_script_warnings:
     description: 'Ignore script warnings during package creation'
     required: false
     default: 'True'
@@ -50,43 +50,43 @@ runs:
     - name: Validate package folder exists
       shell: bash
       run: |
-        if [ ! -d "${{ inputs.packages-folder }}/${{ inputs.package-name }}" ]; then
-          echo "ERROR: Folder ${{ inputs.package-name }} does not exist in ${{ inputs.packages-folder }}"
+        if [ ! -d "${{ inputs.packages_folder }}/${{ inputs.package_name }}" ]; then
+          echo "ERROR: Folder ${{ inputs.package_name }} does not exist in ${{ inputs.packages_folder }}"
           exit 1
         else
-          echo "Found package folder: ${{ inputs.package-name }}"
+          echo "Found package folder: ${{ inputs.package_name }}"
         fi
 
     - name: Create manifest file
       shell: bash
       run: |
-        echo "Creating manifest for package ${{ inputs.package-name }}"
-        java -jar "${{ inputs.agent-jar-path }}" -CreateManifestFile \
-          -PathToScriptsFolder "${{ inputs.packages-folder }}/${{ inputs.package-name }}" \
+        echo "Creating manifest for package ${{ inputs.package_name }}"
+        java -jar "${{ inputs.agent_jar_path }}" -CreateManifestFile \
+          -PathToScriptsFolder "${{ inputs.packages_folder }}/${{ inputs.package_name }}" \
           -Operation "CreateOrUpdate" \
-          -PackageType "${{ inputs.package-type }}"
+          -PackageType "${{ inputs.package_type }}"
 
     - name: Create tar archive
       shell: bash
       run: |
-        echo "Creating tar archive from ${{ inputs.package-name }}"
-        cd "${{ inputs.packages-folder }}"
-        tar -cf "../${{ inputs.package-name }}.tar" "${{ inputs.package-name }}"
+        echo "Creating tar archive from ${{ inputs.package_name }}"
+        cd "${{ inputs.packages_folder }}"
+        tar -cf "../${{ inputs.package_name }}.tar" "${{ inputs.package_name }}"
         cd ..
-        echo "Tar archive created: ${{ inputs.package-name }}.tar"
+        echo "Tar archive created: ${{ inputs.package_name }}.tar"
 
     - name: Create package in DBmaestro
       id: create
       shell: bash
       run: |
-        echo "Creating package ${{ inputs.package-name }} in DBmaestro"
-        java -jar "${{ inputs.agent-jar-path }}" -Package \
-          -ProjectName "${{ inputs.project-name }}" \
-          -IgnoreScriptWarnings ${{ inputs.ignore-script-warnings }} \
-          -FilePath "${{ inputs.package-name }}.tar" \
-          -Server "${{ inputs.dbmaestro-server }}" \
-          -UseSSL "${{ inputs.use-ssl }}" \
-          -AuthType "${{ inputs.auth-type }}" \
+        echo "Creating package ${{ inputs.package_name }} in DBmaestro"
+        java -jar "${{ inputs.agent_jar_path }}" -Package \
+          -ProjectName "${{ inputs.project_name }}" \
+          -IgnoreScriptWarnings ${{ inputs.ignore_script_warnings }} \
+          -FilePath "${{ inputs.package_name }}.tar" \
+          -Server "${{ inputs.dbmaestro_server }}" \
+          -UseSSL "${{ inputs.use_ssl }}" \
+          -AuthType "${{ inputs.auth_type }}" \
           -UserName "${{ inputs.username }}" \
           -Password "${{ inputs.password }}"
 

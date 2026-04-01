@@ -22,15 +22,15 @@ outputs:
   matrix:
     description: 'JSON matrix for packages'
     value: ${{ steps.detect-packages.outputs.matrix }}
-  has-packages:
+  has_packages:
     description: 'Whether packages were detected'
-    value: ${{ steps.detect-packages.outputs.has-packages }}
+    value: ${{ steps.detect-packages.outputs.has_packages }}
   packages:
     description: 'JSON array of packages'
     value: ${{ steps.detect-packages.outputs.packages }}
-  packages-list:
+  packages_list:
     description: 'Comma-separated list of packages'
-    value: ${{ steps.detect-packages.outputs.packages-list }}
+    value: ${{ steps.detect-packages.outputs.packages_list }}
 runs:
   using: 'composite'
   steps:
@@ -103,18 +103,18 @@ runs:
 
         if [[ ${#packages[@]} -eq 0 ]]; then
           echo "No packages detected"
-          echo "has-packages=false" >> "$GITHUB_OUTPUT"
-          echo "packages-list=None" >> "$GITHUB_OUTPUT"
+          echo "has_packages=false" >> "$GITHUB_OUTPUT"
+          echo "packages_list=None" >> "$GITHUB_OUTPUT"
           # Empty matrix with single empty entry
           matrix='[{"package":""}]'
           packages_json="[]"
         else
           echo "Detected packages: ${packages[*]}"
-          echo "has-packages=true" >> "$GITHUB_OUTPUT"
+          echo "has_packages=true" >> "$GITHUB_OUTPUT"
 
           # Create comma-separated packages list
           packages_list=$(IFS=', '; echo "${packages[*]}")
-          echo "packages-list=$packages_list" >> "$GITHUB_OUTPUT"
+          echo "packages_list=$packages_list" >> "$GITHUB_OUTPUT"
 
           # Create JSON matrix for jobs
           matrix="["

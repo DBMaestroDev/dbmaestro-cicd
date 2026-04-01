@@ -21,10 +21,10 @@ inputs:
   dbmaestro_server:
     description: 'DBmaestro server URL'
     required: true
-  dbmaestro_user:
+  DBMAESTRO_USER:
     description: 'DBmaestro username'
     required: true
-  dbmaestro_password:
+  DBMAESTRO_PASSWORD:
     description: 'DBmaestro password'
     required: true
   auth_type:
@@ -86,8 +86,8 @@ runs:
           -Server "${{ inputs.dbmaestro_server }}" \
           -UseSSL "${{ inputs.use_ssl }}" \
           -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.dbmaestro_user }}" \
-          -Password "${{ inputs.dbmaestro_password }}"
+          -UserName "${{ inputs.DBMAESTRO_USER }}" \
+          -Password "${{ inputs.DBMAESTRO_PASSWORD }}"
 
         exit_code=$?
         if [[ $exit_code -ne 0 ]]; then

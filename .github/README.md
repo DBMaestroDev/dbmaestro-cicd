@@ -32,19 +32,19 @@ A reusable workflow for building and validating DBmaestro packages on Linux runn
 - Supports both hosted and self-hosted runners
 
 **Key Inputs:**
-- `project-name`: DBmaestro project name (required)
-- `packages-matrix`: JSON array of packages to build (required)
-- `packages-folder`: Root folder containing packages (default: `packages`)
-- `agent-jar-path`: Path to DBmaestro agent JAR file (default: `/home/runner/DBmaestroAgent.jar`)
-- `use-ssl`: Use SSL for DBmaestro connection (default: `True`)
-- `auth-type`: Authentication type (default: `DBmaestroAccount`)
-- `package-type`: Package type - Regular or AdHoc (default: `Regular`)
+- `project_name`: DBmaestro project name (required)
+- `packages_matrix`: JSON array of packages to build (required)
+- `packages_folder`: Root folder containing packages (default: `packages`)
+- `agent_jar_path`: Path to DBmaestro agent JAR file (default: `/home/runner/DBmaestroAgent.jar`)
+- `use_ssl`: Use SSL for DBmaestro connection (default: `True`)
+- `auth_type`: Authentication type (default: `DBmaestroAccount`)
+- `package_type`: Package type - Regular or AdHoc (default: `Regular`)
 - `runner`: Runner type (default: `ubuntu-latest`)
 
 **Required Secrets:**
-- `dbmaestro-server`: DBmaestro server hostname (Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`)
-- `dbmaestro-user`: DBmaestro username
-- `dbmaestro-password`: DBmaestro password or token
+- `dbmaestro_server`: DBmaestro server hostname (Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`)
+- `dbmaestro_user`: DBmaestro username
+- `DBMAESTRO_PASSWORD`: DBmaestro password or token
 
 **Jobs:**
 - `create_package`: Creates DBmaestro packages from folders
@@ -70,7 +70,7 @@ A reusable workflow for upgrading DBmaestro environments on Linux runners.
 - `project_name`: DBmaestro project name (default: `Demo-PSQL`)
 - `agent_jar_path`: Path to DBmaestro Agent JAR (default: `/opt/dbmaestro/agent/DBmaestroAgent.jar`)
 - `use_ssl`: Use SSL for connection (default: `True`)
-- `auth-type`: Authentication type (default: `DBmaestroAccount`)
+- `auth_type`: Authentication type (default: `DBmaestroAccount`)
 - `detect_from_push`: Detect packages from git push (default: `false`)
 - `is_pull_request`: Whether this is a PR event (default: `false`)
 - `runner`: Runner type (default: `ubuntu-latest`)
@@ -111,7 +111,7 @@ A reusable workflow for upgrading DBmaestro environments using PowerShell on Win
 - `project_name`: DBmaestro project name (default: `Demo-PSQL`)
 - `agent_jar_path`: Path to DBmaestro Agent JAR (default: `C:\Program Files (x86)\DBmaestro\DOP Server\Agent\DBmaestroAgent.jar`)
 - `use_ssl`: Use SSL for connection (default: `True`)
-- `auth-type`: Authentication type (default: `DBmaestroAccount`)
+- `auth_type`: Authentication type (default: `DBmaestroAccount`)
 - `detect_from_push`: Detect packages from git push (default: `false`)
 - `is_pull_request`: Whether this is a PR event (default: `false`)
 
@@ -143,17 +143,17 @@ All Linux actions use bash scripts and are located in the `DBMaestroDev/github` 
 Creates a DBmaestro package from a folder with manifest, tar archive, and package creation.
 
 **Inputs:**
-- `package-name`: Name of the package to create (required)
-- `project-name`: DBmaestro project name (required)
-- `packages-folder`: Root folder containing packages (default: `packages`)
-- `agent-jar-path`: Path to DBmaestro agent JAR file (required)
-- `dbmaestro-server`: DBmaestro server hostname (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `use-ssl`: Use SSL for connection (default: `True`)
-- `auth-type`: Authentication type (default: `DBmaestroAccount`)
+- `package_name`: Name of the package to create (required)
+- `project_name`: DBmaestro project name (required)
+- `packages_folder`: Root folder containing packages (default: `packages`)
+- `agent_jar_path`: Path to DBmaestro agent JAR file (required)
+- `dbmaestro_server`: DBmaestro server hostname (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
+- `use_ssl`: Use SSL for connection (default: `True`)
+- `auth_type`: Authentication type (default: `DBmaestroAccount`)
 - `username`: DBmaestro username (required)
 - `password`: DBmaestro password or token (required)
-- `package-type`: Package type - Regular or AdHoc (default: `Regular`)
-- `ignore-script-warnings`: Ignore script warnings (default: `True`)
+- `package_type`: Package type - Regular or AdHoc (default: `Regular`)
+- `ignore_script_warnings`: Ignore script warnings (default: `True`)
 
 **Outputs:**
 - `package-created`: Whether package was created successfully
@@ -171,12 +171,12 @@ Creates a DBmaestro package from a folder with manifest, tar archive, and packag
 Validates a DBmaestro package using precheck operation.
 
 **Inputs:**
-- `package-name`: Name of the package to validate (required)
-- `project-name`: DBmaestro project name (required)
-- `agent-jar-path`: Path to DBmaestro agent JAR file (required)
-- `dbmaestro-server`: DBmaestro server hostname (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `use-ssl`: Use SSL for connection (default: `True`)
-- `auth-type`: Authentication type (default: `DBmaestroAccount`)
+- `package_name`: Name of the package to validate (required)
+- `project_name`: DBmaestro project name (required)
+- `agent_jar_path`: Path to DBmaestro agent JAR file (required)
+- `dbmaestro_server`: DBmaestro server hostname (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
+- `use_ssl`: Use SSL for connection (default: `True`)
+- `auth_type`: Authentication type (default: `DBmaestroAccount`)
 - `username`: DBmaestro username (required)
 - `password`: DBmaestro password or token (required)
 
@@ -201,9 +201,9 @@ Detects changed packages from git commits or manual input using bash scripts.
 
 **Outputs:**
 - `matrix`: JSON matrix for packages
-- `has-packages`: Whether packages were detected
+- `has_packages`: Whether packages were detected
 - `packages`: JSON array of packages
-- `packages-list`: Comma-separated list of packages
+- `packages_list`: Comma-separated list of packages
 
 **Detection Sources:**
 1. Manual comma-separated input
@@ -223,9 +223,9 @@ Upgrades a target environment with a specific package using DBmaestro on Linux.
 - `project_name`: DBmaestro project name (required)
 - `agent_jar_path`: Path to DBmaestro Agent JAR (required)
 - `use_ssl`: Use SSL (default: `True`)
-- `dbmaestro_server`: DBmaestro server URL (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `dbmaestro_user`: DBmaestro username (required)
-- `dbmaestro_password`: DBmaestro password (required)
+- `DBMAESTRO_SERVER`: DBmaestro server URL (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
+- `DBMAESTRO_USER`: DBmaestro username (required)
+- `DBMAESTRO_PASSWORD`: DBmaestro password (required)
 - `auth_type`: Authentication type (default: `DBmaestroAccount`)
 
 **Steps:**
@@ -308,9 +308,9 @@ Detects changed packages from git commits or manual input using PowerShell.
 
 **Outputs:**
 - `matrix`: JSON matrix for packages
-- `has-packages`: Whether packages were detected
+- `has_packages`: Whether packages were detected
 - `packages`: JSON array of packages
-- `packages-list`: Comma-separated list of packages
+- `packages_list`: Comma-separated list of packages
 
 **Detection Sources:**
 1. Manual comma-separated input
@@ -330,9 +330,9 @@ Upgrades a target environment with a specific package using DBmaestro on Windows
 - `project_name`: DBmaestro project name (required)
 - `agent_jar_path`: Path to DBmaestro Agent JAR (required)
 - `use_ssl`: Use SSL (default: `True`)
-- `dbmaestro_server`: DBmaestro server URL (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `dbmaestro_user`: DBmaestro username (required)
-- `dbmaestro_password`: DBmaestro password (required)
+- `DBMAESTRO_SERVER`: DBmaestro server URL (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
+- `DBMAESTRO_USER`: DBmaestro username (required)
+- `DBMAESTRO_PASSWORD`: DBmaestro password (required)
 - `auth_type`: Authentication type (default: `DBmaestroAccount`)
 
 **Steps:**
@@ -406,13 +406,13 @@ jobs:
   build:
     uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
     with:
-      project-name: 'MyProject'
-      packages-matrix: ${{ github.event.inputs.packages }}
+      project_name: 'MyProject'
+      packages_matrix: ${{ github.event.inputs.packages }}
       runner: 'ubuntu-latest'
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
     secrets:
-      dbmaestro-server: ${{ secrets.DBMAESTRO_SERVER }}
-      dbmaestro-user: ${{ secrets.DBMAESTRO_USER }}
-      dbmaestro-password: ${{ secrets.DBMAESTRO_PASSWORD }}
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
 ```
 
 ### Example: Calling the Linux Upgrade Workflow with Manual Packages
@@ -437,9 +437,9 @@ jobs:
       package_name: ${{ github.event.inputs.packages }}
       target_environment: ${{ github.event.inputs.environment }}
       project_name: 'Demo-PSQL'
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
     secrets:
-      DBMAESTRO_SERVER: ${{ secrets.DBMAESTRO_SERVER }}
-      DBMAESTRO_USER: ${{ secrets.DBMAESTRO_USER }}
       DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
 ```
 
@@ -462,9 +462,9 @@ jobs:
       target_environment: 'Development'
       project_name: 'Demo-PSQL'
       detect_from_push: true
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
     secrets:
-      DBMAESTRO_SERVER: ${{ secrets.DBMAESTRO_SERVER }}
-      DBMAESTRO_USER: ${{ secrets.DBMAESTRO_USER }}
       DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
 ```
 
@@ -487,9 +487,9 @@ jobs:
       target_environment: 'QA'
       project_name: 'Demo-PSQL'
       is_pull_request: true
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
     secrets:
-      DBMAESTRO_SERVER: ${{ secrets.DBMAESTRO_SERVER }}
-      DBMAESTRO_USER: ${{ secrets.DBMAESTRO_USER }}
       DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
 ```
 
@@ -510,9 +510,9 @@ jobs:
     target_environment: 'Production'
     project_name: 'MyProject'
     agent_jar_path: '/opt/dbmaestro/agent/DBmaestroAgent.jar'
-    dbmaestro_server: ${{ secrets.DBMAESTRO_SERVER }}
-    dbmaestro_user: ${{ secrets.DBMAESTRO_USER }}
-    dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+    dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+    dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
 ```
 
 ---
@@ -530,14 +530,15 @@ jobs:
 
 ---
 
-## Required Secrets
+## Required Secrets and Variables
 
-All workflows require the following secrets to be configured:
-
-- `DBMAESTRO_SERVER` or `dbmaestro-server`: DBmaestro server hostname/URL
+All workflows require the following secret and variables to be configured:
+Vars:
+- `DBMAESTRO_SERVER`: DBmaestro server hostname/URL
   - Format: `AGENT_DNS:PORT` (Example: `agent01.dbmaestro.local:8017`)
-- `DBMAESTRO_USER` or `dbmaestro-user`: DBmaestro username
-- `DBMAESTRO_PASSWORD` or `dbmaestro-password`: DBmaestro password or API token
+- `DBMAESTRO_USER`: DBmaestro username
+Secret:
+- `DBMAESTRO_PASSWORD`: DBmaestro password or API token
 
 For PR comments, `GITHUB_TOKEN` is automatically provided by GitHub Actions.
 

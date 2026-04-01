@@ -8,35 +8,35 @@ name: Build and Validate Packages (Reusable)
 on:
   workflow_call:
     inputs:
-      project-name:
+      project_name:
         description: 'DBmaestro project name'
         required: true
         type: string
-      packages-matrix:
+      packages_matrix:
         description: 'JSON array of packages to build (e.g., [{"package":"V15"},{"package":"V16"}])'
         required: true
         type: string
-      packages-folder:
+      packages_folder:
         description: 'Root folder containing packages'
         required: false
         type: string
         default: 'packages'
-      agent-jar-path:
+      agent_jar_path:
         description: 'Path to DBmaestro agent JAR file'
         required: false
         type: string
         default: '/home/runner/DBmaestroAgent.jar'
-      use-ssl:
+      use_ssl:
         description: 'Use SSL for DBmaestro connection'
         required: false
         type: string
         default: 'True'
-      auth-type:
+      auth_type:
         description: 'Authentication type'
         required: false
         type: string
         default: 'DBmaestroAccount'
-      package-type:
+      package_type:
         description: 'Package type (Regular or AdHoc)'
         required: false
         type: string
@@ -46,14 +46,14 @@ on:
         required: false
         type: string
         default: 'ubuntu-latest'
-    secrets:
-      dbmaestro-server:
+      dbmaestro_server:
         description: 'DBmaestro server hostname'
         required: true
-      dbmaestro-user:
+      dbmaestro_user:
         description: 'DBmaestro username'
         required: true
-      dbmaestro-password:
+    secrets:
+      DBMAESTRO_PASSWORD:
         description: 'DBmaestro password or token'
         required: true
 
@@ -64,7 +64,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        item: ${{ fromJson(inputs.packages-matrix) }}
+        item: ${{ fromJson(inputs.packages_matrix) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -72,16 +72,16 @@ jobs:
       - name: Create Package using Action
         uses: DBMaestroDev/github/.github/actions/sh/create-package@v1
         with:
-          package-name: ${{ matrix.item.package }}
-          project-name: ${{ inputs.project-name }}
-          packages-folder: ${{ inputs.packages-folder }}
-          agent-jar-path: ${{ inputs.agent-jar-path }}
-          dbmaestro-server: ${{ secrets.dbmaestro-server }}
-          use-ssl: ${{ inputs.use-ssl }}
-          auth-type: ${{ inputs.auth-type }}
-          username: ${{ secrets.dbmaestro-user }}
-          password: ${{ secrets.dbmaestro-password }}
-          package-type: ${{ inputs.package-type }}
+          agent_jar_path: ${{ inputs.agent_jar_path }}
+          auth_type: ${{ inputs.auth_type }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+          dbmaestro_server: ${{ inputs.dbmaestro_server }}
+          dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          package_name: ${{ matrix.item.package }}
+          package_type: ${{ inputs.package_type }}
+          packages_folder: ${{ inputs.packages_folder }}
+          project_name: ${{ inputs.project_name }}
+          use_ssl: ${{ inputs.use_ssl }}
 
   validate_package:
     name: Validate Package
@@ -90,7 +90,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        item: ${{ fromJson(inputs.packages-matrix) }}
+        item: ${{ fromJson(inputs.packages_matrix) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -98,11 +98,11 @@ jobs:
       - name: Precheck Package using Action
         uses: DBMaestroDev/github/.github/actions/sh/precheck-package@v1
         with:
-          package-name: ${{ matrix.item.package }}
-          project-name: ${{ inputs.project-name }}
-          agent-jar-path: ${{ inputs.agent-jar-path }}
-          dbmaestro-server: ${{ secrets.dbmaestro-server }}
-          use-ssl: ${{ inputs.use-ssl }}
-          auth-type: ${{ inputs.auth-type }}
-          username: ${{ secrets.dbmaestro-user }}
-          password: ${{ secrets.dbmaestro-password }}
+          agent_jar_path: ${{ inputs.agent_jar_path }}
+          auth_type: ${{ inputs.auth_type }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+          dbmaestro_server: ${{ inputs.dbmaestro_server }}
+          dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          package_name: ${{ matrix.item.package }}
+          project_name: ${{ inputs.project_name }}
+          use_ssl: ${{ inputs.use_ssl }}
