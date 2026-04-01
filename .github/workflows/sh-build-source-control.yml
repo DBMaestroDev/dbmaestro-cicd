@@ -1,4 +1,4 @@
-# Version: v1.8
+# Version: v1.9
 # Reusable Workflow: Build Package from Source Control
 # This workflow builds a DBmaestro package from source control (Tasks or Specific Commit)
 # and validates it with precheck
