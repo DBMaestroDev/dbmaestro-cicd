@@ -2,32 +2,32 @@
 name: 'Precheck DBmaestro Package'
 description: 'Validates a DBmaestro package using precheck operation'
 inputs:
+  agent_jar_path:
+    description: 'Path to DBmaestro agent JAR file'
+    required: true
+  auth_type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  dbmaestro_password:
+    description: 'DBmaestro password or token'
+    required: true
+  dbmaestro_server:
+    description: 'DBmaestro server hostname'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
   package_name:
     description: 'Name of the package to validate'
     required: true
   project_name:
     description: 'DBmaestro project name'
     required: true
-  agent_jar_path:
-    description: 'Path to DBmaestro agent JAR file'
-    required: true
-  dbmaestro_server:
-    description: 'DBmaestro server hostname'
-    required: true
   use_ssl:
     description: 'Use SSL for connection'
     required: false
     default: 'True'
-  auth_type:
-    description: 'Authentication type'
-    required: false
-    default: 'DBmaestroAccount'
-  dbmaestro_user:
-    description: 'DBmaestro username'
-    required: true
-  dbmaestro_password:
-    description: 'DBmaestro password or token'
-    required: true
 outputs:
   validation-passed:
     description: 'Whether validation passed'
@@ -46,8 +46,8 @@ runs:
           -Server "${{ inputs.dbmaestro_server }}" \
           -UseSSL "${{ inputs.use_ssl }}" \
           -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.username }}" \
-          -Password "${{ inputs.password }}"
+          -UserName "${{ inputs.dbmaestro_user }}" \
+          -Password "${{ inputs.dbmaestro_password }}"
 
         if [ $? -eq 0 ]; then
           echo "Precheck validation passed"

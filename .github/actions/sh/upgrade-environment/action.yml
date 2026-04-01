@@ -2,35 +2,35 @@
 name: 'Upgrade Environment'
 description: 'Upgrades a target environment with a specific package using DBmaestro (Linux/bash)'
 inputs:
-  package_name:
-    description: 'Package name to upgrade'
-    required: true
-  target_environment:
-    description: 'Target environment for upgrade'
-    required: true
-  project_name:
-    description: 'DBmaestro project name'
-    required: true
   agent_jar_path:
     description: 'Path to DBmaestro Agent JAR file'
-    required: true
-  use_ssl:
-    description: 'Use SSL for DBmaestro connection'
-    required: false
-    default: 'True'
-  dbmaestro_server:
-    description: 'DBmaestro server URL'
-    required: true
-  DBMAESTRO_USER:
-    description: 'DBmaestro username'
-    required: true
-  DBMAESTRO_PASSWORD:
-    description: 'DBmaestro password'
     required: true
   auth_type:
     description: 'DBmaestro authentication type'
     required: false
     default: 'DBmaestroAccount'
+  dbmaestro_password:
+    description: 'DBmaestro password'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
+  dbmaestro_server:
+    description: 'DBmaestro server URL'
+    required: true
+  package_name:
+    description: 'Package name to upgrade'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  target_environment:
+    description: 'Target environment for upgrade'
+    required: true
+  use_ssl:
+    description: 'Use SSL for DBmaestro connection'
+    required: false
+    default: 'True'
 runs:
   using: 'composite'
   steps:
@@ -86,8 +86,8 @@ runs:
           -Server "${{ inputs.dbmaestro_server }}" \
           -UseSSL "${{ inputs.use_ssl }}" \
           -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.DBMAESTRO_USER }}" \
-          -Password "${{ inputs.DBMAESTRO_PASSWORD }}"
+          -UserName "${{ inputs.dbmaestro_user }}" \
+          -Password "${{ inputs.dbmaestro_password }}"
 
         exit_code=$?
         if [[ $exit_code -ne 0 ]]; then

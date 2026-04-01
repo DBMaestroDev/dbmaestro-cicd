@@ -4,19 +4,6 @@ description: 'Build a DBmaestro package from source control (Tasks or Specific C
 author: 'DBmaestro'
 
 inputs:
-  package_name:
-    description: 'Name of the package to build'
-    required: true
-  project_name:
-    description: 'DBmaestro project name'
-    required: true
-  environment-name:
-    description: 'Development environment name'
-    required: true
-  version_type:
-    description: 'Version type: Tasks or Specific Commit'
-    required: false
-    default: ''
   additional_information:
     description: 'Tasks list (comma-separated) or specific commit hash'
     required: false
@@ -24,23 +11,36 @@ inputs:
   agent_jar_path:
     description: 'Path to DBmaestro Agent JAR file'
     required: true
+  auth_type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  dbmaestro_password:
+    description: 'DBmaestro password'
+    required: true
   dbmaestro_server:
     description: 'DBmaestro server URL'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
+  environment-name:
+    description: 'Development environment name'
+    required: true
+  package_name:
+    description: 'Name of the package to build'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
     required: true
   use_ssl:
     description: 'Use SSL for connection'
     required: false
     default: 'True'
-  auth_type:
-    description: 'Authentication type'
+  version_type:
+    description: 'Version type: Tasks or Specific Commit'
     required: false
-    default: 'DBmaestroAccount'
-  dbmaestro_user:
-    description: 'DBmaestro username'
-    required: true
-  dbmaestro_password:
-    description: 'DBmaestro password'
-    required: true
+    default: ''
 
 outputs:
   package-created:

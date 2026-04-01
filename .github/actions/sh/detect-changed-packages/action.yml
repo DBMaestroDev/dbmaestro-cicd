@@ -2,8 +2,8 @@
 name: 'Detect Changed Packages'
 description: 'Detects changed packages from git commits or manual input (Linux/bash)'
 inputs:
-  package_name:
-    description: 'Package name list to upgrade (comma-separated for multiple packages)'
+  base_ref:
+    description: 'Base reference for PR comparison'
     required: false
     default: ''
   detect_from_push:
@@ -14,8 +14,8 @@ inputs:
     description: 'Is this a pull request event (true/false)'
     required: false
     default: 'false'
-  base_ref:
-    description: 'Base reference for PR comparison'
+  package_name:
+    description: 'Package name list to upgrade (comma-separated for multiple packages)'
     required: false
     default: ''
 outputs:

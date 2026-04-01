@@ -2,14 +2,14 @@
 name: 'PR Comment'
 description: 'Posts a comment on a pull request with detected package information'
 inputs:
-  packages_list:
-    description: 'Comma-separated list of detected packages'
-    required: true
   environment_name:
     description: 'Target environment name'
     required: true
   github_token:
     description: 'GitHub token for API access'
+    required: true
+  packages_list:
+    description: 'Comma-separated list of detected packages'
     required: true
 runs:
   using: 'composite'
