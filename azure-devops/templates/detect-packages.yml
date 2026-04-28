@@ -28,43 +28,43 @@ parameters:
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
-    - task: Bash@3
-      displayName: "DBmaestro: Detect Changed Packages"
-      name: detectPackages
-      env:
-        DETECT_IS_PULL_REQUEST: ${{ lower(string(parameters.isPullRequest)) }}
-        DETECT_BASE_REF: ${{ parameters.baseRef }}
-        DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
-        DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
-      inputs:
-        targetType: inline
-        script: |
-          export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
-          bash "$(Build.SourcesDirectory)/core/scripts/sh/detect-packages.sh"
-          # Promote outputs as pipeline variables
-          while IFS='=' read -r key value; do
-            echo "##vso[task.setvariable variable=${key};isOutput=true]${value}"
-          done < "$DBM_OUTPUT_FILE"
+      - task: Bash@3
+        displayName: "DBmaestro: Detect Changed Packages"
+        name: detectPackages
+        env:
+          DETECT_IS_PULL_REQUEST: ${{ lower(string(parameters.isPullRequest)) }}
+          DETECT_BASE_REF: ${{ parameters.baseRef }}
+          DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
+          DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
+        inputs:
+          targetType: inline
+          script: |
+            export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
+            bash "$(Build.SourcesDirectory)/core/scripts/sh/detect-packages.sh"
+            # Promote outputs as pipeline variables
+            while IFS='=' read -r key value; do
+              echo "##vso[task.setvariable variable=${key};isOutput=true]${value}"
+            done < "$DBM_OUTPUT_FILE"
 
   - ${{ if parameters.useWindows }}:
-    - task: PowerShell@2
-      displayName: "DBmaestro: Detect Changed Packages (Windows)"
-      name: detectPackages
-      env:
-        DETECT_IS_PULL_REQUEST: ${{ lower(string(parameters.isPullRequest)) }}
-        DETECT_BASE_REF: ${{ parameters.baseRef }}
-        DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
-        DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
-      inputs:
-        targetType: inline
-        pwsh: true
-        script: |
-          $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
-          & "$(Build.SourcesDirectory)/core/scripts/ps/detect-packages.ps1"
-          # Promote outputs as pipeline variables
-          foreach ($line in (Get-Content "$env:DBM_OUTPUT_FILE")) {
-            $parts = $line -split '=', 2
-            if ($parts.Count -eq 2) {
-              Write-Host "##vso[task.setvariable variable=$($parts[0]);isOutput=true]$($parts[1])"
+      - task: PowerShell@2
+        displayName: "DBmaestro: Detect Changed Packages (Windows)"
+        name: detectPackages
+        env:
+          DETECT_IS_PULL_REQUEST: ${{ lower(string(parameters.isPullRequest)) }}
+          DETECT_BASE_REF: ${{ parameters.baseRef }}
+          DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
+          DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
+        inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+            $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
+            & "$(Build.SourcesDirectory)/core/scripts/ps/detect-packages.ps1"
+            # Promote outputs as pipeline variables
+            foreach ($line in (Get-Content "$env:DBM_OUTPUT_FILE")) {
+              $parts = $line -split '=', 2
+              if ($parts.Count -eq 2) {
+                Write-Host "##vso[task.setvariable variable=$($parts[0]);isOutput=true]$($parts[1])"
+              }
             }
-          }

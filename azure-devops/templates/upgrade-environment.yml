@@ -42,36 +42,36 @@ parameters:
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
-    - task: Bash@3
-      displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}'"
-      env:
-        DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
-        DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
-        DBMAESTRO_TARGET_ENV: ${{ parameters.targetEnvironment }}
-        DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
-        DBMAESTRO_SERVER: ${{ parameters.server }}
-        DBMAESTRO_USER: ${{ parameters.user }}
-        DBMAESTRO_PASSWORD: ${{ parameters.password }}
-        DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
-        DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
-      inputs:
-        targetType: filePath
-        filePath: $(Build.SourcesDirectory)/core/scripts/sh/upgrade-environment.sh
+      - task: Bash@3
+        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}'"
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+          DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+          DBMAESTRO_TARGET_ENV: ${{ parameters.targetEnvironment }}
+          DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+          DBMAESTRO_SERVER: ${{ parameters.server }}
+          DBMAESTRO_USER: ${{ parameters.user }}
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+          DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)/core/scripts/sh/upgrade-environment.sh
 
   - ${{ if parameters.useWindows }}:
-    - task: PowerShell@2
-      displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}' (Windows)"
-      env:
-        DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
-        DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
-        DBMAESTRO_TARGET_ENV: ${{ parameters.targetEnvironment }}
-        DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
-        DBMAESTRO_SERVER: ${{ parameters.server }}
-        DBMAESTRO_USER: ${{ parameters.user }}
-        DBMAESTRO_PASSWORD: ${{ parameters.password }}
-        DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
-        DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
-      inputs:
-        targetType: filePath
-        filePath: $(Build.SourcesDirectory)/core/scripts/ps/upgrade-environment.ps1
-        pwsh: true
+      - task: PowerShell@2
+        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}' (Windows)"
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+          DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+          DBMAESTRO_TARGET_ENV: ${{ parameters.targetEnvironment }}
+          DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+          DBMAESTRO_SERVER: ${{ parameters.server }}
+          DBMAESTRO_USER: ${{ parameters.user }}
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+          DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)/core/scripts/ps/upgrade-environment.ps1
+          pwsh: true

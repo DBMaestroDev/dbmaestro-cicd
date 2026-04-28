@@ -45,4 +45,3 @@ runs:
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
         bash "$GITHUB_WORKSPACE/core/scripts/sh/detect-packages.sh"
-

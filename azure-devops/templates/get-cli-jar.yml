@@ -29,22 +29,22 @@ parameters:
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
-    - task: Bash@3
-      displayName: "DBmaestro: Download Agent JAR"
-      env:
-        DBMAESTRO_VERSION: ${{ parameters.version }}
-        DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
-      inputs:
-        targetType: filePath
-        filePath: $(Build.SourcesDirectory)/core/scripts/sh/get-cli-jar.sh
+      - task: Bash@3
+        displayName: "DBmaestro: Download Agent JAR"
+        env:
+          DBMAESTRO_VERSION: ${{ parameters.version }}
+          DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)/core/scripts/sh/get-cli-jar.sh
 
   - ${{ if parameters.useWindows }}:
-    - task: PowerShell@2
-      displayName: "DBmaestro: Download Agent JAR (Windows)"
-      env:
-        DBMAESTRO_VERSION: ${{ parameters.version }}
-        DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
-      inputs:
-        targetType: filePath
-        filePath: $(Build.SourcesDirectory)/core/scripts/ps/get-cli-jar.ps1
-        pwsh: true
+      - task: PowerShell@2
+        displayName: "DBmaestro: Download Agent JAR (Windows)"
+        env:
+          DBMAESTRO_VERSION: ${{ parameters.version }}
+          DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)/core/scripts/ps/get-cli-jar.ps1
+          pwsh: true

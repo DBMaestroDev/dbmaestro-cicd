@@ -84,58 +84,58 @@ stages:
     dependsOn: DBmaestro_Setup
     jobs:
       - ${{ each pkg in parameters.packages }}:
-        - job: Build_${{ replace(pkg, '-', '_') }}
-          displayName: "Create & Validate: ${{ pkg }}"
-          pool:
-            name: ${{ parameters.pool }}
-          steps:
-            - checkout: self
-            - checkout: dbmaestro-cicd
-            - template: create-package.yml
-              parameters:
-                packageName: ${{ pkg }}
-                projectName: ${{ parameters.projectName }}
-                agentJarPath: ${{ parameters.agentJarPath }}
-                server: ${{ parameters.server }}
-                user: $(DBMAESTRO_USER)
-                password: $(DBMAESTRO_PASSWORD)
-                packagesFolder: ${{ parameters.packagesFolder }}
-                useSsl: ${{ parameters.useSsl }}
-                authType: ${{ parameters.authType }}
-                useWindows: ${{ parameters.useWindows }}
-            - template: precheck-package.yml
-              parameters:
-                packageName: ${{ pkg }}
-                projectName: ${{ parameters.projectName }}
-                agentJarPath: ${{ parameters.agentJarPath }}
-                server: ${{ parameters.server }}
-                user: $(DBMAESTRO_USER)
-                password: $(DBMAESTRO_PASSWORD)
-                useSsl: ${{ parameters.useSsl }}
-                authType: ${{ parameters.authType }}
-                useWindows: ${{ parameters.useWindows }}
+          - job: Build_${{ replace(pkg, '-', '_') }}
+            displayName: "Create & Validate: ${{ pkg }}"
+            pool:
+              name: ${{ parameters.pool }}
+            steps:
+              - checkout: self
+              - checkout: dbmaestro-cicd
+              - template: create-package.yml
+                parameters:
+                  packageName: ${{ pkg }}
+                  projectName: ${{ parameters.projectName }}
+                  agentJarPath: ${{ parameters.agentJarPath }}
+                  server: ${{ parameters.server }}
+                  user: $(DBMAESTRO_USER)
+                  password: $(DBMAESTRO_PASSWORD)
+                  packagesFolder: ${{ parameters.packagesFolder }}
+                  useSsl: ${{ parameters.useSsl }}
+                  authType: ${{ parameters.authType }}
+                  useWindows: ${{ parameters.useWindows }}
+              - template: precheck-package.yml
+                parameters:
+                  packageName: ${{ pkg }}
+                  projectName: ${{ parameters.projectName }}
+                  agentJarPath: ${{ parameters.agentJarPath }}
+                  server: ${{ parameters.server }}
+                  user: $(DBMAESTRO_USER)
+                  password: $(DBMAESTRO_PASSWORD)
+                  useSsl: ${{ parameters.useSsl }}
+                  authType: ${{ parameters.authType }}
+                  useWindows: ${{ parameters.useWindows }}
 
   - stage: DBmaestro_Deploy
     displayName: "DBmaestro Deploy"
     dependsOn: DBmaestro_Build
     jobs:
       - ${{ each pkg in parameters.packages }}:
-        - job: Deploy_${{ replace(pkg, '-', '_') }}
-          displayName: "Upgrade '${{ parameters.targetEnvironment }}': ${{ pkg }}"
-          pool:
-            name: ${{ parameters.pool }}
-          steps:
-            - checkout: self
-            - checkout: dbmaestro-cicd
-            - template: upgrade-environment.yml
-              parameters:
-                packageName: ${{ pkg }}
-                projectName: ${{ parameters.projectName }}
-                targetEnvironment: ${{ parameters.targetEnvironment }}
-                agentJarPath: ${{ parameters.agentJarPath }}
-                server: ${{ parameters.server }}
-                user: $(DBMAESTRO_USER)
-                password: $(DBMAESTRO_PASSWORD)
-                useSsl: ${{ parameters.useSsl }}
-                authType: ${{ parameters.authType }}
-                useWindows: ${{ parameters.useWindows }}
+          - job: Deploy_${{ replace(pkg, '-', '_') }}
+            displayName: "Upgrade '${{ parameters.targetEnvironment }}': ${{ pkg }}"
+            pool:
+              name: ${{ parameters.pool }}
+            steps:
+              - checkout: self
+              - checkout: dbmaestro-cicd
+              - template: upgrade-environment.yml
+                parameters:
+                  packageName: ${{ pkg }}
+                  projectName: ${{ parameters.projectName }}
+                  targetEnvironment: ${{ parameters.targetEnvironment }}
+                  agentJarPath: ${{ parameters.agentJarPath }}
+                  server: ${{ parameters.server }}
+                  user: $(DBMAESTRO_USER)
+                  password: $(DBMAESTRO_PASSWORD)
+                  useSsl: ${{ parameters.useSsl }}
+                  authType: ${{ parameters.authType }}
+                  useWindows: ${{ parameters.useWindows }}
