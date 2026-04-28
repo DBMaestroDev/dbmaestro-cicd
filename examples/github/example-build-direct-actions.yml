@@ -60,7 +60,7 @@ jobs:
 
       - name: Create Package
         id: create
-        uses: DBMaestroDev/github/.github/actions/sh/create-package@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/create-package@main
         with:
           package_name: ${{ matrix.item.package }}
           project_name: ${{ inputs.project_name }}
@@ -74,7 +74,7 @@ jobs:
           package_type: 'Regular'
 
       - name: Precheck Package
-        uses: DBMaestroDev/github/.github/actions/sh/precheck-package@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/precheck-package@main
         with:
           package_name: ${{ matrix.item.package }}
           project_name: ${{ inputs.project_name }}

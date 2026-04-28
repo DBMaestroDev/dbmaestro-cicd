@@ -72,7 +72,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Create Package using Action
-        uses: DBMaestroDev/github/.github/actions/sh/create-package@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/create-package@main
         with:
           agent_jar_path: ${{ inputs.agent_jar_path }}
           auth_type: ${{ inputs.auth_type }}
@@ -98,7 +98,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Precheck Package using Action
-        uses: DBMaestroDev/github/.github/actions/sh/precheck-package@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/precheck-package@main
         with:
           agent_jar_path: ${{ inputs.agent_jar_path }}
           auth_type: ${{ inputs.auth_type }}
