@@ -35,6 +35,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: main
+
     - name: Run precheck validation
       id: precheck
       shell: bash
@@ -49,4 +56,4 @@ runs:
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
-        bash "$GITHUB_WORKSPACE/core/scripts/sh/precheck-package.sh"
+        bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/precheck-package.sh"

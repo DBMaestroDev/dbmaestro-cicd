@@ -18,6 +18,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: main
+
     - name: Download DBmaestro Agent JAR
       id: download
       shell: bash
@@ -26,4 +33,4 @@ runs:
         DBMAESTRO_JAR_PATH: ${{ inputs.jar-path }}
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
-        bash "$GITHUB_WORKSPACE/core/scripts/sh/get-cli-jar.sh"
+        bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/get-cli-jar.sh"

@@ -34,6 +34,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: main
+
     - name: Detect Packages
       id: detect-packages
       shell: bash
@@ -44,4 +51,4 @@ runs:
         DETECT_PACKAGE_NAME: ${{ inputs.package_name }}
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
-        bash "$GITHUB_WORKSPACE/core/scripts/sh/detect-packages.sh"
+        bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/detect-packages.sh"

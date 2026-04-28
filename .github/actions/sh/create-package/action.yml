@@ -47,6 +47,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: main
+
     - name: Create Package
       id: create
       shell: bash
@@ -64,4 +71,4 @@ runs:
         DBMAESTRO_IGNORE_WARNINGS: ${{ inputs.ignore_script_warnings }}
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
-        bash "$GITHUB_WORKSPACE/core/scripts/sh/create-package.sh"
+        bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/create-package.sh"

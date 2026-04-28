@@ -50,6 +50,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: main
+
     - name: Build Package from Source Control
       id: build
       shell: pwsh
@@ -67,4 +74,4 @@ runs:
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
       run: |
         $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
-        & "$env:GITHUB_WORKSPACE/core/scripts/ps/build-from-source.ps1"
+        & "$env:GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/ps/build-from-source.ps1"
