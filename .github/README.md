@@ -6,8 +6,8 @@ Two variants are provided:
 - **`sh/`** — Bash scripts, for Linux runners
 - **`ps/`** — PowerShell (`pwsh`) scripts, for Linux runners with `pwsh` installed **or** native Windows runners
 
-> Actions are consumed from the `DBMaestroDev/github` repository using the `@v1` tag.  
-> Example: `DBMaestroDev/github/.github/actions/sh/create-package@v1`
+> Actions are consumed from the `DBMaestroDev/github` repository using the `@main` tag.  
+> Example: `DBMaestroDev/github/.github/actions/sh/create-package@main`
 
 ---
 
@@ -51,7 +51,7 @@ jobs:
           echo "matrix=$matrix]" >> $GITHUB_OUTPUT
   build:
     needs: prepare
-    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
+    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@main
     with:
       project_name: 'Demo-PSQL'
       packages_matrix: ${{ needs.prepare.outputs.matrix }}
@@ -254,13 +254,13 @@ Change the action path from `sh/` to `ps/` and point `runs-on` at a Windows runn
 
 ```yaml
 # Linux (default)
-- uses: DBMaestroDev/github/.github/actions/sh/create-package@v1
+- uses: DBMaestroDev/github/.github/actions/sh/create-package@main
   with:
     package_name: V15
     ...
 
 # Windows — just swap sh → ps
-- uses: DBMaestroDev/github/.github/actions/ps/create-package@v1
+- uses: DBMaestroDev/github/.github/actions/ps/create-package@main
   with:
     package_name: V15
     ...
@@ -276,7 +276,7 @@ For upgrade scenarios, swap the workflow file name and runner:
 # Linux (sh — default)
 jobs:
   upgrade:
-    uses: DBMaestroDev/github/.github/workflows/sh-upgrade-environment.yml@v1
+    uses: DBMaestroDev/github/.github/workflows/sh-upgrade-environment.yml@main
     with:
       runner: 'dbmaestro-runner'
       ...
@@ -284,7 +284,7 @@ jobs:
 # PowerShell (same runner, just swap the workflow name)
 jobs:
   upgrade:
-    uses: DBMaestroDev/github/.github/workflows/ps-upgrade-environment.yml@v1
+    uses: DBMaestroDev/github/.github/workflows/ps-upgrade-environment.yml@main
     with:
       runner: 'dbmaestro-runner'
       ...

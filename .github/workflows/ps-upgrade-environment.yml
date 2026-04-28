@@ -3,7 +3,7 @@
 # Can be called from other workflows to upgrade environments
 # Packages must be built and validated prior to upgrade
 
-name: Reusable Upgrade Environment
+name: Upgrade Environment - ps (Reusable)
 
 on:
   workflow_call:
@@ -89,7 +89,7 @@ jobs:
 
       - name: Detect Changed Packages
         id: detect
-        uses: DBMaestroDev/github/.github/actions/ps/detect-changed-packages@v1
+        uses: DBMaestroDev/github/.github/actions/ps/detect-changed-packages@main
         with:
           package_name: ${{ inputs.package_name }}
           detect_from_push: ${{ inputs.detect_from_push }}
@@ -110,7 +110,7 @@ jobs:
 
       - name: Detect Changed Folders in packages/
         id: detect-pr
-        uses: DBMaestroDev/github/.github/actions/ps/detect-changed-packages@v1
+        uses: DBMaestroDev/github/.github/actions/ps/detect-changed-packages@main
         with:
           is_pull_request: true
 
@@ -125,7 +125,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Post PR Comment
-        uses: DBMaestroDev/github/.github/actions/ps/pr-comment@v1
+        uses: DBMaestroDev/github/.github/actions/ps/pr-comment@main
         with:
           packages_list: ${{ needs.detect_changed_packages_pr.outputs.packages_list }}
           environment_name: ${{ inputs.target_environment }}
@@ -150,7 +150,7 @@ jobs:
           fetch-depth: 0
 
       - name: Upgrade Package
-        uses: DBMaestroDev/github/.github/actions/ps/upgrade-environment@v1
+        uses: DBMaestroDev/github/.github/actions/ps/upgrade-environment@main
         with:
           package_name: ${{ matrix.item.package }}
           target_environment: ${{ inputs.target_environment }}

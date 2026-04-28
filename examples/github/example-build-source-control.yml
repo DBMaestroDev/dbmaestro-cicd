@@ -74,7 +74,7 @@ jobs:
   build_and_validate:
     name: Build and Validate Package
     needs: prepare_parameters
-    uses: DBMaestroDev/github/.github/workflows/sh-build-source-control.yml@v1
+    uses: DBMaestroDev/github/.github/workflows/sh-build-source-control.yml@main
     with:
       package_name: ${{ inputs.package_name }}
       project_name: ${{ inputs.project_name }}

@@ -8,7 +8,7 @@
 # 2. Your package folders must live under packages/<package-name>/
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/deploy.yml'
 
 variables:
   # --- DBmaestro connection ---

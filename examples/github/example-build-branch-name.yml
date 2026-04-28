@@ -37,7 +37,7 @@ jobs:
   build_and_validate:
     name: Build and Validate Package
     needs: get_package_from_branch
-    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
+    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@main
     with:
       project_name: 'Demo-PSQL'
       packages_matrix: ${{ needs.get_package_from_branch.outputs.matrix }}

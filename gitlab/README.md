@@ -27,7 +27,7 @@ Add the following to your repository `.gitlab-ci.yml`:
 
 ```yaml
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/deploy.yml'
 
 variables:
   DBMAESTRO_SERVER: 'agent01.dbmaestro.local:8017'

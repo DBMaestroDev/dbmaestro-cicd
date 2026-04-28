@@ -54,7 +54,7 @@ Reference the reusable workflows from your repository workflow:
 ```yaml
 jobs:
   deploy:
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@v1
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
     secrets: inherit
 ```
 
@@ -66,7 +66,7 @@ Include the shared templates in your `.gitlab-ci.yml`:
 
 ```yaml
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/deploy.yml'
 ```
 
 See [gitlab/README.md](gitlab/README.md) for detailed setup.
