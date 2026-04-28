@@ -1,0 +1,57 @@
+# Example: Build with Git Change Detection
+# Automatically detects which packages changed since the base branch and builds them.
+# Triggers on pull requests or can be run manually with a target branch override.
+
+name: Example - Build with Git Change Detection (Linux)
+
+on:
+  pull_request:
+    branches:
+      - Release_Source
+      - main
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Base branch to compare against'
+        required: false
+        type: string
+        default: 'Release_Source'
+
+jobs:
+  detect_changed_packages:
+    name: Detect Changed Packages
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has_packages: ${{ steps.detect.outputs.has_packages }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed Packages
+        id: detect
+        uses: DBMaestroDev/github/.github/actions/sh/detect-changed-packages@v1
+        with:
+          is_pull_request: ${{ github.event_name == 'pull_request' }}
+          base_ref: ${{ github.event_name == 'pull_request' && github.base_ref || inputs.target_branch }}
+
+  build_and_validate:
+    name: Build and Validate Packages
+    needs: detect_changed_packages
+    if: needs.detect_changed_packages.outputs.has_packages == 'true'
+    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
+    with:
+      project_name: 'Demo-PSQL'
+      packages_matrix: ${{ needs.detect_changed_packages.outputs.matrix }}
+      packages_folder: 'packages'
+      agent_jar_path: '/home/runner/DBmaestroAgent.jar'
+      use_ssl: 'True'
+      auth_type: 'DBmaestroAccount'
+      package_type: 'Regular'
+      runner: 'dbmaestro-linux'
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}

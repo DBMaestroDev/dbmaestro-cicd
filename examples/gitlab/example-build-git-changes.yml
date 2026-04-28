@@ -1,0 +1,90 @@
+# Example: Build with Git Change Detection (GitLab CI)
+# Automatically detects which packages changed in the MR diff and builds them.
+
+include:
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/detect-packages.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
+
+stages:
+  - setup
+  - detect
+  - build
+  - validate
+
+variables:
+  DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
+  DBMAESTRO_PACKAGES_FOLDER: 'packages'
+  DBMAESTRO_USE_SSL: 'True'
+  DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'
+  DBMAESTRO_PACKAGE_TYPE: 'Regular'
+  DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
+
+# --- Setup Stage ---
+get_cli_jar:
+  extends: .get-cli-jar
+  stage: setup
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# --- Detect Stage ---
+detect_changed_packages:
+  extends: .detect-packages-mr
+  stage: detect
+  needs: [get_cli_jar]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# --- Build Stage ---
+create_changed_packages:
+  extends: .create-package
+  stage: build
+  needs:
+    - job: detect_changed_packages
+      artifacts: true
+  script:
+    - |
+      if [ "$has_packages" != "true" ]; then
+        echo "No changed packages detected. Skipping."
+        exit 0
+      fi
+      IFS=',' read -ra PACKAGES <<< "$packages_list"
+      for PKG in "${PACKAGES[@]}"; do
+        PKG=$(echo "$PKG" | xargs)
+        [ -z "$PKG" ] && continue
+        export DBMAESTRO_PACKAGE_NAME="$PKG"
+        echo "Creating package: $PKG"
+        bash "$CI_PROJECT_DIR/core/scripts/sh/create-package.sh"
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# --- Validate Stage ---
+precheck_changed_packages:
+  extends: .precheck-package
+  stage: validate
+  needs:
+    - job: detect_changed_packages
+      artifacts: true
+    - job: create_changed_packages
+  script:
+    - |
+      if [ "$has_packages" != "true" ]; then
+        echo "No changed packages detected. Skipping."
+        exit 0
+      fi
+      IFS=',' read -ra PACKAGES <<< "$packages_list"
+      for PKG in "${PACKAGES[@]}"; do
+        PKG=$(echo "$PKG" | xargs)
+        [ -z "$PKG" ] && continue
+        export DBMAESTRO_PACKAGE_NAME="$PKG"
+        echo "Prechecking package: $PKG"
+        bash "$CI_PROJECT_DIR/core/scripts/sh/precheck-package.sh"
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'

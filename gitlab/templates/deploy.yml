@@ -1,0 +1,95 @@
+# GitLab CI template: deploy
+# Combined deployment pipeline: detect → create → precheck → upgrade
+# Include this single file to get the full deployment pipeline.
+#
+# Usage in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
+#
+#   variables:
+#     DBMAESTRO_SERVER: "dbmaestro.example.com"
+#     DBMAESTRO_PROJECT_NAME: "MyProject"
+#     DBMAESTRO_TARGET_ENV: "Production"
+#     DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+#     DBMAESTRO_VERSION: "26.1.0.13224"
+#     # Set DBMAESTRO_USER and DBMAESTRO_PASSWORD as masked CI/CD variables
+
+include:
+  - local: '/gitlab/templates/get-cli-jar.yml'
+  - local: '/gitlab/templates/detect-packages.yml'
+  - local: '/gitlab/templates/create-package.yml'
+  - local: '/gitlab/templates/precheck-package.yml'
+  - local: '/gitlab/templates/upgrade-environment.yml'
+
+stages:
+  - setup
+  - detect
+  - create
+  - validate
+  - deploy
+
+dbm-get-jar:
+  stage: setup
+  extends: .get-cli-jar
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+dbm-detect-packages:
+  stage: detect
+  extends: .detect-packages
+  variables:
+    DETECT_FROM_PUSH: "true"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+dbm-detect-packages-mr:
+  stage: detect
+  extends: .detect-packages-mr
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+dbm-create-package:
+  stage: create
+  extends: .create-package
+  needs:
+    - job: dbm-detect-packages
+      optional: true
+      artifacts: true
+    - job: dbm-detect-packages-mr
+      optional: true
+      artifacts: true
+  parallel:
+    matrix:
+      - DBMAESTRO_PACKAGE_NAME: $DETECTED_PACKAGES
+  rules:
+    - if: $has_packages == "true"
+
+dbm-precheck-package:
+  stage: validate
+  extends: .precheck-package
+  needs:
+    - job: dbm-create-package
+      artifacts: true
+  parallel:
+    matrix:
+      - DBMAESTRO_PACKAGE_NAME: $DETECTED_PACKAGES
+  rules:
+    - if: $has_packages == "true"
+
+dbm-upgrade-environment:
+  stage: deploy
+  extends: .upgrade-environment
+  needs:
+    - job: dbm-precheck-package
+      artifacts: true
+  parallel:
+    matrix:
+      - DBMAESTRO_PACKAGE_NAME: $DETECTED_PACKAGES
+  rules:
+    - if: $has_packages == "true"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never

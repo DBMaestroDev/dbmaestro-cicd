@@ -1,0 +1,108 @@
+# Example: Build with Manual Package Selection (Azure DevOps)
+# Manually trigger this pipeline and enter comma-separated package names.
+
+parameters:
+  - name: packageNames
+    displayName: 'Package names (comma-separated, e.g., V15,V16,V33)'
+    type: string
+  - name: projectName
+    displayName: 'DBmaestro project name'
+    type: string
+    default: 'Demo-PSQL'
+  - name: packagesFolder
+    type: string
+    default: 'packages'
+  - name: agentJarPath
+    type: string
+    default: '/home/runner/DBmaestroAgent.jar'
+  - name: runnerPool
+    type: string
+    default: 'dbmaestro-linux'
+
+trigger: none
+pr: none
+
+stages:
+  - stage: Setup
+    displayName: 'Setup'
+    jobs:
+      - job: GetCliJar
+        displayName: 'Download DBmaestro CLI'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
+            parameters:
+              jarPath: ${{ parameters.agentJarPath }}
+              useWindows: false
+
+  - stage: Build
+    displayName: 'Build Packages'
+    dependsOn: Setup
+    jobs:
+      - job: BuildPackages
+        displayName: 'Create and Validate Packages'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: self
+
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+              for PKG in "${PACKAGES[@]}"; do
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+                echo "=== Creating package: $PKG ==="
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
+                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
+                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
+                export DBMAESTRO_USE_SSL="True"
+                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
+                export DBMAESTRO_PACKAGE_TYPE="Regular"
+                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/create_${PKG}.env"
+                bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh"
+              done
+            displayName: 'Create Packages'
+            env:
+              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
+
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+              for PKG in "${PACKAGES[@]}"; do
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+                echo "=== Prechecking package: $PKG ==="
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
+                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
+                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
+                export DBMAESTRO_USE_SSL="True"
+                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
+                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/precheck_${PKG}.env"
+                bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh"
+              done
+            displayName: 'Precheck Packages'
+            env:
+              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
+
+  - stage: Summary
+    displayName: 'Pipeline Summary'
+    dependsOn: Build
+    condition: always()
+    jobs:
+      - job: DisplaySummary
+        displayName: 'Display Summary'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - bash: |
+              echo "============================================"
+              echo "   DBmaestro Package Build Summary"
+              echo "============================================"
+              echo "Project:  ${{ parameters.projectName }}"
+              echo "Packages: ${{ parameters.packageNames }}"
+              echo "============================================"
+            displayName: 'Print Build Summary'

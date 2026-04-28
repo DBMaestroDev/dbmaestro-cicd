@@ -1,0 +1,36 @@
+# GitLab CI template: get-cli-jar
+# Downloads the DBmaestro Agent JAR file.
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
+#
+#   download-jar:
+#     extends: .get-cli-jar
+#     variables:
+#       DBMAESTRO_VERSION: "26.1.0.13224"
+#       DBMAESTRO_JAR_PATH: "/home/runner/DBmaestroAgent.jar"
+
+.get-cli-jar:
+  variables:
+    DBMAESTRO_VERSION: ""
+    DBMAESTRO_JAR_PATH: "/home/runner/DBmaestroAgent.jar"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env
+  before_script:
+    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+
+.get-cli-jar-windows:
+  variables:
+    DBMAESTRO_VERSION: ""
+    DBMAESTRO_JAR_PATH: "/home/runner/DBmaestroAgent.jar"
+  script:
+    - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/get-cli-jar.ps1"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env

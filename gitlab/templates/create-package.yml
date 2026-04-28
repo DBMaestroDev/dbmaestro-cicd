@@ -1,0 +1,58 @@
+# GitLab CI template: create-package
+# Creates a DBmaestro package (manifest + archive + upload).
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
+#
+#   create:
+#     extends: .create-package
+#     variables:
+#       DBMAESTRO_PACKAGE_NAME: "MyPackage"
+#       DBMAESTRO_PROJECT_NAME: "MyProject"
+#       DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+#       DBMAESTRO_SERVER: "dbmaestro.example.com"
+#       DBMAESTRO_USER: "$DBMAESTRO_USER"       # CI/CD variable
+#       DBMAESTRO_PASSWORD: "$DBMAESTRO_PASSWORD" # CI/CD secret
+
+.create-package:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_PACKAGES_FOLDER: "packages"
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DBMAESTRO_PACKAGE_TYPE: "Regular"
+    DBMAESTRO_IGNORE_WARNINGS: "True"
+  before_script:
+    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/create-package.sh"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env
+
+.create-package-windows:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_PACKAGES_FOLDER: "packages"
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DBMAESTRO_PACKAGE_TYPE: "Regular"
+    DBMAESTRO_IGNORE_WARNINGS: "True"
+  script:
+    - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/create-package.ps1"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env

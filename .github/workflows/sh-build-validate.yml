@@ -45,10 +45,10 @@ on:
         required: true
         type: string
       runner:
-        description: 'Runner type (ubuntu-latest or self-hosted)'
+        description: 'Runner label'
         required: false
         type: string
-        default: 'ubuntu-latest'
+        default: 'dbmaestro-runner'
       use_ssl:
         description: 'Use SSL for DBmaestro connection'
         required: false

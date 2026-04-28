@@ -1,0 +1,45 @@
+# Azure DevOps example pipeline for DBmaestro deployments
+# Copy this file to your project repository as azure-pipelines.yml and adjust the parameters section.
+#
+# Prerequisites:
+# 1. Create a GitHub service connection in Azure DevOps (Project Settings → Service connections → GitHub)
+#    and name it 'github-dbmaestro'. Required to reference the public dbmaestro-cicd repository.
+# 2. Set the following pipeline secret variables (mark as secret):
+#    - DBMAESTRO_USER      (your DBmaestro username)
+#    - DBMAESTRO_PASSWORD  (your DBmaestro password)
+# 3. Your package folders must live under packages/<package-name>/
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: github-dbmaestro     # your GitHub service connection name
+      ref: v1
+
+extends:
+  template: azure-devops/templates/deploy.yml@dbmaestro-cicd
+  parameters:
+    server: "dbmaestro.example.com"          # replace with your DBmaestro server
+    projectName: "MyProject"                  # replace with your project name
+    targetEnvironment: "Production"           # replace with your target environment
+    agentJarPath: "/home/runner/DBmaestroAgent.jar"
+    dbmaestroVersion: "26.1.0.13224"          # replace with the JAR version to download
+    packagesFolder: "packages"
+    useSsl: "True"
+    authType: "DBmaestroAccount"
+    linuxPool: "ubuntu-latest"
+    # List packages to deploy — these must match folder names under packages/
+    packages:
+      - "PackageA"
+      - "PackageB"

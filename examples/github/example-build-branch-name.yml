@@ -1,0 +1,77 @@
+# Example: Build with Branch Name as Package Name
+# Uses the current branch name (or PR source branch) as the package name.
+# Useful for workflows where each feature branch maps to a DBmaestro package.
+
+name: Example - Build with Branch Name (Linux)
+
+on:
+  pull_request:
+    branches:
+      - Release_Source
+      - main
+  workflow_dispatch:
+
+jobs:
+  get_package_from_branch:
+    name: Get Package from Branch Name
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      package_name: ${{ steps.set-matrix.outputs.package_name }}
+    steps:
+      - name: Get Branch Name and Create Matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
+
+          echo "Using branch name as package name: $BRANCH_NAME"
+          matrix='[{"package":"'"$BRANCH_NAME"'"}]'
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          echo "package_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+  build_and_validate:
+    name: Build and Validate Package
+    needs: get_package_from_branch
+    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
+    with:
+      project_name: 'Demo-PSQL'
+      packages_matrix: ${{ needs.get_package_from_branch.outputs.matrix }}
+      packages_folder: 'packages'
+      agent_jar_path: '/home/runner/DBmaestroAgent.jar'
+      use_ssl: 'True'
+      auth_type: 'DBmaestroAccount'
+      package_type: 'Regular'
+      runner: 'dbmaestro-linux'
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+  post_process:
+    name: Post PR Comment
+    runs-on: ubuntu-latest
+    needs: [get_package_from_branch, build_and_validate]
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - name: Comment on PR (Success)
+        if: needs.build_and_validate.result == 'success'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+            -d "{\"body\":\":white_check_mark: **Package Built and Validated Successfully**\n\nPackage: \`${{ needs.get_package_from_branch.outputs.package_name }}\`\"}"
+
+      - name: Comment on PR (Failure)
+        if: needs.build_and_validate.result == 'failure'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+            -d "{\"body\":\":x: **Package Build or Validation Failed**\n\nPackage: \`${{ needs.get_package_from_branch.outputs.package_name }}\`\"}"

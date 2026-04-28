@@ -57,37 +57,15 @@ runs:
         Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary
 
     - name: Execute Upgrade
-      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
-      run: |
-        # ===== Upgrade Environment =====
-        $ErrorActionPreference = 'Stop'
-        $targetEnv = "${{ inputs.target_environment }}"
-        $package = "${{ inputs.package_name }}"
-        $agentJar = "${{ inputs.agent_jar_path }}"
-        $projectName = "${{ inputs.project_name }}"
-
-        if ($package -eq "" -or -Not $package) {
-          Write-Host "No package to process"
-          exit 1
-        }
-
-        Write-Host "==== Upgrade package on $targetEnv environment... ===="
-        Write-Host "==== Package name: $package ===="
-        Write-Host "==== Project name: $projectName ===="
-        Write-Host "==== Agent JAR: $agentJar ===="
-
-        & java -jar "$agentJar" -Upgrade `
-          -ProjectName "$projectName" `
-          -EnvName "$targetEnv" `
-          -PackageName "$package" `
-          -Server "${{ inputs.dbmaestro_server }}" `
-          -UseSSL "${{ inputs.use_ssl }}" `
-          -AuthType "${{ inputs.auth_type }}" `
-          -UserName "${{ inputs.DBMAESTRO_USER }}" `
-          -Password "${{ inputs.DBMAESTRO_PASSWORD }}"
-
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "==== Upgrade failed for package: $package ===="
-          exit 1
-        }
-        Write-Host "==== Upgrade package on $targetEnv environment completed successfully ===="
+      shell: pwsh
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_TARGET_ENV: ${{ inputs.target_environment }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.DBMAESTRO_USER }}
+        DBMAESTRO_PASSWORD: ${{ inputs.DBMAESTRO_PASSWORD }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: '& "$env:GITHUB_WORKSPACE/core/scripts/ps/upgrade-environment.ps1"'

@@ -1,0 +1,80 @@
+# Example: Build with Manual Package Selection
+# Accepts a comma-separated list of package names as a manual workflow input.
+# Useful for ad-hoc builds or when automation cannot determine the packages.
+
+name: Example - Build with Manual Package Selection (Linux)
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Package names (comma-separated, e.g., V15,V16,V33)'
+        required: true
+        type: string
+      project_name:
+        description: 'DBmaestro project name'
+        required: false
+        type: string
+        default: 'Demo-PSQL'
+
+jobs:
+  prepare_matrix:
+    name: Prepare Package Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.create-matrix.outputs.matrix }}
+    steps:
+      - name: Create Matrix from Input
+        id: create-matrix
+        shell: bash
+        run: |
+          IFS=',' read -ra PACKAGES <<< "${{ inputs.packages }}"
+          matrix="["
+          first=true
+          for pkg in "${PACKAGES[@]}"; do
+            pkg=$(echo "$pkg" | xargs)
+            if [ -n "$pkg" ]; then
+              [ "$first" = false ] && matrix="$matrix,"
+              matrix="$matrix{\"package\":\"$pkg\"}"
+              first=false
+            fi
+          done
+          matrix="$matrix]"
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  build_and_validate:
+    name: Build and Validate Packages
+    needs: prepare_matrix
+    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
+    with:
+      project_name: ${{ inputs.project_name }}
+      packages_matrix: ${{ needs.prepare_matrix.outputs.matrix }}
+      packages_folder: 'packages'
+      agent_jar_path: '/home/runner/DBmaestroAgent.jar'
+      use_ssl: 'True'
+      auth_type: 'DBmaestroAccount'
+      package_type: 'Regular'
+      runner: 'dbmaestro-linux'
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+  summary:
+    name: Workflow Summary
+    runs-on: ubuntu-latest
+    needs: [prepare_matrix, build_and_validate]
+    if: always()
+    steps:
+      - name: Display Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## Package Build Summary
+
+          | Property | Value |
+          |----------|-------|
+          | **Project Name** | ${{ inputs.project_name }} |
+          | **Packages** | ${{ inputs.packages }} |
+          | **Build Status** | ${{ needs.build_and_validate.result }} |
+          | **Overall Result** | ${{ needs.build_and_validate.result == 'success' && '✅ Success' || '❌ Failed' }} |
+          EOF

@@ -1,0 +1,70 @@
+# Version: v1.0
+name: 'Build Package from Source Control'
+description: 'Build a DBmaestro package from source control (Tasks or Specific Commit) — PowerShell/Windows'
+author: 'DBmaestro'
+
+inputs:
+  additional_information:
+    description: 'Tasks list (comma-separated) or specific commit hash'
+    required: false
+    default: ''
+  agent_jar_path:
+    description: 'Path to DBmaestro Agent JAR file'
+    required: true
+  auth_type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  dbmaestro_password:
+    description: 'DBmaestro password'
+    required: true
+  dbmaestro_server:
+    description: 'DBmaestro server URL'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
+  environment-name:
+    description: 'Development environment name'
+    required: true
+  package_name:
+    description: 'Name of the package to build'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  use_ssl:
+    description: 'Use SSL for connection'
+    required: false
+    default: 'True'
+  version_type:
+    description: 'Version type: Tasks or Specific Commit'
+    required: false
+    default: ''
+
+outputs:
+  package-created:
+    description: 'Whether the package was created successfully (true/false)'
+    value: ${{ steps.build.outcome == 'success' }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build Package from Source Control
+      id: build
+      shell: pwsh
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_ENV_NAME: ${{ inputs.environment-name }}
+        DBMAESTRO_VERSION_TYPE: ${{ inputs.version_type }}
+        DBMAESTRO_ADDITIONAL_INFORMATION: ${{ inputs.additional_information }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: |
+        $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
+        & "$env:GITHUB_WORKSPACE/core/scripts/ps/build-from-source.ps1"

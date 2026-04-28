@@ -1,0 +1,50 @@
+# Azure DevOps step template: get-cli-jar
+# Downloads the DBmaestro Agent JAR file.
+#
+# Usage in your azure-pipelines.yml:
+#
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
+#   steps:
+#     - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
+#       parameters:
+#         version: "26.1.0.13224"
+#         jarPath: "/home/runner/DBmaestroAgent.jar"
+
+parameters:
+  - name: version
+    type: string
+  - name: jarPath
+    type: string
+    default: "/home/runner/DBmaestroAgent.jar"
+  - name: useWindows
+    type: boolean
+    default: false
+
+steps:
+  - ${{ if not(parameters.useWindows) }}:
+    - task: Bash@3
+      displayName: "DBmaestro: Download Agent JAR"
+      env:
+        DBMAESTRO_VERSION: ${{ parameters.version }}
+        DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)/core/scripts/sh/get-cli-jar.sh
+
+  - ${{ if parameters.useWindows }}:
+    - task: PowerShell@2
+      displayName: "DBmaestro: Download Agent JAR (Windows)"
+      env:
+        DBMAESTRO_VERSION: ${{ parameters.version }}
+        DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)/core/scripts/ps/get-cli-jar.ps1
+        pwsh: true

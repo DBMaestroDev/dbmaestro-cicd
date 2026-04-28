@@ -60,38 +60,14 @@ runs:
 
     - name: Execute Upgrade
       shell: bash
-      run: |
-        set -e
-
-        # ===== Upgrade Environment =====
-        target_env="${{ inputs.target_environment }}"
-        package="${{ inputs.package_name }}"
-        agent_jar="${{ inputs.agent_jar_path }}"
-        project_name="${{ inputs.project_name }}"
-
-        if [[ -z "$package" ]]; then
-          echo "No package to process"
-          exit 1
-        fi
-
-        echo "==== Upgrade package on $target_env environment... ===="
-        echo "==== Package name: $package ===="
-        echo "==== Project name: $project_name ===="
-        echo "==== Agent JAR: $agent_jar ===="
-
-        java -jar "$agent_jar" -Upgrade \
-          -ProjectName "$project_name" \
-          -EnvName "$target_env" \
-          -PackageName "$package" \
-          -Server "${{ inputs.dbmaestro_server }}" \
-          -UseSSL "${{ inputs.use_ssl }}" \
-          -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.dbmaestro_user }}" \
-          -Password "${{ inputs.dbmaestro_password }}"
-
-        exit_code=$?
-        if [[ $exit_code -ne 0 ]]; then
-          echo "==== Upgrade failed for package: $package ===="
-          exit 1
-        fi
-        echo "==== Upgrade package on $target_env environment completed successfully ===="
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_TARGET_ENV: ${{ inputs.target_environment }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: bash "$GITHUB_WORKSPACE/core/scripts/sh/upgrade-environment.sh"

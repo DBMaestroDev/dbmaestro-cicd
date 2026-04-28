@@ -43,58 +43,25 @@ inputs:
 outputs:
   package-created:
     description: 'Whether package was created successfully'
-    value: ${{ steps.create.outputs.success }}
+    value: ${{ steps.create.outputs.package_created }}
 runs:
   using: 'composite'
   steps:
-    - name: Validate package folder exists
-      shell: bash
-      run: |
-        if [ ! -d "${{ inputs.packages_folder }}/${{ inputs.package_name }}" ]; then
-          echo "ERROR: Folder ${{ inputs.package_name }} does not exist in ${{ inputs.packages_folder }}"
-          exit 1
-        else
-          echo "Found package folder: ${{ inputs.package_name }}"
-        fi
-
-    - name: Create manifest file
-      shell: bash
-      run: |
-        echo "Creating manifest for package ${{ inputs.package_name }}"
-        java -jar "${{ inputs.agent_jar_path }}" -CreateManifestFile \
-          -PathToScriptsFolder "${{ inputs.packages_folder }}/${{ inputs.package_name }}" \
-          -Operation "CreateOrUpdate" \
-          -PackageType "${{ inputs.package_type }}"
-
-    - name: Create tar archive
-      shell: bash
-      run: |
-        echo "Creating tar archive from ${{ inputs.package_name }}"
-        cd "${{ inputs.packages_folder }}"
-        tar -cf "../${{ inputs.package_name }}.tar" "${{ inputs.package_name }}"
-        cd ..
-        echo "Tar archive created: ${{ inputs.package_name }}.tar"
-
-    - name: Create package in DBmaestro
+    - name: Create Package
       id: create
       shell: bash
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_PACKAGES_FOLDER: ${{ inputs.packages_folder }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+        DBMAESTRO_PACKAGE_TYPE: ${{ inputs.package_type }}
+        DBMAESTRO_IGNORE_WARNINGS: ${{ inputs.ignore_script_warnings }}
       run: |
-        echo "Creating package ${{ inputs.package_name }} in DBmaestro"
-        java -jar "${{ inputs.agent_jar_path }}" -Package \
-          -ProjectName "${{ inputs.project_name }}" \
-          -IgnoreScriptWarnings ${{ inputs.ignore_script_warnings }} \
-          -FilePath "${{ inputs.package_name }}.tar" \
-          -Server "${{ inputs.dbmaestro_server }}" \
-          -UseSSL "${{ inputs.use_ssl }}" \
-          -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.dbmaestro_user }}" \
-          -Password "${{ inputs.dbmaestro_password }}"
-
-        if [ $? -eq 0 ]; then
-          echo "Package created successfully"
-          echo "success=true" >> $GITHUB_OUTPUT
-        else
-          echo "Failed to create package"
-          echo "success=false" >> $GITHUB_OUTPUT
-          exit 1
-        fi
+        export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
+        bash "$GITHUB_WORKSPACE/core/scripts/sh/create-package.sh"

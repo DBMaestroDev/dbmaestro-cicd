@@ -1,552 +1,305 @@
-# GitHub Actions Workflows and Composite Actions
+﻿# GitHub Actions — DBmaestro CI/CD Library
 
-This repository contains reusable workflows and composite actions for DBmaestro package management and environment upgrades. The workflows and actions are available in two variants: **Linux** (bash) and **PowerShell** (Windows).
+Reusable workflows and composite actions for DBmaestro package management and environment upgrades. All logic is delegated to the platform-agnostic scripts in [`core/scripts/`](../core/scripts/).
 
-**Note:** The composite actions referenced by these workflows are located in the `DBMaestroDev/github` repository and are called using the `@v1` branch reference (e.g., `DBMaestroDev/github/.github/actions/sh/detect-changed-packages@v1`).
+Two variants are provided:
+- **`sh/`** — Bash scripts, for Linux runners
+- **`ps/`** — PowerShell (`pwsh`) scripts, for Linux runners with `pwsh` installed **or** native Windows runners
+
+> Actions are consumed from the `DBMaestroDev/github` repository using the `@v1` tag.  
+> Example: `DBMaestroDev/github/.github/actions/sh/create-package@v1`
+
+---
 
 ## Table of Contents
 
-- [Workflows](#workflows)
-  - [Linux Workflows](#sh-workflows)
-  - [PowerShell Workflows](#ps-workflows)
+- [Quick Start](#quick-start)
+- [Choosing sh vs ps (Linux vs Windows)](#choosing-sh-vs-ps-linux-vs-windows)
+- [Reusable Workflows](#reusable-workflows)
 - [Composite Actions](#composite-actions)
-  - [Linux Actions](#sh-actions)
-  - [PowerShell Actions](#ps-actions)
-- [Usage](#usage)
+- [Example Pipelines](#example-pipelines)
+- [Required Secrets and Variables](#required-secrets-and-variables)
 
 ---
 
-## Workflows
+## Quick Start
 
-### Linux Workflows
-
-#### 1. Build and Validate Packages
-**File:** `.github/workflows/sh-build-validate.yml`
-
-A reusable workflow for building and validating DBmaestro packages on Linux runners.
-
-**Features:**
-- Builds packages from a JSON matrix input
-- Validates packages using precheck operation
-- Sequential execution (max-parallel: 1)
-- Supports both hosted and self-hosted runners
-
-**Key Inputs:**
-- `project_name`: DBmaestro project name (required)
-- `packages_matrix`: JSON array of packages to build (required)
-- `packages_folder`: Root folder containing packages (default: `packages`)
-- `agent_jar_path`: Path to DBmaestro agent JAR file (default: `/home/runner/DBmaestroAgent.jar`)
-- `use_ssl`: Use SSL for DBmaestro connection (default: `True`)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
-- `package_type`: Package type - Regular or AdHoc (default: `Regular`)
-- `runner`: Runner type (default: `ubuntu-latest`)
-
-**Required Secrets:**
-- `dbmaestro_server`: DBmaestro server hostname (Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`)
-- `dbmaestro_user`: DBmaestro username
-- `DBMAESTRO_PASSWORD`: DBmaestro password or token
-
-**Jobs:**
-- `create_package`: Creates DBmaestro packages from folders
-- `validate_package`: Validates packages using precheck operation
-
----
-
-#### 2. Upgrade Environment (Linux)
-**File:** `.github/workflows/sh-upgrade-environment.yml`
-
-A reusable workflow for upgrading DBmaestro environments on Linux runners.
-
-**Features:**
-- Manual package input or automatic detection from git changes
-- Pull request support with automatic package detection
-- Sequential upgrade execution (max-parallel: 1)
-- PR comment posting with detected packages
-- GitHub job summaries with upgrade details
-
-**Key Inputs:**
-- `package_name`: Comma-separated list of packages (optional)
-- `target_environment`: Target environment for upgrade (required)
-- `project_name`: DBmaestro project name (default: `Demo-PSQL`)
-- `agent_jar_path`: Path to DBmaestro Agent JAR (default: `/opt/dbmaestro/agent/DBmaestroAgent.jar`)
-- `use_ssl`: Use SSL for connection (default: `True`)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
-- `detect_from_push`: Detect packages from git push (default: `false`)
-- `is_pull_request`: Whether this is a PR event (default: `false`)
-- `runner`: Runner type (default: `ubuntu-latest`)
-
-**Required Secrets:**
-- `DBMAESTRO_SERVER`: DBmaestro server URL (Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`)
-- `DBMAESTRO_USER`: DBmaestro username
-- `DBMAESTRO_PASSWORD`: DBmaestro password
-
-**Outputs:**
-- `upgraded_packages`: List of packages that were upgraded
-
-**Jobs:**
-- `detect_changed_packages`: Detects packages from manual input or git push
-- `detect_changed_packages_pr`: Detects packages from pull request changes
-- `post_pr_comment`: Posts PR comment with detected packages (PR only)
-- `upgrade_environment`: Performs the actual environment upgrade
+```yaml
+# .github/workflows/my-build.yml
+name: Build Packages
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Package names (comma-separated)'
+        required: true
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        run: |
+          IFS=',' read -ra PKGS <<< "${{ inputs.packages }}"
+          matrix="["; first=true
+          for p in "${PKGS[@]}"; do
+            p=$(echo "$p" | xargs); [ -z "$p" ] && continue
+            [ "$first" = false ] && matrix="$matrix,"
+            matrix="$matrix{\"package\":\"$p\"}"; first=false
+          done
+          echo "matrix=$matrix]" >> $GITHUB_OUTPUT
+  build:
+    needs: prepare
+    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
+    with:
+      project_name: 'Demo-PSQL'
+      packages_matrix: ${{ needs.prepare.outputs.matrix }}
+      runner: 'dbmaestro-linux'
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+```
 
 ---
 
-### PowerShell Workflows
+## Reusable Workflows
 
-#### 1. Upgrade Environment (PowerShell)
-**File:** `.github/workflows/ps-upgrade-environment.yml`
+### `sh-build-validate.yml` — Build and Validate (Linux)
 
-A reusable workflow for upgrading DBmaestro environments using PowerShell on Windows runners.
+Builds and validates packages from a JSON matrix (create → precheck, sequential).
 
-**Features:**
-- Manual package input or automatic detection from git changes
-- Pull request support with automatic package detection
-- Sequential upgrade execution (max-parallel: 1)
-- PR comment posting with detected packages
-- Uses self-hosted Windows runners by default
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `project_name` | Yes | — | DBmaestro project name |
+| `packages_matrix` | Yes | — | JSON array e.g. `[{"package":"V15"}]` |
+| `packages_folder` | | `packages` | Folder containing package sub-directories |
+| `agent_jar_path` | | `/home/runner/DBmaestroAgent.jar` | Path to the DBmaestro agent JAR |
+| `use_ssl` | | `True` | Enable SSL |
+| `auth_type` | | `DBmaestroAccount` | Authentication type |
+| `package_type` | | `Regular` | `Regular` or `AdHoc` |
+| `runner` | | `dbmaestro-runner` | Runner label |
+| `dbmaestro_server` | Yes | — | Server in `host:port` format |
+| `dbmaestro_user` | Yes | — | DBmaestro username |
 
-**Key Inputs:**
-- `package_name`: Comma-separated list of packages (optional)
-- `target_environment`: Target environment for upgrade (required)
-- `project_name`: DBmaestro project name (default: `Demo-PSQL`)
-- `agent_jar_path`: Path to DBmaestro Agent JAR (default: `C:\Program Files (x86)\DBmaestro\DOP Server\Agent\DBmaestroAgent.jar`)
-- `use_ssl`: Use SSL for connection (default: `True`)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
-- `detect_from_push`: Detect packages from git push (default: `false`)
-- `is_pull_request`: Whether this is a PR event (default: `false`)
+Secret required: `DBMAESTRO_PASSWORD`
 
-**Required Secrets:**
-- `DBMAESTRO_SERVER`: DBmaestro server URL (Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`)
-- `DBMAESTRO_USER`: DBmaestro username
-- `DBMAESTRO_PASSWORD`: DBmaestro password
+---
 
-**Outputs:**
-- `upgraded_packages`: List of packages that were upgraded
+### `sh-build-source-control.yml` — Build from Source Control (Linux)
 
-**Jobs:**
-- `detect_changed_packages`: Detects packages from manual input or git push
-- `detect_changed_packages_pr`: Detects packages from pull request changes
-- `post_pr_comment`: Posts PR comment with detected packages (PR only)
-- `upgrade_environment`: Performs the actual environment upgrade
+Builds a package from source control (all changes, specific tasks, or a specific commit).
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `package_name` | Yes | — | Package name |
+| `project_name` | Yes | — | DBmaestro project name |
+| `environment-name` | | `Dev_Env_1` | Development environment name |
+| `version_type` | | `` | `Tasks`, `Specific Commit`, or empty (all) |
+| `additional_information` | | `` | Task IDs or commit hash |
+| `agent_jar_path` | | `/home/runner/DBmaestroAgent.jar` | Path to JAR |
+| `use_ssl` | | `True` | Enable SSL |
+| `auth_type` | | `DBmaestroAccount` | Authentication type |
+| `runner` | | `dbmaestro-runner` | Runner label |
+| `dbmaestro_server` | Yes | — | Server in `host:port` format |
+| `dbmaestro_user` | Yes | — | DBmaestro username |
+
+Secret required: `DBMAESTRO_PASSWORD`
+
+---
+
+### `sh-upgrade-environment.yml` — Upgrade Environment (Linux)
+
+Upgrades a DBmaestro target environment. Supports push detection, PR mode, and manual input.
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `package_name` | | `` | Comma-separated packages (empty = auto-detect) |
+| `target_environment` | Yes | — | Environment to upgrade |
+| `project_name` | | `Demo-PSQL` | DBmaestro project name |
+| `agent_jar_path` | | `/home/runner/DBmaestroAgent.jar` | Path to JAR |
+| `detect_from_push` | | `false` | Detect packages from the push commit |
+| `is_pull_request` | | `false` | Set `true` for PR-triggered runs |
+| `use_ssl` | | `True` | Enable SSL |
+| `auth_type` | | `DBmaestroAccount` | Authentication type |
+| `runner` | | `dbmaestro-runner` | Runner label |
+| `dbmaestro_server` | Yes | — | Server in `host:port` format |
+| `dbmaestro_user` | Yes | — | DBmaestro username |
+
+Secret required: `DBMAESTRO_PASSWORD`
+
+---
+
+### `ps-upgrade-environment.yml` — Upgrade Environment (PowerShell)
+
+Identical behavior to `sh-upgrade-environment.yml` but uses `pwsh`. Runs on a Linux runner with `pwsh` installed or a native Windows runner.
+
+---
+
+### `ps-build-validate.yml` — Build and Validate (PowerShell)
+
+PowerShell equivalent of `sh-build-validate.yml`. Runs on a Linux runner with `pwsh` installed or a native Windows runner; calls `ps/create-package` and `ps/precheck-package` actions.
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `project_name` | Yes | — | DBmaestro project name |
+| `packages_matrix` | Yes | — | JSON array e.g. `[{"package":"V15"}]` |
+| `packages_folder` | | `packages` | Folder containing package sub-directories |
+| `agent_jar_path` | | `/home/runner/DBmaestroAgent.jar` | Path to the DBmaestro agent JAR |
+| `use_ssl` | | `True` | Enable SSL |
+| `auth_type` | | `DBmaestroAccount` | Authentication type |
+| `package_type` | | `Regular` | `Regular` or `AdHoc` |
+| `runner` | | `dbmaestro-runner` | Runner label |
+| `dbmaestro_server` | Yes | — | Server in `host:port` format |
+| `dbmaestro_user` | Yes | — | DBmaestro username |
+
+Secret required: `DBMAESTRO_PASSWORD`
+
+---
+
+### `ps-build-source-control.yml` — Build from Source Control (PowerShell)
+
+PowerShell equivalent of `sh-build-source-control.yml`. Runs on a Linux runner with `pwsh` installed or a native Windows runner; calls `ps/build-from-source-control` action.
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `package_name` | Yes | — | Package name |
+| `project_name` | Yes | — | DBmaestro project name |
+| `environment-name` | | `Dev_Env_1` | Development environment name |
+| `version_type` | | `` | `Tasks`, `Specific Commit`, or empty (all) |
+| `additional_information` | | `` | Task IDs or commit hash |
+| `agent_jar_path` | | `/home/runner/DBmaestroAgent.jar` | Path to JAR |
+| `use_ssl` | | `True` | Enable SSL |
+| `auth_type` | | `DBmaestroAccount` | Authentication type |
+| `runner` | | `dbmaestro-runner` | Runner label |
+| `dbmaestro_server` | Yes | — | Server in `host:port` format |
+| `dbmaestro_user` | Yes | — | DBmaestro username |
+
+Secret required: `DBMAESTRO_PASSWORD`
 
 ---
 
 ## Composite Actions
 
-### Linux Actions
+### Linux (`sh/`)
 
-All Linux actions use bash scripts and are located in the `DBMaestroDev/github` repository at `.github/actions/sh/`.
+| Action | Description | Key Outputs |
+|--------|-------------|-------------|
+| `sh/get-cli-jar` | Downloads the DBmaestro agent JAR from GitHub releases | `download_success` |
+| `sh/detect-changed-packages` | Detects changed packages from git diff, push, or manual input | `has_packages`, `packages_list`, `matrix` |
+| `sh/create-package` | Creates a manifest + archive and uploads to DBmaestro | `package_created` |
+| `sh/precheck-package` | Runs a DBmaestro PreCheck validation | `validation_passed` |
+| `sh/upgrade-environment` | Upgrades a DBmaestro target environment | — |
+| `sh/build-from-source-control` | Builds a package from source control | — |
+| `sh/pr-comment` | Posts a PR comment listing detected packages | — |
 
-#### 1. Create Package
-**Location:** `DBMaestroDev/github/.github/actions/sh/create-package/action.yml`
+### PowerShell (`ps/`)
 
-Creates a DBmaestro package from a folder with manifest, tar archive, and package creation.
+| Action | Description | Key Outputs |
+|--------|-------------|-------------|
+| `ps/get-cli-jar` | Downloads the DBmaestro agent JAR via `Invoke-WebRequest` | `download_success` |
+| `ps/detect-changed-packages` | Detects changed packages (PowerShell equivalent) | `has_packages`, `packages_list`, `matrix` |
+| `ps/create-package` | Creates package using PowerShell | `package_created` |
+| `ps/precheck-package` | Runs PreCheck validation using PowerShell | `validation_passed` |
+| `ps/build-from-source-control` | Builds a package from source control using PowerShell | — |
+| `ps/upgrade-environment` | Upgrades environment using PowerShell | — |
+| `ps/pr-comment` | Posts PR comment | — |
 
-**Inputs:**
-- `package_name`: Name of the package to create (required)
-- `project_name`: DBmaestro project name (required)
-- `packages_folder`: Root folder containing packages (default: `packages`)
-- `agent_jar_path`: Path to DBmaestro agent JAR file (required)
-- `dbmaestro_server`: DBmaestro server hostname (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `use_ssl`: Use SSL for connection (default: `True`)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
-- `username`: DBmaestro username (required)
-- `password`: DBmaestro password or token (required)
-- `package_type`: Package type - Regular or AdHoc (default: `Regular`)
-- `ignore_script_warnings`: Ignore script warnings (default: `True`)
+### Common Inputs (create, precheck, upgrade actions)
 
-**Outputs:**
-- `package-created`: Whether package was created successfully
-
-**Steps:**
-1. Validates package folder exists
-2. Creates manifest and tar archive
-3. Executes DBmaestro package creation via Java agent
-
----
-
-#### 2. Precheck Package
-**Location:** `DBMaestroDev/github/.github/actions/sh/precheck-package/action.yml`
-
-Validates a DBmaestro package using precheck operation.
-
-**Inputs:**
-- `package_name`: Name of the package to validate (required)
-- `project_name`: DBmaestro project name (required)
-- `agent_jar_path`: Path to DBmaestro agent JAR file (required)
-- `dbmaestro_server`: DBmaestro server hostname (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `use_ssl`: Use SSL for connection (default: `True`)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
-- `username`: DBmaestro username (required)
-- `password`: DBmaestro password or token (required)
-
-**Outputs:**
-- `validation-passed`: Whether validation passed
-
-**Steps:**
-1. Runs precheck validation via DBmaestro agent
+| Input | Description |
+|-------|-------------|
+| `package_name` | Package name |
+| `project_name` | DBmaestro project name |
+| `agent_jar_path` | Path to DBmaestro agent JAR |
+| `dbmaestro_server` | Server in `host:port` format |
+| `dbmaestro_user` | DBmaestro username |
+| `dbmaestro_password` | DBmaestro password (secret) |
+| `use_ssl` | Enable SSL (`True`/`False`) |
+| `auth_type` | Authentication type |
 
 ---
 
-#### 3. Detect Changed Packages
-**Location:** `DBMaestroDev/github/.github/actions/sh/detect-changed-packages/action.yml`
+## Example Pipelines
 
-Detects changed packages from git commits or manual input using bash scripts.
+Ready-to-use examples are in [`examples/github/`](../examples/github/):
 
-**Inputs:**
-- `package_name`: Comma-separated package names (optional)
-- `detect_from_push`: Detect from git push (default: `false`)
-- `is_pull_request`: Whether this is a PR event (default: `false`)
-- `base_ref`: Base reference for PR comparison (optional)
-
-**Outputs:**
-- `matrix`: JSON matrix for packages
-- `has_packages`: Whether packages were detected
-- `packages`: JSON array of packages
-- `packages_list`: Comma-separated list of packages
-
-**Detection Sources:**
-1. Manual comma-separated input
-2. Git diff from push events
-3. Git diff from pull requests
+| File | Description |
+|------|-------------|
+| `example-build-branch-name.yml` | Uses the branch/PR name as the package name |
+| `example-build-direct-actions.yml` | Calls composite actions directly (no reusable workflow) |
+| `example-build-git-changes.yml` | Auto-detects changed packages from git diff |
+| `example-build-manual-input.yml` | Manual comma-separated package list via `workflow_dispatch` |
+| `example-build-source-control.yml` | Build from source (all / tasks / specific commit) |
+| `example-upgrade-environment.yml` | Upgrade with push, PR, and dispatch triggers + `concurrency:` guard |
 
 ---
 
-#### 4. Upgrade Environment
-**Location:** `DBMaestroDev/github/.github/actions/sh/upgrade-environment/action.yml`
+## Choosing sh vs ps (Linux bash vs PowerShell)
 
-Upgrades a target environment with a specific package using DBmaestro on Linux.
+Both variants run on a Linux runner. Use `ps/` when your team prefers PowerShell, or when the same runner also needs to run PowerShell scripts on other pipelines. A native Windows runner is also supported for either variant — just point `runs-on` at a Windows label.
 
-**Inputs:**
-- `package_name`: Package name to upgrade (required)
-- `target_environment`: Target environment (required)
-- `project_name`: DBmaestro project name (required)
-- `agent_jar_path`: Path to DBmaestro Agent JAR (required)
-- `use_ssl`: Use SSL (default: `True`)
-- `DBMAESTRO_SERVER`: DBmaestro server URL (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `DBMAESTRO_USER`: DBmaestro username (required)
-- `DBMAESTRO_PASSWORD`: DBmaestro password (required)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
+| Scenario | Use | Shell | Runner requirement |
+|----------|-----|-------|--------------------|
+| Linux runner (any) | `sh/` actions, `sh-*` workflows | Bash | Linux |
+| Linux runner with `pwsh` installed | `ps/` actions, `ps-*` workflows | PowerShell (`pwsh`) | Linux + `pwsh` |
+| Native Windows runner | `ps/` actions, `ps-*` workflows | PowerShell (`pwsh`) | Windows |
 
-**Steps:**
-1. Normalizes environment name (replaces underscores with spaces)
-2. Creates GitHub step summary with upgrade details
-3. Executes Java-based DBmaestro agent upgrade command
-4. Handles errors with appropriate exit codes
+The recommended default is a single self-hosted Linux runner labelled `dbmaestro-runner` with `pwsh` installed — it can run both `sh/` and `ps/` workflows without OS switching.
 
----
+### Switching from Linux to Windows — composite actions
 
-#### 5. PR Comment
-**Location:** `DBMaestroDev/github/.github/actions/sh/pr-comment/action.yml`
+Change the action path from `sh/` to `ps/` and point `runs-on` at a Windows runner:
 
-Posts a comment on a pull request with detected package information.
-
-**Inputs:**
-- `packages_list`: Comma-separated list of detected packages (required)
-- `environment_name`: Target environment name (required)
-- `github_token`: GitHub token for API access (required)
-
-**Steps:**
-1. Posts formatted comment to PR using GitHub Script API
-
-**Comment Format:**
-```
-## 📦 Changed Packages Detected
-
-**Modified Packages:** [package list]
-
-This pull request affects the following packages in the `/packages` folder.
-Will upgrade **[environment]** with these packages (in order) upon merging.
-```
-
----
-
-#### 6. Get CLI JAR
-**Location:** `DBMaestroDev/github/.github/actions/sh/get-cli-jar/action.yml`
-
-Downloads the DBmaestro Agent JAR file from GitHub releases.
-
-**Inputs:**
-- `version`: Version of the DBmaestro Agent JAR to download (required) - Format: `26.1.0.13224`
-- `jar-path`: Path where the JAR file will be saved (required) - Example: `./DBmaestroAgent.jar`
-
-**Outputs:**
-- `jar-file`: Path to the downloaded JAR file
-- `download-success`: Whether the download was successful
-
-**Steps:**
-1. Creates target directory if it doesn't exist
-2. Downloads JAR file from `https://raw.githubusercontent.com/DBMaestroDev/dbm_jar/refs/tags/v{version}/DBmaestroAgent.jar`
-3. Verifies file exists and is not empty
-4. Reports file size and download success
-
-**Usage:**
 ```yaml
-- name: Download DBmaestro Agent
-  uses: DBMaestroDev/github/.github/actions/sh/get-cli-jar@v1
+# Linux (default)
+- uses: DBMaestroDev/github/.github/actions/sh/create-package@v1
   with:
-    version: '26.1.0.13224'
-    jar-path: './tools/DBmaestroAgent.jar'
-```
+    package_name: V15
+    ...
 
----
-
-### PowerShell Actions
-
-All PowerShell actions use PowerShell scripts and are located in the `DBMaestroDev/github` repository at `.github/actions/ps/`.
-
-#### 1. Detect Changed Packages
-**Location:** `DBMaestroDev/github/.github/actions/ps/detect-changed-packages/action.yml`
-
-Detects changed packages from git commits or manual input using PowerShell.
-
-**Inputs:**
-- `package_name`: Comma-separated package names (optional)
-- `detect_from_push`: Detect from git push (default: `false`)
-- `is_pull_request`: Whether this is a PR event (default: `false`)
-- `base_ref`: Base reference for PR comparison (optional)
-
-**Outputs:**
-- `matrix`: JSON matrix for packages
-- `has_packages`: Whether packages were detected
-- `packages`: JSON array of packages
-- `packages_list`: Comma-separated list of packages
-
-**Detection Sources:**
-1. Manual comma-separated input
-2. Git diff from push events
-3. Git diff from pull requests
-
----
-
-#### 2. Upgrade Environment
-**Location:** `DBMaestroDev/github/.github/actions/ps/upgrade-environment/action.yml`
-
-Upgrades a target environment with a specific package using DBmaestro on Windows.
-
-**Inputs:**
-- `package_name`: Package name to upgrade (required)
-- `target_environment`: Target environment (required)
-- `project_name`: DBmaestro project name (required)
-- `agent_jar_path`: Path to DBmaestro Agent JAR (required)
-- `use_ssl`: Use SSL (default: `True`)
-- `DBMAESTRO_SERVER`: DBmaestro server URL (required) - Format: `AGENT_DNS:PORT`, e.g., `agent01.dbmaestro.local:8017`
-- `DBMAESTRO_USER`: DBmaestro username (required)
-- `DBMAESTRO_PASSWORD`: DBmaestro password (required)
-- `auth_type`: Authentication type (default: `DBmaestroAccount`)
-
-**Steps:**
-1. Normalizes environment name (replaces underscores with spaces)
-2. Creates GitHub step summary with upgrade details
-3. Executes Java-based DBmaestro agent upgrade command
-4. Handles errors with appropriate exit codes
-
----
-
-#### 3. PR Comment
-**Location:** `DBMaestroDev/github/.github/actions/ps/pr-comment/action.yml`
-
-Posts a comment on a pull request with detected package information (identical to Linux version).
-
-**Inputs:**
-- `packages_list`: Comma-separated list of detected packages (required)
-- `environment_name`: Target environment name (required)
-- `github_token`: GitHub token for API access (required)
-
-**Steps:**
-1. Posts formatted comment to PR using GitHub Script API
-
----
-
-#### 4. Get CLI JAR
-**Location:** `DBMaestroDev/github/.github/actions/ps/get-cli-jar/action.yml`
-
-Downloads the DBmaestro Agent JAR file from GitHub releases using PowerShell.
-
-**Inputs:**
-- `version`: Version of the DBmaestro Agent JAR to download (required) - Format: `26.1.0.13224`
-- `jar-path`: Path where the JAR file will be saved (required) - Example: `.\DBmaestroAgent.jar`
-
-**Outputs:**
-- `jar-file`: Path to the downloaded JAR file
-- `download-success`: Whether the download was successful
-
-**Steps:**
-1. Creates target directory if it doesn't exist
-2. Downloads JAR file using `Invoke-WebRequest` from `https://raw.githubusercontent.com/DBMaestroDev/dbm_jar/refs/tags/v{version}/DBmaestroAgent.jar`
-3. Verifies file exists and is not empty
-4. Reports file size and download success
-
-**Usage:**
-```yaml
-- name: Download DBmaestro Agent
-  uses: DBMaestroDev/github/.github/actions/ps/get-cli-jar@v1
+# Windows — just swap sh → ps
+- uses: DBMaestroDev/github/.github/actions/ps/create-package@v1
   with:
-    version: '26.1.0.13224'
-    jar-path: '.\tools\DBmaestroAgent.jar'
+    package_name: V15
+    ...
 ```
 
----
+> The input names are identical between `sh/` and `ps/` variants.
 
-## Usage
+### Switching from Linux to Windows — reusable workflows
 
-### Example: Calling the Linux Build and Validate Workflow
-
-```yaml
-name: Build Packages
-
-on:
-  workflow_dispatch:
-    inputs:
-      packages:
-        description: 'Packages to build (JSON array)'
-        required: true
-
-jobs:
-  build:
-    uses: DBMaestroDev/github/.github/workflows/sh-build-validate.yml@v1
-    with:
-      project_name: 'MyProject'
-      packages_matrix: ${{ github.event.inputs.packages }}
-      runner: 'ubuntu-latest'
-      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
-      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
-    secrets:
-      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
-```
-
-### Example: Calling the Linux Upgrade Workflow with Manual Packages
+For upgrade scenarios, swap the workflow file name and runner:
 
 ```yaml
-name: Manual Upgrade
-
-on:
-  workflow_dispatch:
-    inputs:
-      packages:
-        description: 'Packages to upgrade (comma-separated)'
-        required: true
-      environment:
-        description: 'Target environment'
-        required: true
-
+# Linux (sh — default)
 jobs:
   upgrade:
     uses: DBMaestroDev/github/.github/workflows/sh-upgrade-environment.yml@v1
     with:
-      package_name: ${{ github.event.inputs.packages }}
-      target_environment: ${{ github.event.inputs.environment }}
-      project_name: 'Demo-PSQL'
-      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
-      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
-    secrets:
-      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
-```
+      runner: 'dbmaestro-runner'
+      ...
 
-### Example: Calling the Upgrade Workflow on Push (Auto-Detect)
-
-```yaml
-name: Auto Upgrade on Push
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/**'
-
+# PowerShell (same runner, just swap the workflow name)
 jobs:
   upgrade:
-    uses: DBMaestroDev/github/.github/workflows/sh-upgrade-environment.yml@v1
+    uses: DBMaestroDev/github/.github/workflows/ps-upgrade-environment.yml@v1
     with:
-      target_environment: 'Development'
-      project_name: 'Demo-PSQL'
-      detect_from_push: true
-      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
-      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
-    secrets:
-      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+      runner: 'dbmaestro-runner'
+      ...
 ```
 
-### Example: Calling the Upgrade Workflow on Pull Request
-
-```yaml
-name: Upgrade on PR
-
-on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'packages/**'
-
-jobs:
-  upgrade:
-    uses: DBMaestroDev/github/.github/workflows/sh-upgrade-environment.yml@v1
-    with:
-      target_environment: 'QA'
-      project_name: 'Demo-PSQL'
-      is_pull_request: true
-      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
-      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
-    secrets:
-      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
-```
-
-### Example: Using Composite Actions Directly
-
-```yaml
-- name: Detect Packages
-  id: detect
-  uses: DBMaestroDev/github/.github/actions/sh/detect-changed-packages@v1
-  with:
-    package_name: 'V15,V16'
-    detect_from_push: false
-
-- name: Upgrade Environment
-  uses: DBMaestroDev/github/.github/actions/sh/upgrade-environment@v1
-  with:
-    package_name: 'V15'
-    target_environment: 'Production'
-    project_name: 'MyProject'
-    agent_jar_path: '/opt/dbmaestro/agent/DBmaestroAgent.jar'
-    dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
-    dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
-    DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
-```
-
----
-
-## Key Differences: Linux vs PowerShell
-
-| Feature | Linux | PowerShell |
-|---------|-------|------------|
-| **Shell** | bash | PowerShell |
-| **Default Runner** | `ubuntu-latest` (configurable) | `self-hosted` |
-| **Agent Path** | `/opt/dbmaestro/agent/DBmaestroAgent.jar` | `C:\Program Files (x86)\DBmaestro\DOP Server\Agent\DBmaestroAgent.jar` |
-| **Additional Workflows** | Build and Validate | (not available) |
-| **Linux-Only Actions** | Create Package, Precheck Package | (not available) |
-| **Common Actions** | Detect Changed Packages, Upgrade Environment, PR Comment, Get CLI JAR | Detect Changed Packages, Upgrade Environment, PR Comment, Get CLI JAR |
+> `ps-build-validate` and `ps-build-source-control` workflows do not exist — for Windows build pipelines, call the `ps/` composite actions directly (see `example-build-direct-actions.yml`).
 
 ---
 
 ## Required Secrets and Variables
 
-All workflows require the following secret and variables to be configured:
-Vars:
-- `DBMAESTRO_SERVER`: DBmaestro server hostname/URL
-  - Format: `AGENT_DNS:PORT` (Example: `agent01.dbmaestro.local:8017`)
-- `DBMAESTRO_USER`: DBmaestro username
-Secret:
-- `DBMAESTRO_PASSWORD`: DBmaestro password or API token
+Configure in **Settings → Secrets and variables → Actions**:
 
-For PR comments, `GITHUB_TOKEN` is automatically provided by GitHub Actions.
-
----
-
-## Notes
-
-- **Sequential Execution**: All upgrade jobs use `max-parallel: 1` to ensure packages are upgraded in order
-- **Environment Name Normalization**: Both Linux and PowerShell actions automatically replace underscores with spaces in environment names
-- **Package Detection**: Packages are detected from the `packages/` folder root directory
-- **Runner Requirements**: Linux workflows can run on `ubuntu-latest` or self-hosted runners; PowerShell workflows require Windows runners
+| Name | Type | Description |
+|------|------|-------------|
+| `DBMAESTRO_PASSWORD` | Secret | DBmaestro account password |
+| `DBMAESTRO_SERVER` | Variable | Agent hostname and port, e.g. `agent01.local:8017` |
+| `DBMAESTRO_USER` | Variable | DBmaestro username |

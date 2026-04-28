@@ -1,0 +1,86 @@
+# Example: Build with Direct Action Usage (no reusable workflow wrapper)
+# Calls the composite actions directly for full control over the pipeline steps.
+# Useful when you need to add custom steps between create and precheck.
+
+name: Example - Build Direct Action Usage (Linux)
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_names:
+        description: 'Package names to build (comma-separated, e.g., V15,V16)'
+        required: true
+        type: string
+      project_name:
+        description: 'DBmaestro project name'
+        required: true
+        type: string
+        default: 'Demo-PSQL'
+
+env:
+  AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
+  PACKAGES_FOLDER: 'packages'
+
+jobs:
+  prepare_matrix:
+    name: Prepare Package Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.create-matrix.outputs.matrix }}
+    steps:
+      - name: Create Matrix from Input
+        id: create-matrix
+        shell: bash
+        run: |
+          IFS=',' read -ra PACKAGES <<< "${{ inputs.package_names }}"
+          matrix="["
+          first=true
+          for pkg in "${PACKAGES[@]}"; do
+            pkg=$(echo "$pkg" | xargs)
+            if [ -n "$pkg" ]; then
+              [ "$first" = false ] && matrix="$matrix,"
+              matrix="$matrix{\"package\":\"$pkg\"}"
+              first=false
+            fi
+          done
+          matrix="$matrix]"
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  build_packages:
+    name: Build Package - ${{ matrix.item.package }}
+    runs-on: dbmaestro-linux
+    needs: prepare_matrix
+    strategy:
+      max-parallel: 1
+      matrix:
+        item: ${{ fromJson(needs.prepare_matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Create Package
+        id: create
+        uses: DBMaestroDev/github/.github/actions/sh/create-package@v1
+        with:
+          package_name: ${{ matrix.item.package }}
+          project_name: ${{ inputs.project_name }}
+          packages_folder: ${{ env.PACKAGES_FOLDER }}
+          agent_jar_path: ${{ env.AGENT_JAR }}
+          dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+          use_ssl: 'True'
+          auth_type: 'DBmaestroAccount'
+          dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+          package_type: 'Regular'
+
+      - name: Precheck Package
+        uses: DBMaestroDev/github/.github/actions/sh/precheck-package@v1
+        with:
+          package_name: ${{ matrix.item.package }}
+          project_name: ${{ inputs.project_name }}
+          agent_jar_path: ${{ env.AGENT_JAR }}
+          dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+          use_ssl: 'True'
+          auth_type: 'DBmaestroAccount'
+          dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}

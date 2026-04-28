@@ -1,0 +1,89 @@
+# Azure DevOps step template: build-from-source
+# Builds a DBmaestro package from source control (Tasks or Specific Commit).
+#
+# Usage in your azure-pipelines.yml:
+#
+#   steps:
+#     - template: azure-devops/templates/build-from-source.yml@dbmaestro-cicd
+#       parameters:
+#         packageName: "MyPackage"
+#         projectName: "MyProject"
+#         envName: "Dev_Env_1"
+#         versionType: "Tasks"
+#         additionalInformation: "TASK-123,TASK-456"
+#         agentJarPath: "/home/runner/DBmaestroAgent.jar"
+#         server: "dbmaestro.example.com"
+#         user: $(DBMAESTRO_USER)
+#         password: $(DBMAESTRO_PASSWORD)
+
+parameters:
+  - name: packageName
+    type: string
+  - name: projectName
+    type: string
+  - name: envName
+    type: string
+  - name: agentJarPath
+    type: string
+    default: "/home/runner/DBmaestroAgent.jar"
+  - name: server
+    type: string
+  - name: user
+    type: string
+  - name: password
+    type: string
+  - name: versionType
+    type: string
+    default: ""
+  - name: additionalInformation
+    type: string
+    default: ""
+  - name: useSsl
+    type: string
+    default: "True"
+  - name: authType
+    type: string
+    default: "DBmaestroAccount"
+  - name: useWindows
+    type: boolean
+    default: false
+
+steps:
+  - ${{ if not(parameters.useWindows) }}:
+    - task: Bash@3
+      displayName: "DBmaestro: Build Package '${{ parameters.packageName }}' from Source"
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+        DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+        DBMAESTRO_ENV_NAME: ${{ parameters.envName }}
+        DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+        DBMAESTRO_SERVER: ${{ parameters.server }}
+        DBMAESTRO_USER: ${{ parameters.user }}
+        DBMAESTRO_PASSWORD: ${{ parameters.password }}
+        DBMAESTRO_VERSION_TYPE: ${{ parameters.versionType }}
+        DBMAESTRO_ADDITIONAL_INFORMATION: ${{ parameters.additionalInformation }}
+        DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+        DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)/core/scripts/sh/build-from-source.sh
+
+  - ${{ if parameters.useWindows }}:
+    - task: PowerShell@2
+      displayName: "DBmaestro: Build Package '${{ parameters.packageName }}' from Source (Windows)"
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+        DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+        DBMAESTRO_ENV_NAME: ${{ parameters.envName }}
+        DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+        DBMAESTRO_SERVER: ${{ parameters.server }}
+        DBMAESTRO_USER: ${{ parameters.user }}
+        DBMAESTRO_PASSWORD: ${{ parameters.password }}
+        DBMAESTRO_VERSION_TYPE: ${{ parameters.versionType }}
+        DBMAESTRO_ADDITIONAL_INFORMATION: ${{ parameters.additionalInformation }}
+        DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+        DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)/core/scripts/ps/build-from-source.ps1
+        pwsh: true

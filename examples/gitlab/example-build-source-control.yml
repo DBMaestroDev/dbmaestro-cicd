@@ -1,0 +1,60 @@
+# Example: Build from Source Control (GitLab CI)
+# Builds a DBmaestro package from source control by task list, commit hash, or all changes.
+# Trigger via the GitLab "Run pipeline" UI and set the required variables.
+
+include:
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/build-from-source.yml'
+
+stages:
+  - setup
+  - build
+
+variables:
+  DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
+  DBMAESTRO_USE_SSL: 'True'
+  DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'
+  DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
+  # Set these variables in the GitLab "Run pipeline" UI:
+  # DBMAESTRO_PACKAGE_NAME      - package to build
+  # DBMAESTRO_ENV_NAME          - development environment name
+  # BUILD_TYPE                  - one of: "All", "Tasks", "Commit"
+  # TASKS_LIST                  - comma-separated task IDs (when BUILD_TYPE=Tasks)
+  # COMMIT_HASH                 - commit hash (when BUILD_TYPE=Commit)
+  BUILD_TYPE: 'All'
+  TASKS_LIST: ''
+  COMMIT_HASH: ''
+
+# --- Setup Stage ---
+get_cli_jar:
+  extends: .get-cli-jar
+  stage: setup
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+
+# --- Build Stage ---
+build_from_source:
+  extends: .build-from-source
+  stage: build
+  needs: [get_cli_jar]
+  before_script:
+    - |
+      case "$BUILD_TYPE" in
+        "Tasks")
+          export DBMAESTRO_VERSION_TYPE="Tasks"
+          export DBMAESTRO_ADDITIONAL_INFORMATION="$TASKS_LIST"
+          ;;
+        "Commit")
+          export DBMAESTRO_VERSION_TYPE="Specific Commit"
+          export DBMAESTRO_ADDITIONAL_INFORMATION="$COMMIT_HASH"
+          ;;
+        *)
+          export DBMAESTRO_VERSION_TYPE=""
+          export DBMAESTRO_ADDITIONAL_INFORMATION=""
+          ;;
+      esac
+      echo "Build type resolved: $DBMAESTRO_VERSION_TYPE"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always

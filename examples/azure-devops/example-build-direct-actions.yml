@@ -1,0 +1,104 @@
+# Example: Build with Direct Template Usage (Azure DevOps)
+# Calls DBmaestro templates directly for full control over each pipeline step.
+# Trigger manually and provide the package names to build.
+
+parameters:
+  - name: packageNames
+    displayName: 'Package names (comma-separated, e.g., V15,V16)'
+    type: string
+  - name: projectName
+    displayName: 'DBmaestro project name'
+    type: string
+    default: 'Demo-PSQL'
+  - name: packagesFolder
+    type: string
+    default: 'packages'
+  - name: agentJarPath
+    type: string
+    default: '/home/runner/DBmaestroAgent.jar'
+  - name: runnerPool
+    type: string
+    default: 'dbmaestro-linux'
+
+trigger: none
+pr: none
+
+stages:
+  - stage: Setup
+    displayName: 'Setup'
+    jobs:
+      - job: GetCliJar
+        displayName: 'Download DBmaestro CLI'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
+            parameters:
+              jarPath: ${{ parameters.agentJarPath }}
+              useWindows: false
+
+  - stage: Build
+    displayName: 'Build Packages'
+    dependsOn: Setup
+    jobs:
+      - job: CreateAndPrecheckPackages
+        displayName: 'Create and Precheck All Packages'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: self
+
+          # Loop over each comma-separated package name
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+              for PKG in "${PACKAGES[@]}"; do
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+                echo "##vso[task.setvariable variable=currentPackage]$PKG"
+                echo "Processing package: $PKG"
+              done
+            displayName: 'List Packages to Process'
+
+          # Azure DevOps does not support dynamic step loops, so packages are
+          # processed in a single Bash step that calls the core scripts directly.
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+              for PKG in "${PACKAGES[@]}"; do
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+                echo "=== Creating package: $PKG ==="
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
+                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
+                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
+                export DBMAESTRO_USE_SSL="True"
+                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
+                export DBMAESTRO_PACKAGE_TYPE="Regular"
+                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm_output_${PKG}.env"
+                bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh"
+              done
+            displayName: 'Create Packages'
+            env:
+              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
+
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+              for PKG in "${PACKAGES[@]}"; do
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+                echo "=== Prechecking package: $PKG ==="
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
+                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
+                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
+                export DBMAESTRO_USE_SSL="True"
+                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
+                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm_precheck_${PKG}.env"
+                bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh"
+              done
+            displayName: 'Precheck Packages'
+            env:
+              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)

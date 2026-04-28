@@ -1,0 +1,51 @@
+# GitLab CI template: precheck-package
+# Validates a DBmaestro package using the precheck operation.
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
+#
+#   precheck:
+#     extends: .precheck-package
+#     needs: [create]
+#     variables:
+#       DBMAESTRO_PACKAGE_NAME: "MyPackage"
+#       DBMAESTRO_PROJECT_NAME: "MyProject"
+#       DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+#       DBMAESTRO_SERVER: "dbmaestro.example.com"
+
+.precheck-package:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  before_script:
+    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/precheck-package.sh"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env
+
+.precheck-package-windows:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/precheck-package.ps1"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env

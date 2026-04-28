@@ -1,0 +1,69 @@
+# Example: Build with Branch Name as Package Name (GitLab CI)
+# Uses the current branch name (or MR source branch) as the package name.
+
+include:
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
+
+stages:
+  - setup
+  - build
+  - validate
+
+variables:
+  DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
+  DBMAESTRO_PACKAGES_FOLDER: 'packages'
+  DBMAESTRO_USE_SSL: 'True'
+  DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'
+  DBMAESTRO_PACKAGE_TYPE: 'Regular'
+  DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
+
+# --- Setup Stage ---
+get_cli_jar:
+  extends: .get-cli-jar
+  stage: setup
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# --- Build Stage ---
+create_package_from_branch:
+  extends: .create-package
+  stage: build
+  needs: [get_cli_jar]
+  variables:
+    DBMAESTRO_PACKAGE_NAME: >-
+      $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "" ?
+      $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME : $CI_COMMIT_REF_NAME
+  before_script:
+    - |
+      if [ -n "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" ]; then
+        export DBMAESTRO_PACKAGE_NAME="$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      else
+        export DBMAESTRO_PACKAGE_NAME="$CI_COMMIT_REF_NAME"
+      fi
+      echo "DBMAESTRO_PACKAGE_NAME=$DBMAESTRO_PACKAGE_NAME" >> build.env
+    - source build.env || true
+  artifacts:
+    reports:
+      dotenv: build.env
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# --- Validate Stage ---
+precheck_package_from_branch:
+  extends: .precheck-package
+  stage: validate
+  needs: [create_package_from_branch]
+  before_script:
+    - |
+      if [ -n "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" ]; then
+        export DBMAESTRO_PACKAGE_NAME="$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      else
+        export DBMAESTRO_PACKAGE_NAME="$CI_COMMIT_REF_NAME"
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'

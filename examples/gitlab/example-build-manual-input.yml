@@ -1,0 +1,100 @@
+# Example: Build with Manual Package Selection (GitLab CI)
+# Accepts a comma-separated list of package names via CI/CD variable at pipeline trigger time.
+# Run via the GitLab "Run pipeline" UI and set PACKAGE_NAMES_INPUT.
+
+include:
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
+
+stages:
+  - setup
+  - build
+  - validate
+  - summary
+
+variables:
+  DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
+  DBMAESTRO_PACKAGES_FOLDER: 'packages'
+  DBMAESTRO_USE_SSL: 'True'
+  DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'
+  DBMAESTRO_PACKAGE_TYPE: 'Regular'
+  DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
+  # Set this variable in the GitLab "Run pipeline" UI
+  # Format: comma-separated, e.g., "V15,V16,V33"
+  PACKAGE_NAMES_INPUT: ''
+
+# --- Setup Stage ---
+get_cli_jar:
+  extends: .get-cli-jar
+  stage: setup
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+
+# --- Build Stage ---
+create_packages:
+  extends: .create-package
+  stage: build
+  needs: [get_cli_jar]
+  script:
+    - |
+      IFS=',' read -ra PACKAGES <<< "$PACKAGE_NAMES_INPUT"
+      SUCCESS_PKGS=""
+      FAILED_PKGS=""
+      for PKG in "${PACKAGES[@]}"; do
+        PKG=$(echo "$PKG" | xargs)
+        [ -z "$PKG" ] && continue
+        export DBMAESTRO_PACKAGE_NAME="$PKG"
+        echo "Creating package: $PKG"
+        if bash "$CI_PROJECT_DIR/core/scripts/sh/create-package.sh"; then
+          SUCCESS_PKGS="$SUCCESS_PKGS $PKG"
+        else
+          FAILED_PKGS="$FAILED_PKGS $PKG"
+        fi
+      done
+      echo "CREATED_PACKAGES=$SUCCESS_PKGS" >> build_results.env
+      echo "FAILED_CREATES=$FAILED_PKGS" >> build_results.env
+  artifacts:
+    reports:
+      dotenv: build_results.env
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+
+# --- Validate Stage ---
+precheck_packages:
+  extends: .precheck-package
+  stage: validate
+  needs: [create_packages]
+  script:
+    - |
+      IFS=',' read -ra PACKAGES <<< "$PACKAGE_NAMES_INPUT"
+      for PKG in "${PACKAGES[@]}"; do
+        PKG=$(echo "$PKG" | xargs)
+        [ -z "$PKG" ] && continue
+        export DBMAESTRO_PACKAGE_NAME="$PKG"
+        echo "Prechecking package: $PKG"
+        bash "$CI_PROJECT_DIR/core/scripts/sh/precheck-package.sh"
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+
+# --- Summary Stage ---
+pipeline_summary:
+  stage: summary
+  image: alpine:latest
+  needs: [precheck_packages]
+  when: always
+  script:
+    - |
+      echo "============================================"
+      echo "   DBmaestro Package Build Summary"
+      echo "============================================"
+      echo "Project:  $DBMAESTRO_PROJECT_NAME"
+      echo "Packages: $PACKAGE_NAMES_INPUT"
+      echo "============================================"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always

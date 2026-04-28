@@ -1,0 +1,141 @@
+# Azure DevOps pipeline template: deploy
+# Combined deployment pipeline stage: detect → create → precheck → upgrade
+#
+# Usage in your azure-pipelines.yml:
+#
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
+#   extends:
+#     template: azure-devops/templates/deploy.yml@dbmaestro-cicd
+#     parameters:
+#       server: "dbmaestro.example.com"
+#       projectName: "MyProject"
+#       targetEnvironment: "Production"
+#       pool: "dbmaestro-runner"
+#       dbmaestroVersion: "26.1.0.13224"
+#       packages:
+#         - "PackageA"
+#         - "PackageB"
+
+parameters:
+  - name: server
+    type: string
+  - name: projectName
+    type: string
+  - name: targetEnvironment
+    type: string
+  - name: agentJarPath
+    type: string
+    default: "/home/runner/DBmaestroAgent.jar"
+  - name: dbmaestroVersion
+    type: string
+    default: ""
+  - name: packages
+    type: object
+    default: []
+  - name: detectFromPush
+    type: boolean
+    default: true
+  - name: packageName
+    type: string
+    default: ""
+  - name: packagesFolder
+    type: string
+    default: "packages"
+  - name: useSsl
+    type: string
+    default: "True"
+  - name: authType
+    type: string
+    default: "DBmaestroAccount"
+  - name: useWindows
+    type: boolean
+    default: false
+  - name: pool
+    type: string
+    default: "dbmaestro-runner"
+
+stages:
+  - stage: DBmaestro_Setup
+    displayName: "DBmaestro Setup"
+    jobs:
+      - job: DownloadJar
+        displayName: "Download Agent JAR"
+        pool:
+          name: ${{ parameters.pool }}
+        ${{ if ne(parameters.dbmaestroVersion, '') }}:
+          steps:
+            - checkout: self
+            - checkout: dbmaestro-cicd
+            - template: get-cli-jar.yml
+              parameters:
+                version: ${{ parameters.dbmaestroVersion }}
+                jarPath: ${{ parameters.agentJarPath }}
+                useWindows: ${{ parameters.useWindows }}
+
+  - stage: DBmaestro_Build
+    displayName: "DBmaestro Build & Validate"
+    dependsOn: DBmaestro_Setup
+    jobs:
+      - ${{ each pkg in parameters.packages }}:
+        - job: Build_${{ replace(pkg, '-', '_') }}
+          displayName: "Create & Validate: ${{ pkg }}"
+          pool:
+            name: ${{ parameters.pool }}
+          steps:
+            - checkout: self
+            - checkout: dbmaestro-cicd
+            - template: create-package.yml
+              parameters:
+                packageName: ${{ pkg }}
+                projectName: ${{ parameters.projectName }}
+                agentJarPath: ${{ parameters.agentJarPath }}
+                server: ${{ parameters.server }}
+                user: $(DBMAESTRO_USER)
+                password: $(DBMAESTRO_PASSWORD)
+                packagesFolder: ${{ parameters.packagesFolder }}
+                useSsl: ${{ parameters.useSsl }}
+                authType: ${{ parameters.authType }}
+                useWindows: ${{ parameters.useWindows }}
+            - template: precheck-package.yml
+              parameters:
+                packageName: ${{ pkg }}
+                projectName: ${{ parameters.projectName }}
+                agentJarPath: ${{ parameters.agentJarPath }}
+                server: ${{ parameters.server }}
+                user: $(DBMAESTRO_USER)
+                password: $(DBMAESTRO_PASSWORD)
+                useSsl: ${{ parameters.useSsl }}
+                authType: ${{ parameters.authType }}
+                useWindows: ${{ parameters.useWindows }}
+
+  - stage: DBmaestro_Deploy
+    displayName: "DBmaestro Deploy"
+    dependsOn: DBmaestro_Build
+    jobs:
+      - ${{ each pkg in parameters.packages }}:
+        - job: Deploy_${{ replace(pkg, '-', '_') }}
+          displayName: "Upgrade '${{ parameters.targetEnvironment }}': ${{ pkg }}"
+          pool:
+            name: ${{ parameters.pool }}
+          steps:
+            - checkout: self
+            - checkout: dbmaestro-cicd
+            - template: upgrade-environment.yml
+              parameters:
+                packageName: ${{ pkg }}
+                projectName: ${{ parameters.projectName }}
+                targetEnvironment: ${{ parameters.targetEnvironment }}
+                agentJarPath: ${{ parameters.agentJarPath }}
+                server: ${{ parameters.server }}
+                user: $(DBMAESTRO_USER)
+                password: $(DBMAESTRO_PASSWORD)
+                useSsl: ${{ parameters.useSsl }}
+                authType: ${{ parameters.authType }}
+                useWindows: ${{ parameters.useWindows }}

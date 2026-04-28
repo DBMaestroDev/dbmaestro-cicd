@@ -43,106 +43,25 @@ inputs:
 outputs:
   package-created:
     description: 'Whether package was created successfully'
-    value: ${{ steps.create.outputs.success }}
+    value: ${{ steps.create.outputs.package_created }}
 runs:
   using: 'composite'
   steps:
-    - name: Validate package folder exists
-      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
-      run: |
-        $ErrorActionPreference = 'Stop'
-
-        $packagesFolder = "${{ inputs.packages_folder }}"
-        $packageName = "${{ inputs.package_name }}"
-        $packagePath = Join-Path -Path $packagesFolder -ChildPath $packageName
-
-        if (-not (Test-Path -Path $packagePath -PathType Container)) {
-          Write-Host "ERROR: Folder $packageName does not exist in $packagesFolder"
-          exit 1
-        } else {
-          Write-Host "Found package folder: $packageName"
-        }
-
-    - name: Create manifest file
-      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
-      run: |
-        $ErrorActionPreference = 'Stop'
-
-        $packageName = "${{ inputs.package_name }}"
-        $packagesFolder = "${{ inputs.packages_folder }}"
-        $agentJarPath = "${{ inputs.agent_jar_path }}"
-        $packageType = "${{ inputs.package_type }}"
-        $scriptsFolder = Join-Path -Path $packagesFolder -ChildPath $packageName
-
-        Write-Host "Creating manifest for package $packageName"
-
-        & java -jar "$agentJarPath" -CreateManifestFile `
-          -PathToScriptsFolder "$scriptsFolder" `
-          -Operation "CreateOrUpdate" `
-          -PackageType "$packageType"
-
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "ERROR: Failed to create manifest file"
-          exit 1
-        }
-
-    - name: Create zip archive
-      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
-      run: |
-        $ErrorActionPreference = 'Stop'
-
-        $packageName = "${{ inputs.package_name }}"
-        $packagesFolder = "${{ inputs.packages_folder }}"
-        $zipFile = "$packageName.zip"
-        $sourcePath = Join-Path -Path $packagesFolder -ChildPath $packageName
-        $destinationPath = Join-Path -Path (Get-Location) -ChildPath $zipFile
-
-        Write-Host "Creating zip archive from $packageName"
-
-        # Remove existing zip file if it exists
-        if (Test-Path -Path $destinationPath) {
-          Remove-Item -Path $destinationPath -Force
-        }
-
-        # Create zip archive using Compress-Archive
-        Compress-Archive -Path "$sourcePath\*" -DestinationPath $destinationPath -CompressionLevel Optimal
-
-        if (Test-Path -Path $destinationPath) {
-          $fileSize = (Get-Item -Path $destinationPath).Length
-          Write-Host "Zip archive created: $zipFile (Size: $fileSize bytes)"
-        } else {
-          Write-Host "ERROR: Failed to create zip archive"
-          exit 1
-        }
-
-    - name: Create package in DBmaestro
+    - name: Create Package
       id: create
-      shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"
+      shell: pwsh
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_PACKAGES_FOLDER: ${{ inputs.packages_folder }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+        DBMAESTRO_PACKAGE_TYPE: ${{ inputs.package_type }}
+        DBMAESTRO_IGNORE_WARNINGS: ${{ inputs.ignore_script_warnings }}
       run: |
-        $ErrorActionPreference = 'Stop'
-
-        $packageName = "${{ inputs.package_name }}"
-        $projectName = "${{ inputs.project_name }}"
-        $agentJarPath = "${{ inputs.agent_jar_path }}"
-        $zipFile = "$packageName.zip"
-
-        Write-Host "Creating package $packageName in DBmaestro"
-
-        & java -jar "$agentJarPath" -Package `
-          -ProjectName "$projectName" `
-          -IgnoreScriptWarnings "${{ inputs.ignore_script_warnings }}" `
-          -FilePath "$zipFile" `
-          -Server "${{ inputs.dbmaestro_server }}" `
-          -UseSSL "${{ inputs.use_ssl }}" `
-          -AuthType "${{ inputs.auth_type }}" `
-          -UserName "${{ inputs.username }}" `
-          -Password "${{ inputs.password }}"
-
-        if ($LASTEXITCODE -eq 0) {
-          Write-Host "Package created successfully"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "success=true"
-        } else {
-          Write-Host "Failed to create package"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "success=false"
-          exit 1
-        }
+        $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
+        & "$env:GITHUB_WORKSPACE/core/scripts/ps/create-package.ps1"

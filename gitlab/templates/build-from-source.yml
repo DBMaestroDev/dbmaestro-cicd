@@ -1,0 +1,48 @@
+# GitLab CI template: build-from-source
+# Builds a DBmaestro package from source control (Tasks or Specific Commit).
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/build-from-source.yml'
+#
+#   build:
+#     extends: .build-from-source
+#     variables:
+#       DBMAESTRO_PACKAGE_NAME: "MyPackage"
+#       DBMAESTRO_PROJECT_NAME: "MyProject"
+#       DBMAESTRO_ENV_NAME: "Dev_Env_1"
+#       DBMAESTRO_VERSION_TYPE: "Tasks"
+#       DBMAESTRO_ADDITIONAL_INFORMATION: "TASK-123,TASK-456"
+
+.build-from-source:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_ENV_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_VERSION_TYPE: ""
+    DBMAESTRO_ADDITIONAL_INFORMATION: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/build-from-source.sh"
+
+.build-from-source-windows:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_ENV_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_VERSION_TYPE: ""
+    DBMAESTRO_ADDITIONAL_INFORMATION: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/build-from-source.ps1"

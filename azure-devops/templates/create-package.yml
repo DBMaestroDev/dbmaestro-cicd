@@ -1,0 +1,87 @@
+# Azure DevOps step template: create-package
+# Creates a DBmaestro package (manifest + archive + upload).
+#
+# Usage in your azure-pipelines.yml:
+#
+#   steps:
+#     - template: azure-devops/templates/create-package.yml@dbmaestro-cicd
+#       parameters:
+#         packageName: "MyPackage"
+#         projectName: "MyProject"
+#         agentJarPath: "/home/runner/DBmaestroAgent.jar"
+#         server: "dbmaestro.example.com"
+#         user: $(DBMAESTRO_USER)
+#         password: $(DBMAESTRO_PASSWORD)
+
+parameters:
+  - name: packageName
+    type: string
+  - name: projectName
+    type: string
+  - name: agentJarPath
+    type: string
+    default: "/home/runner/DBmaestroAgent.jar"
+  - name: server
+    type: string
+  - name: user
+    type: string
+  - name: password
+    type: string
+  - name: packagesFolder
+    type: string
+    default: "packages"
+  - name: useSsl
+    type: string
+    default: "True"
+  - name: authType
+    type: string
+    default: "DBmaestroAccount"
+  - name: packageType
+    type: string
+    default: "Regular"
+  - name: ignoreWarnings
+    type: string
+    default: "True"
+  - name: useWindows
+    type: boolean
+    default: false
+
+steps:
+  - ${{ if not(parameters.useWindows) }}:
+    - task: Bash@3
+      displayName: "DBmaestro: Create Package '${{ parameters.packageName }}'"
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+        DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+        DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+        DBMAESTRO_SERVER: ${{ parameters.server }}
+        DBMAESTRO_USER: ${{ parameters.user }}
+        DBMAESTRO_PASSWORD: ${{ parameters.password }}
+        DBMAESTRO_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
+        DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+        DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        DBMAESTRO_PACKAGE_TYPE: ${{ parameters.packageType }}
+        DBMAESTRO_IGNORE_WARNINGS: ${{ parameters.ignoreWarnings }}
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)/core/scripts/sh/create-package.sh
+
+  - ${{ if parameters.useWindows }}:
+    - task: PowerShell@2
+      displayName: "DBmaestro: Create Package '${{ parameters.packageName }}' (Windows)"
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+        DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+        DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+        DBMAESTRO_SERVER: ${{ parameters.server }}
+        DBMAESTRO_USER: ${{ parameters.user }}
+        DBMAESTRO_PASSWORD: ${{ parameters.password }}
+        DBMAESTRO_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
+        DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+        DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        DBMAESTRO_PACKAGE_TYPE: ${{ parameters.packageType }}
+        DBMAESTRO_IGNORE_WARNINGS: ${{ parameters.ignoreWarnings }}
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)/core/scripts/ps/create-package.ps1
+        pwsh: true

@@ -1,0 +1,45 @@
+# GitLab CI template: upgrade-environment
+# Upgrades a DBmaestro target environment with a specific package.
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/upgrade-environment.yml'
+#
+#   upgrade:
+#     extends: .upgrade-environment
+#     needs: [precheck]
+#     variables:
+#       DBMAESTRO_PACKAGE_NAME: "MyPackage"
+#       DBMAESTRO_PROJECT_NAME: "MyProject"
+#       DBMAESTRO_TARGET_ENV: "Production"
+#       DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+#       DBMAESTRO_SERVER: "dbmaestro.example.com"
+
+.upgrade-environment:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_TARGET_ENV: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/upgrade-environment.sh"
+
+.upgrade-environment-windows:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_TARGET_ENV: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/upgrade-environment.ps1"

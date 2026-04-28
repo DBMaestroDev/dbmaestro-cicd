@@ -31,29 +31,22 @@ inputs:
 outputs:
   validation-passed:
     description: 'Whether validation passed'
-    value: ${{ steps.precheck.outputs.success }}
+    value: ${{ steps.precheck.outputs.validation_passed }}
 runs:
   using: 'composite'
   steps:
     - name: Run precheck validation
       id: precheck
       shell: bash
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
       run: |
-        echo "Pre-checking package ${{ inputs.package_name }}"
-        java -jar "${{ inputs.agent_jar_path }}" -PreCheck \
-          -ProjectName "${{ inputs.project_name }}" \
-          -PackageName "${{ inputs.package_name }}" \
-          -Server "${{ inputs.dbmaestro_server }}" \
-          -UseSSL "${{ inputs.use_ssl }}" \
-          -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.dbmaestro_user }}" \
-          -Password "${{ inputs.dbmaestro_password }}"
-
-        if [ $? -eq 0 ]; then
-          echo "Precheck validation passed"
-          echo "success=true" >> $GITHUB_OUTPUT
-        else
-          echo "Precheck validation failed"
-          echo "success=false" >> $GITHUB_OUTPUT
-          exit 1
-        fi
+        export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
+        bash "$GITHUB_WORKSPACE/core/scripts/sh/precheck-package.sh"

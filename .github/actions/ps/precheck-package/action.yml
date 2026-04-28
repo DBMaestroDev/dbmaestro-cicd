@@ -1,0 +1,52 @@
+# Version: v1.0
+name: 'Precheck DBmaestro Package'
+description: 'Validates a DBmaestro package using precheck operation (PowerShell/Windows)'
+inputs:
+  agent_jar_path:
+    description: 'Path to DBmaestro agent JAR file'
+    required: true
+  auth_type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  dbmaestro_password:
+    description: 'DBmaestro password or token'
+    required: true
+  dbmaestro_server:
+    description: 'DBmaestro server hostname'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: true
+  package_name:
+    description: 'Name of the package to validate'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  use_ssl:
+    description: 'Use SSL for connection'
+    required: false
+    default: 'True'
+outputs:
+  validation-passed:
+    description: 'Whether validation passed'
+    value: ${{ steps.precheck.outputs.validation_passed }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Run precheck validation
+      id: precheck
+      shell: pwsh
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: |
+        $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
+        & "$env:GITHUB_WORKSPACE/core/scripts/ps/precheck-package.ps1"

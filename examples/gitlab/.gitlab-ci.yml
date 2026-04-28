@@ -1,0 +1,22 @@
+# GitLab CI example pipeline for DBmaestro deployments
+# Copy this file to your project repository as .gitlab-ci.yml and adjust the variables section.
+#
+# Prerequisites:
+# 1. Set the following CI/CD masked variables in your GitLab project:
+#    - DBMAESTRO_USER      (your DBmaestro username)
+#    - DBMAESTRO_PASSWORD  (your DBmaestro password)
+# 2. Your package folders must live under packages/<package-name>/
+
+include:
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
+
+variables:
+  # --- DBmaestro connection ---
+  DBMAESTRO_SERVER: "dbmaestro.example.com"     # replace with your server
+  DBMAESTRO_PROJECT_NAME: "MyProject"           # replace with your project
+  DBMAESTRO_TARGET_ENV: "Production"            # replace with your target environment
+  DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+  DBMAESTRO_VERSION: "26.1.0.13224"             # replace with the JAR version to download
+  DBMAESTRO_USE_SSL: "True"
+  DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  DBMAESTRO_PACKAGES_FOLDER: "packages"

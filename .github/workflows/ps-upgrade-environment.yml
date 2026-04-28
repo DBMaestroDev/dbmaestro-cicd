@@ -12,7 +12,7 @@ on:
         description: 'Path to DBmaestro Agent JAR file'
         required: false
         type: string
-        default: 'C:\Program Files (x86)\DBmaestro\DOP Server\Agent\DBmaestroAgent.jar'
+        default: '/home/runner/DBmaestroAgent.jar'
       auth_type:
         description: 'Authentication type'
         required: false
@@ -55,6 +55,11 @@ on:
         required: false
         type: string
         default: 'True'
+      runner:
+        description: 'Runner label'
+        required: false
+        type: string
+        default: 'dbmaestro-runner'
     secrets:
       DBMAESTRO_PASSWORD:
         required: true
@@ -70,7 +75,7 @@ jobs:
   # Detect changed packages from push or workflow input
   detect_changed_packages:
     name: Detect Changed Packages
-    runs-on: self-hosted
+    runs-on: ${{ inputs.runner }}
     if: ${{ !inputs.is_pull_request }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
@@ -92,7 +97,7 @@ jobs:
   # Detect changed packages for pull requests
   detect_changed_packages_pr:
     name: Detect Changed Packages (Pull Request)
-    runs-on: self-hosted
+    runs-on: ${{ inputs.runner }}
     if: ${{ inputs.is_pull_request }}
     outputs:
       packages: ${{ steps.detect-pr.outputs.packages }}
@@ -112,7 +117,7 @@ jobs:
   # Comment on PR with detected packages
   comment_pr:
     name: Comment PR with Detected Changed Packages
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     if: ${{ inputs.is_pull_request }}
     needs: detect_changed_packages_pr
     steps:
@@ -129,7 +134,7 @@ jobs:
   # Upgrade environment with detected packages
   upgrade_environment:
     name: Upgrade Environment
-    runs-on: self-hosted
+    runs-on: ${{ inputs.runner }}
     needs: detect_changed_packages
     if: |
       !inputs.is_pull_request &&

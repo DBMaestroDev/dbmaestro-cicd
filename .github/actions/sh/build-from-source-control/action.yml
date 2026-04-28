@@ -53,29 +53,16 @@ runs:
     - name: Build Package from Source Control
       id: build
       shell: bash
-      run: |
-        echo "==== Building package: ${{ inputs.package_name }} ===="
-        echo "Project: ${{ inputs.project_name }}"
-        echo "Environment: ${{ inputs.environment-name }}"
-        echo "Version Type: ${{ inputs.version_type }}"
-        echo "Additional Information: ${{ inputs.additional_information }}"
-        
-        java -jar "${{ inputs.agent_jar_path }}" -Build \
-          -ProjectName "${{ inputs.project_name }}" \
-          -EnvName "${{ inputs.environment-name }}" \
-          -VersionType "${{ inputs.version_type }}" \
-          -AdditionalInformation "${{ inputs.additional_information }}" \
-          -CreatePackage True \
-          -PackageName "${{ inputs.package_name }}" \
-          -Server "${{ inputs.dbmaestro_server }}" \
-          -UseSSL "${{ inputs.use_ssl }}" \
-          -AuthType "${{ inputs.auth_type }}" \
-          -UserName "${{ inputs.username }}" \
-          -Password "${{ inputs.password }}"
-        
-        if [ $? -ne 0 ]; then
-          echo "::error::Failed to build package ${{ inputs.package_name }}"
-          exit 1
-        fi
-        
-        echo "✅ Package ${{ inputs.package_name }} built successfully"
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_ENV_NAME: ${{ inputs.environment-name }}
+        DBMAESTRO_VERSION_TYPE: ${{ inputs.version_type }}
+        DBMAESTRO_ADDITIONAL_INFORMATION: ${{ inputs.additional_information }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: bash "$GITHUB_WORKSPACE/core/scripts/sh/build-from-source.sh"

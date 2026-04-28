@@ -1,0 +1,48 @@
+# GitLab CI template: detect-packages
+# Detects changed DBmaestro packages from git diff, push, or manual input.
+# Outputs are exposed via dotenv artifact: has_packages, packages_list, matrix, packages
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/detect-packages.yml'
+#
+#   detect:
+#     extends: .detect-packages
+#     variables:
+#       DETECT_FROM_PUSH: "true"
+
+.detect-packages:
+  variables:
+    DETECT_IS_PULL_REQUEST: "false"
+    DETECT_BASE_REF: ""
+    DETECT_FROM_PUSH: "false"
+    DETECT_PACKAGE_NAME: ""
+  before_script:
+    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/detect-packages.sh"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env
+
+.detect-packages-mr:
+  extends: .detect-packages
+  variables:
+    DETECT_IS_PULL_REQUEST: "true"
+    DETECT_BASE_REF: "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+.detect-packages-windows:
+  variables:
+    DETECT_IS_PULL_REQUEST: "false"
+    DETECT_BASE_REF: ""
+    DETECT_FROM_PUSH: "false"
+    DETECT_PACKAGE_NAME: ""
+  script:
+    - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/detect-packages.ps1"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env

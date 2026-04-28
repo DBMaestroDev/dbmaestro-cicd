@@ -1,0 +1,115 @@
+# Example: Build with Git Change Detection (Azure DevOps)
+# Detects which packages changed in the current branch or PR diff and builds them.
+
+parameters:
+  - name: projectName
+    type: string
+    default: 'Demo-PSQL'
+  - name: packagesFolder
+    type: string
+    default: 'packages'
+  - name: agentJarPath
+    type: string
+    default: '/home/runner/DBmaestroAgent.jar'
+  - name: runnerPool
+    type: string
+    default: 'dbmaestro-linux'
+  - name: baseBranch
+    displayName: 'Base branch to compare against (manual runs)'
+    type: string
+    default: 'main'
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+      - Release_Source
+
+stages:
+  - stage: Setup
+    displayName: 'Setup'
+    jobs:
+      - job: GetCliJar
+        displayName: 'Download DBmaestro CLI'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
+            parameters:
+              jarPath: ${{ parameters.agentJarPath }}
+              useWindows: false
+
+  - stage: Detect
+    displayName: 'Detect Changed Packages'
+    dependsOn: Setup
+    jobs:
+      - job: DetectChanges
+        displayName: 'Detect Changed Packages'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - bash: |
+              IS_PR="false"
+              BASE_REF="${{ parameters.baseBranch }}"
+
+              if [ -n "$(System.PullRequest.TargetBranch)" ]; then
+                IS_PR="true"
+                BASE_REF="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
+              fi
+
+              export DETECT_IS_PULL_REQUEST="$IS_PR"
+              export DETECT_BASE_REF="$BASE_REF"
+              export DETECT_FROM_PUSH="false"
+              export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/detect_output.env"
+
+              bash "$(Build.SourcesDirectory)/core/scripts/sh/detect-packages.sh"
+
+              # Read outputs and export as pipeline variables
+              if [ -f "$DBM_OUTPUT_FILE" ]; then
+                while IFS='=' read -r key value; do
+                  echo "##vso[task.setvariable variable=$key;isOutput=true]$value"
+                done < "$DBM_OUTPUT_FILE"
+              fi
+            name: detectStep
+            displayName: 'Detect Changed Packages'
+
+  - stage: Build
+    displayName: 'Build Changed Packages'
+    dependsOn: Detect
+    variables:
+      hasPkgs: $[ stageDependencies.Detect.DetectChanges.outputs['detectStep.has_packages'] ]
+      pkgsList: $[ stageDependencies.Detect.DetectChanges.outputs['detectStep.packages_list'] ]
+    condition: eq(stageDependencies.Detect.DetectChanges.outputs['detectStep.has_packages'], 'true')
+    jobs:
+      - job: BuildChangedPackages
+        displayName: 'Build Changed Packages'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: self
+
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "$(pkgsList)"
+              for PKG in "${PACKAGES[@]}"; do
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+                echo "=== Creating package: $PKG ==="
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
+                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
+                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
+                export DBMAESTRO_USE_SSL="True"
+                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
+                export DBMAESTRO_PACKAGE_TYPE="Regular"
+                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/create_${PKG}.env"
+                bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh"
+                bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh"
+              done
+            displayName: 'Create and Precheck Changed Packages'
+            env:
+              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
