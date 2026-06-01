@@ -2,6 +2,13 @@
 # Upgrades a DBmaestro environment on push, pull request, or manual trigger.
 # lockBehavior: sequential prevents concurrent upgrades to the same environment.
 
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
+
 parameters:
   - name: targetEnvironment
     displayName: 'Target environment for upgrade (manual runs)'
@@ -21,7 +28,7 @@ parameters:
     default: 'Demo-PSQL'
   - name: agentJarPath
     type: string
-    default: '/home/runner/DBmaestroAgent.jar'
+    default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
@@ -51,10 +58,14 @@ stages:
         displayName: 'Download DBmaestro CLI'
         pool: ${{ parameters.runnerPool }}
         steps:
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+
           - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
             parameters:
               jarPath: ${{ parameters.agentJarPath }}
               useWindows: false
+              version: "26.1.2.13455"
 
   - stage: Upgrade
     displayName: 'Upgrade Environment'
@@ -67,6 +78,10 @@ stages:
         pool: ${{ parameters.runnerPool }}
         steps:
           - checkout: self
+            fetchDepth: 1
+
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
 
           - bash: |
               # Determine the target environment and whether this is a PR
@@ -95,8 +110,6 @@ stages:
               server: $(DBMAESTRO_SERVER)
               user: $(DBMAESTRO_USER)
               password: $(DBMAESTRO_PASSWORD)
-              detectFromPush: $[and(ne(variables['Build.Reason'], 'Manual'), eq(variables['resolvedIsPr'], 'false'))]
-              isPullRequest: $(resolvedIsPr)
               useSsl: 'True'
               authType: 'DBmaestroAccount'
               useWindows: false

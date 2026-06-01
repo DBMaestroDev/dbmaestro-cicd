@@ -1,5 +1,11 @@
 # Example: Build with Branch Name as Package Name (Azure DevOps)
 # Uses the current branch name (or PR source branch) as the package name.
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
 
 parameters:
   - name: projectName
@@ -10,7 +16,7 @@ parameters:
     default: 'packages'
   - name: agentJarPath
     type: string
-    default: '/home/runner/DBmaestroAgent.jar'
+    default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
@@ -35,10 +41,14 @@ stages:
         displayName: 'Download DBmaestro CLI'
         pool: ${{ parameters.runnerPool }}
         steps:
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+          
           - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
             parameters:
               jarPath: ${{ parameters.agentJarPath }}
               useWindows: false
+              version: "26.1.2.13455"
 
   - stage: Build
     displayName: 'Build Package from Branch Name'
@@ -58,6 +68,9 @@ stages:
         steps:
           - checkout: self
 
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+            
           - bash: |
               if [ -n "$(System.PullRequest.SourceBranch)" ]; then
                 # Strip refs/heads/ prefix if present

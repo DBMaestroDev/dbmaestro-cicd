@@ -1,6 +1,12 @@
 # Example: Build from Source Control (Azure DevOps)
 # Builds a DBmaestro package from source control by task list, commit hash, or all changes.
 # Trigger manually via the Azure DevOps UI and set the required parameters.
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
 
 parameters:
   - name: packageName
@@ -18,21 +24,20 @@ parameters:
     displayName: 'What to include in the package'
     type: string
     values:
-      - 'All Changes'
       - 'Specific Tasks'
       - 'Specific Commit'
-    default: 'All Changes'
+    default: 'Specific Tasks'
   - name: tasksList
-    displayName: 'Task IDs (comma-separated, used when buildType = Specific Tasks)'
+    displayName: 'Task IDs (comma-separated, optional - used when buildType = Specific Tasks)'
     type: string
-    default: ''
+    default: 'none'
   - name: commitHash
-    displayName: 'Commit hash (used when buildType = Specific Commit)'
+    displayName: 'Commit hash (optional - used when buildType = Specific Commit)'
     type: string
-    default: ''
+    default: 'none'
   - name: agentJarPath
     type: string
-    default: '/home/runner/DBmaestroAgent.jar'
+    default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
@@ -48,10 +53,15 @@ stages:
         displayName: 'Download DBmaestro CLI'
         pool: ${{ parameters.runnerPool }}
         steps:
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+
+          
           - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
             parameters:
               jarPath: ${{ parameters.agentJarPath }}
               useWindows: false
+              version: "26.1.2.13455"
 
   - stage: Build
     displayName: 'Build Package from Source Control'
@@ -62,20 +72,28 @@ stages:
         pool: ${{ parameters.runnerPool }}
         steps:
           - checkout: self
+            fetchDepth: 1
+
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
 
           - bash: |
               case "${{ parameters.buildType }}" in
                 "Specific Tasks")
+                  if [ "${{ parameters.tasksList }}" = "none" ] || [ -z "${{ parameters.tasksList }}" ]; then
+                    echo "##vso[task.logissue type=error]buildType is 'Specific Tasks' but tasksList is not provided"
+                    exit 1
+                  fi
                   echo "##vso[task.setvariable variable=versionType]Tasks"
                   echo "##vso[task.setvariable variable=additionalInfo]${{ parameters.tasksList }}"
                   ;;
                 "Specific Commit")
+                  if [ "${{ parameters.commitHash }}" = "none" ] || [ -z "${{ parameters.commitHash }}" ]; then
+                    echo "##vso[task.logissue type=error]buildType is 'Specific Commit' but commitHash is not provided"
+                    exit 1
+                  fi
                   echo "##vso[task.setvariable variable=versionType]Specific Commit"
                   echo "##vso[task.setvariable variable=additionalInfo]${{ parameters.commitHash }}"
-                  ;;
-                *)
-                  echo "##vso[task.setvariable variable=versionType]"
-                  echo "##vso[task.setvariable variable=additionalInfo]"
                   ;;
               esac
             displayName: 'Resolve Build Type Parameters'

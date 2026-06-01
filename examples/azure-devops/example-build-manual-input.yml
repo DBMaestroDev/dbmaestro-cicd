@@ -1,5 +1,11 @@
 # Example: Build with Manual Package Selection (Azure DevOps)
 # Manually trigger this pipeline and enter comma-separated package names.
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
 
 parameters:
   - name: packageNames
@@ -14,7 +20,7 @@ parameters:
     default: 'packages'
   - name: agentJarPath
     type: string
-    default: '/home/runner/DBmaestroAgent.jar'
+    default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
@@ -30,64 +36,33 @@ stages:
         displayName: 'Download DBmaestro CLI'
         pool: ${{ parameters.runnerPool }}
         steps:
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+          
           - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
             parameters:
               jarPath: ${{ parameters.agentJarPath }}
               useWindows: false
+              version: "26.1.2.13455"
 
   - stage: Build
     displayName: 'Build Packages'
     dependsOn: Setup
     jobs:
-      - job: BuildPackages
-        displayName: 'Create and Validate Packages'
-        pool: ${{ parameters.runnerPool }}
-        steps:
-          - checkout: self
-
-          - bash: |
-              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
-              for PKG in "${PACKAGES[@]}"; do
-                PKG=$(echo "$PKG" | xargs)
-                [ -z "$PKG" ] && continue
-                echo "=== Creating package: $PKG ==="
-                export DBMAESTRO_PACKAGE_NAME="$PKG"
-                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
-                export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
-                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
-                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
-                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
-                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
-                export DBMAESTRO_USE_SSL="True"
-                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
-                export DBMAESTRO_PACKAGE_TYPE="Regular"
-                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/create_${PKG}.env"
-                bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh"
-              done
-            displayName: 'Create Packages'
-            env:
-              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
-
-          - bash: |
-              IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
-              for PKG in "${PACKAGES[@]}"; do
-                PKG=$(echo "$PKG" | xargs)
-                [ -z "$PKG" ] && continue
-                echo "=== Prechecking package: $PKG ==="
-                export DBMAESTRO_PACKAGE_NAME="$PKG"
-                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
-                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
-                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
-                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
-                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
-                export DBMAESTRO_USE_SSL="True"
-                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
-                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/precheck_${PKG}.env"
-                bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh"
-              done
-            displayName: 'Precheck Packages'
-            env:
-              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
+      - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
+        parameters:
+          packageNames: ${{ parameters.packageNames }}
+          projectName: ${{ parameters.projectName }}
+          packagesFolder: ${{ parameters.packagesFolder }}
+          agentJarPath: ${{ parameters.agentJarPath }}
+          server: $(DBMAESTRO_SERVER)
+          user: $(DBMAESTRO_USER)
+          password: $(DBMAESTRO_PASSWORD)
+          useSsl: 'True'
+          authType: 'DBmaestroAccount'
+          packageType: 'Regular'
+          runnerPool: ${{ parameters.runnerPool }}
+          useWindows: false
 
   - stage: Summary
     displayName: 'Pipeline Summary'

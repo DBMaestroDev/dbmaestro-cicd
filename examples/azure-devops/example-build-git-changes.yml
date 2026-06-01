@@ -1,5 +1,11 @@
 # Example: Build with Git Change Detection (Azure DevOps)
 # Detects which packages changed in the current branch or PR diff and builds them.
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
 
 parameters:
   - name: projectName
@@ -10,7 +16,7 @@ parameters:
     default: 'packages'
   - name: agentJarPath
     type: string
-    default: '/home/runner/DBmaestroAgent.jar'
+    default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
@@ -35,10 +41,14 @@ stages:
         displayName: 'Download DBmaestro CLI'
         pool: ${{ parameters.runnerPool }}
         steps:
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+          
           - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
             parameters:
               jarPath: ${{ parameters.agentJarPath }}
               useWindows: false
+              version: "26.1.2.13455"
 
   - stage: Detect
     displayName: 'Detect Changed Packages'
@@ -51,6 +61,9 @@ stages:
           - checkout: self
             fetchDepth: 0
 
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+
           - bash: |
               IS_PR="false"
               BASE_REF="${{ parameters.baseBranch }}"
@@ -60,56 +73,36 @@ stages:
                 BASE_REF="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
               fi
 
-              export DETECT_IS_PULL_REQUEST="$IS_PR"
-              export DETECT_BASE_REF="$BASE_REF"
-              export DETECT_FROM_PUSH="false"
-              export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/detect_output.env"
+              echo "##vso[task.setvariable variable=resolvedIsPr]$IS_PR"
+              echo "##vso[task.setvariable variable=resolvedBaseRef]$BASE_REF"
+            displayName: 'Resolve Detection Parameters'
 
-              bash "$(Build.SourcesDirectory)/core/scripts/sh/detect-packages.sh"
-
-              # Read outputs and export as pipeline variables
-              if [ -f "$DBM_OUTPUT_FILE" ]; then
-                while IFS='=' read -r key value; do
-                  echo "##vso[task.setvariable variable=$key;isOutput=true]$value"
-                done < "$DBM_OUTPUT_FILE"
-              fi
-            name: detectStep
-            displayName: 'Detect Changed Packages'
+          - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
+            parameters:
+              isPullRequest: $(resolvedIsPr)
+              baseRef: $(resolvedBaseRef)
+              detectFromPush: false
+              useWindows: false
 
   - stage: Build
     displayName: 'Build Changed Packages'
     dependsOn: Detect
     variables:
-      hasPkgs: $[ stageDependencies.Detect.DetectChanges.outputs['detectStep.has_packages'] ]
-      pkgsList: $[ stageDependencies.Detect.DetectChanges.outputs['detectStep.packages_list'] ]
-    condition: eq(stageDependencies.Detect.DetectChanges.outputs['detectStep.has_packages'], 'true')
+      hasPkgs: $[ stageDependencies.Detect.DetectChanges.outputs['detectPackages.has_packages'] ]
+      pkgsList: $[ stageDependencies.Detect.DetectChanges.outputs['detectPackages.packages_list'] ]
+    condition: eq(stageDependencies.Detect.DetectChanges.outputs['detectPackages.has_packages'], 'true')
     jobs:
-      - job: BuildChangedPackages
-        displayName: 'Build Changed Packages'
-        pool: ${{ parameters.runnerPool }}
-        steps:
-          - checkout: self
-
-          - bash: |
-              IFS=',' read -ra PACKAGES <<< "$(pkgsList)"
-              for PKG in "${PACKAGES[@]}"; do
-                PKG=$(echo "$PKG" | xargs)
-                [ -z "$PKG" ] && continue
-                echo "=== Creating package: $PKG ==="
-                export DBMAESTRO_PACKAGE_NAME="$PKG"
-                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
-                export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
-                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
-                export DBMAESTRO_SERVER="$(DBMAESTRO_SERVER)"
-                export DBMAESTRO_USER="$(DBMAESTRO_USER)"
-                export DBMAESTRO_PASSWORD="$(DBMAESTRO_PASSWORD)"
-                export DBMAESTRO_USE_SSL="True"
-                export DBMAESTRO_AUTH_TYPE="DBmaestroAccount"
-                export DBMAESTRO_PACKAGE_TYPE="Regular"
-                export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/create_${PKG}.env"
-                bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh"
-                bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh"
-              done
-            displayName: 'Create and Precheck Changed Packages'
-            env:
-              DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
+      - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
+        parameters:
+          packageNames: $(pkgsList)
+          projectName: ${{ parameters.projectName }}
+          packagesFolder: ${{ parameters.packagesFolder }}
+          agentJarPath: ${{ parameters.agentJarPath }}
+          server: $(DBMAESTRO_SERVER)
+          user: $(DBMAESTRO_USER)
+          password: $(DBMAESTRO_PASSWORD)
+          useSsl: 'True'
+          authType: 'DBmaestroAccount'
+          packageType: 'Regular'
+          runnerPool: ${{ parameters.runnerPool }}
+          useWindows: false

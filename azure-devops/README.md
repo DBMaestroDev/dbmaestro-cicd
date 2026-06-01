@@ -34,7 +34,7 @@ resources:
     - repository: dbmaestro-cicd
       type: github
       name: DBMaestroDev/dbmaestro-cicd
-      endpoint: github-dbmaestro     # your GitHub service connection
+      endpoint: dbmaestro-cicd     # your GitHub service connection
       ref: v1
 
 extends:
@@ -54,7 +54,9 @@ extends:
 
 Since `dbmaestro-cicd` is hosted on GitHub, use `type: github` and a GitHub service connection.
 
-**Prerequisites:** Create a GitHub service connection in Azure DevOps under **Project Settings → Service connections → New service connection → GitHub**. Name it (e.g. `github-dbmaestro`). Azure DevOps requires a service connection to reference any external GitHub repository, even public ones.
+**Prerequisites:** Create a GitHub service connection in Azure DevOps under **Project Settings → Service connections → New service connection → GitHub**. Name it (e.g. `dbmaestro-cicd`). Azure DevOps requires a service connection to reference any external GitHub repository, even public ones.
+Use Personal Access Token if needed.
+Grant access permission to all pipelines
 
 Add this block to any pipeline that uses templates from this library:
 
@@ -64,7 +66,7 @@ resources:
     - repository: dbmaestro-cicd
       type: github
       name: DBMaestroDev/dbmaestro-cicd
-      endpoint: github-dbmaestro     # your GitHub service connection name
+      endpoint: dbmaestro-cicd     # your GitHub service connection name
       ref: v1                       # or refs/tags/v1
 ```
 
@@ -84,14 +86,14 @@ Downloads the DBmaestro agent JAR from GitHub releases.
 steps:
   - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
     parameters:
-      version: '26.1.0.13224'
+      version: '26.1.2.13455'
       jarPath: '/home/runner/DBmaestroAgent.jar'
       useWindows: false
 ```
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `version` | Yes | � | JAR version, e.g. `26.1.0.13224` |
+| `version` | Yes | � | JAR version, e.g. `26.1.2.13455` |
 | `jarPath` | Yes | � | Destination path on the agent |
 | `useWindows` | | `false` | Use PowerShell instead of Bash |
 
@@ -220,7 +222,7 @@ resources:
     - repository: dbmaestro-cicd
       type: github
       name: DBMaestroDev/dbmaestro-cicd
-      endpoint: github-dbmaestro
+      endpoint: dbmaestro-cicd
       ref: v1
 
 extends:
@@ -230,7 +232,7 @@ extends:
     projectName: 'Demo-PSQL'
     targetEnvironment: 'Release_Source'
     agentJarPath: '/home/runner/DBmaestroAgent.jar'
-    dbmaestroVersion: '26.1.0.13224'
+    dbmaestroVersion: '26.1.2.13455'
     packages:
       - name: 'V15'
       - name: 'V16'
@@ -246,7 +248,7 @@ extends:
 | `projectName` | Yes | � | DBmaestro project name |
 | `targetEnvironment` | Yes | � | Target environment name |
 | `agentJarPath` | | `/home/runner/DBmaestroAgent.jar` | JAR path on the runner |
-| `dbmaestroVersion` | | `26.1.0.13224` | JAR version to download |
+| `dbmaestroVersion` | | `26.1.2.13455` | JAR version to download |
 | `packages` | | `[]` | List of `{name: string}` objects |
 | `detectFromPush` | | `false` | Auto-detect packages from push |
 | `packagesFolder` | | `packages` | Root packages folder |

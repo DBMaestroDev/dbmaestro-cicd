@@ -1,0 +1,123 @@
+# Azure DevOps job template: build-multiple-packages
+# Creates and validates multiple DBmaestro packages from a comma-separated list.
+# Processes packages sequentially: creates each package, then prechecks it.
+#
+# Usage in your azure-pipelines.yml:
+#
+#   jobs:
+#     - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
+#       parameters:
+#         packageNames: "V1,V2,V3"
+#         projectName: "MyProject"
+#         agentJarPath: "/home/runner/DBmaestroAgent.jar"
+#         server: "dbmaestro.example.com"
+#         user: $(DBMAESTRO_USER)
+#         password: $(DBMAESTRO_PASSWORD)
+
+parameters:
+  - name: packageNames
+    type: string
+    description: 'Comma-separated package names (e.g., "V1,V2,V3")'
+  - name: projectName
+    type: string
+  - name: packagesFolder
+    type: string
+    default: "packages"
+  - name: agentJarPath
+    type: string
+    default: "$(Pipeline.Workspace)/DBmaestroAgent.jar"
+  - name: server
+    type: string
+  - name: user
+    type: string
+  - name: password
+    type: string
+  - name: useSsl
+    type: string
+    default: "True"
+  - name: authType
+    type: string
+    default: "DBmaestroAccount"
+  - name: packageType
+    type: string
+    default: "Regular"
+  - name: ignoreWarnings
+    type: string
+    default: "True"
+  - name: pool
+    type: object
+    default: null
+  - name: runnerPool
+    type: string
+    default: 'dbmaestro-linux'
+  - name: useWindows
+    type: boolean
+    default: false
+
+jobs:
+  - job: BuildMultiplePackages
+    displayName: 'Create and Validate Packages'
+    pool: ${{ parameters.pool != null && parameters.pool || format('{ name: {0} }', parameters.runnerPool) }}
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - checkout: dbmaestro-cicd
+        fetchDepth: 1
+
+      - bash: |
+          IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+          PKG_COUNT=${#PACKAGES[@]}
+          
+          for i in "${!PACKAGES[@]}"; do
+            PKG="${PACKAGES[$i]}"
+            PKG=$(echo "$PKG" | xargs)
+            [ -z "$PKG" ] && continue
+            
+            PKG_NUM=$((i+1))
+            echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Creating $PKG ==="
+            
+            # Set environment for create-package
+            export DBMAESTRO_PACKAGE_NAME="$PKG"
+            export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+            export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
+            export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+            export DBMAESTRO_SERVER="${{ parameters.server }}"
+            export DBMAESTRO_USER="${{ parameters.user }}"
+            export DBMAESTRO_PASSWORD="${{ parameters.password }}"
+            export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
+            export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
+            export DBMAESTRO_PACKAGE_TYPE="${{ parameters.packageType }}"
+            export DBMAESTRO_IGNORE_WARNINGS="${{ parameters.ignoreWarnings }}"
+            
+            # Invoke the create-package script
+            if [ "${{ parameters.useWindows }}" = "False" ]; then
+              bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh" || exit 1
+            else
+              pwsh -Command "& '$(Build.SourcesDirectory)\core\scripts\ps\create-package.ps1'" -ErrorAction Stop
+            fi
+            echo "##[endgroup]"
+            
+            echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Prechecking $PKG ==="
+            
+            # Set environment for precheck-package
+            export DBMAESTRO_PACKAGE_NAME="$PKG"
+            export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+            export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+            export DBMAESTRO_SERVER="${{ parameters.server }}"
+            export DBMAESTRO_USER="${{ parameters.user }}"
+            export DBMAESTRO_PASSWORD="${{ parameters.password }}"
+            export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
+            export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
+            
+            # Invoke the precheck-package script
+            if [ "${{ parameters.useWindows }}" = "False" ]; then
+              bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh" || exit 1
+            else
+              pwsh -Command "& '$(Build.SourcesDirectory)\core\scripts\ps\precheck-package.ps1'" -ErrorAction Stop
+            fi
+            echo "##[endgroup]"
+          done
+        displayName: 'Create and Precheck Packages Sequentially'
+        env:
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}

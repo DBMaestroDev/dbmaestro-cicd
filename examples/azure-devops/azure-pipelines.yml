@@ -33,7 +33,7 @@ extends:
     server: "dbmaestro.example.com"          # replace with your DBmaestro server
     projectName: "MyProject"                  # replace with your project name
     targetEnvironment: "Production"           # replace with your target environment
-    agentJarPath: "/home/runner/DBmaestroAgent.jar"
+    agentJarPath: "$(Pipeline.Workspace)/DBmaestroAgent.jar"
     dbmaestroVersion: "26.1.0.13224"          # replace with the JAR version to download
     packagesFolder: "packages"
     useSsl: "True"
