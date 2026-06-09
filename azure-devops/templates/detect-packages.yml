@@ -34,7 +34,7 @@ steps:
         env:
           DETECT_IS_PULL_REQUEST: ${{ parameters.isPullRequest }}
           DETECT_BASE_REF: ${{ parameters.baseRef }}
-          DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
+          DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
         inputs:
           targetType: inline
@@ -53,7 +53,7 @@ steps:
         env:
           DETECT_IS_PULL_REQUEST: ${{ parameters.isPullRequest }}
           DETECT_BASE_REF: ${{ parameters.baseRef }}
-          DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
+          DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
         inputs:
           targetType: inline
