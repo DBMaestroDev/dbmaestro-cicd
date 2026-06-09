@@ -96,9 +96,9 @@ jobs:
             
             # Invoke the create-package script
             if [ "${{ parameters.useWindows }}" = "False" ]; then
-              bash "$(Build.SourcesDirectory)/core/scripts/sh/create-package.sh" || exit 1
+              bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/create-package.sh" || exit 1
             else
-              pwsh -Command "& '$(Build.SourcesDirectory)\core\scripts\ps\create-package.ps1'" -ErrorAction Stop
+              pwsh -Command "& '$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\create-package.ps1'" -ErrorAction Stop
             fi
             echo "##[endgroup]"
             
@@ -116,12 +116,13 @@ jobs:
             
             # Invoke the precheck-package script
             if [ "${{ parameters.useWindows }}" = "False" ]; then
-              bash "$(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh" || exit 1
+              bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/precheck-package.sh" || exit 1
             else
-              pwsh -Command "& '$(Build.SourcesDirectory)\core\scripts\ps\precheck-package.ps1'" -ErrorAction Stop
+              pwsh -Command "& '$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\precheck-package.ps1'" -ErrorAction Stop
             fi
             echo "##[endgroup]"
           done
         displayName: 'Create and Precheck Packages Sequentially'
+        workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
         env:
           DBMAESTRO_PASSWORD: ${{ parameters.password }}
