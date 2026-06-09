@@ -17,7 +17,7 @@
 parameters:
   - name: packageNames
     type: string
-    description: 'Comma-separated package names (e.g., "V1,V2,V3")'
+    displayName: 'Comma-separated package names (e.g., "V1,V2,V3")'
   - name: projectName
     type: string
   - name: packagesFolder
@@ -57,7 +57,11 @@ parameters:
 jobs:
   - job: BuildMultiplePackages
     displayName: 'Create and Validate Packages'
-    pool: ${{ parameters.pool != null && parameters.pool || format('{ name: {0} }', parameters.runnerPool) }}
+    ${{ if ne(parameters.pool, null) }}:
+      pool: ${{ parameters.pool }}
+    ${{ else }}:
+      pool:
+        name: ${{ parameters.runnerPool }}
     steps:
       - checkout: self
         fetchDepth: 1
