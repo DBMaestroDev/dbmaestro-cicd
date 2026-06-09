@@ -11,8 +11,8 @@
 
 parameters:
   - name: isPullRequest
-    type: boolean
-    default: false
+    type: string
+    default: "false"
   - name: baseRef
     type: string
     default: ""
@@ -32,7 +32,7 @@ steps:
         displayName: "DBmaestro: Detect Changed Packages"
         name: detectPackages
         env:
-          DETECT_IS_PULL_REQUEST: ${{ lower(string(parameters.isPullRequest)) }}
+          DETECT_IS_PULL_REQUEST: ${{ parameters.isPullRequest }}
           DETECT_BASE_REF: ${{ parameters.baseRef }}
           DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
@@ -51,7 +51,7 @@ steps:
         displayName: "DBmaestro: Detect Changed Packages (Windows)"
         name: detectPackages
         env:
-          DETECT_IS_PULL_REQUEST: ${{ lower(string(parameters.isPullRequest)) }}
+          DETECT_IS_PULL_REQUEST: ${{ parameters.isPullRequest }}
           DETECT_BASE_REF: ${{ parameters.baseRef }}
           DETECT_FROM_PUSH: ${{ lower(string(parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
