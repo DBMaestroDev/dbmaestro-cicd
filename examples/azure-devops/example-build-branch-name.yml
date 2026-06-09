@@ -72,11 +72,11 @@ stages:
             fetchDepth: 1
             
           - bash: |
-              if [ -n "$(System.PullRequest.SourceBranch)" ]; then
+              if [ -n "$SYSTEM_PULLREQUEST_SOURCEBRANCH" ]; then
                 # Strip refs/heads/ prefix if present
                 PKG="${SYSTEM_PULLREQUEST_SOURCEBRANCH#refs/heads/}"
               else
-                PKG="$(Build.SourceBranchName)"
+                PKG="$BUILD_SOURCEBRANCHNAME"
               fi
               echo "Resolved package name: $PKG"
               echo "##vso[task.setvariable variable=resolvedPackageName]$PKG"

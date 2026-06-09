@@ -68,7 +68,7 @@ stages:
               IS_PR="false"
               BASE_REF="${{ parameters.baseBranch }}"
 
-              if [ -n "$(System.PullRequest.TargetBranch)" ]; then
+              if [ -n "$SYSTEM_PULLREQUEST_TARGETBRANCH" ]; then
                 IS_PR="true"
                 BASE_REF="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
               fi
