@@ -57,7 +57,7 @@ parameters:
 jobs:
   - job: BuildMultiplePackages
     displayName: 'Create and Validate Packages'
-    ${{ if ne(parameters.pool, null) }}:
+    ${{ if parameters.pool }}:
       pool: ${{ parameters.pool }}
     ${{ else }}:
       pool:
