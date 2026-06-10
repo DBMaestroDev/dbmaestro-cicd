@@ -44,8 +44,14 @@ steps:
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
             # the base branch to compare against when detecting package changes.
             if [ -n "$DETECT_BASE_REF" ]; then
-              git fetch origin "$DETECT_BASE_REF" 2>/dev/null || true
-              git log --oneline -n 5 --all
+              echo "Fetching origin/$DETECT_BASE_REF..."
+              git fetch origin "$DETECT_BASE_REF" 2>&1
+              echo "Available branches:"
+              git branch -a
+              echo "Current HEAD:"
+              git rev-parse HEAD
+              echo "origin/$DETECT_BASE_REF:"
+              git rev-parse "origin/$DETECT_BASE_REF" 2>&1 || echo "Not found"
             fi
             bash "$(Build.SourcesDirectory)/core/scripts/sh/detect-packages.sh"
             # Promote outputs as pipeline variables
