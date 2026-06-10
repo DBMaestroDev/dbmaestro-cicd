@@ -31,13 +31,13 @@ steps:
       - task: Bash@3
         displayName: "DBmaestro: Detect Changed Packages"
         name: detectPackages
-        workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
         env:
           DETECT_IS_PULL_REQUEST: ${{ parameters.isPullRequest }}
           DETECT_BASE_REF: ${{ parameters.baseRef }}
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
         inputs:
+          workDir: $(Build.SourcesDirectory)/$(Build.Repository.Name)
           targetType: inline
           script: |
             export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
@@ -57,13 +57,13 @@ steps:
       - task: PowerShell@2
         displayName: "DBmaestro: Detect Changed Packages (Windows)"
         name: detectPackages
-        workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
         env:
           DETECT_IS_PULL_REQUEST: ${{ parameters.isPullRequest }}
           DETECT_BASE_REF: ${{ parameters.baseRef }}
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
         inputs:
+          workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
           targetType: inline
           pwsh: true
           script: |
