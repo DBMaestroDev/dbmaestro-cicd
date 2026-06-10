@@ -60,6 +60,7 @@ stages:
         steps:
           - checkout: self
             fetchDepth: 0
+            ref: $(Build.SourceBranch)
 
           - checkout: dbmaestro-cicd
             fetchDepth: 1
