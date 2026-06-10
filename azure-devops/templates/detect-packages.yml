@@ -40,7 +40,7 @@ steps:
           targetType: inline
           script: |
             cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
-            export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
+            export DBM_OUTPUT_FILE="$(Pipeline.Workspace)/dbm-packages.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
             # the base branch to compare against when detecting package changes.
@@ -48,7 +48,7 @@ steps:
               git fetch origin "$DETECT_BASE_REF" 2>/dev/null || true
             fi
             bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/detect-packages.sh"
-            # Promote outputs as pipeline variables
+            # Promote outputs as pipeline variables and save to workspace
             if [ -f "$DBM_OUTPUT_FILE" ]; then
               while IFS='=' read -r key value; do
                 echo "##vso[task.setvariable variable=${key};isOutput=true]${value}"
