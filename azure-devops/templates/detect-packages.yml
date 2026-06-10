@@ -37,22 +37,15 @@ steps:
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
         inputs:
-          workDir: $(Build.SourcesDirectory)/$(Build.Repository.Name)
           targetType: inline
           script: |
+            cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
             export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
-            echo "Current directory: $(pwd)"
-            echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
-            echo "Current HEAD: $(git rev-parse HEAD)"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
             # the base branch to compare against when detecting package changes.
             if [ -n "$DETECT_BASE_REF" ]; then
-              echo "Fetching origin/$DETECT_BASE_REF..."
-              git fetch origin "$DETECT_BASE_REF" 2>&1
-              echo "origin/$DETECT_BASE_REF: $(git rev-parse origin/$DETECT_BASE_REF)"
-              echo "Git diff output:"
-              git diff --name-only "origin/$DETECT_BASE_REF" HEAD
+              git fetch origin "$DETECT_BASE_REF" 2>/dev/null || true
             fi
             bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/detect-packages.sh"
             # Promote outputs as pipeline variables
@@ -70,7 +63,6 @@ steps:
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
         inputs:
-          workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
           targetType: inline
           pwsh: true
           script: |
