@@ -93,31 +93,17 @@ stages:
     displayName: 'Build Changed Packages'
     dependsOn: Detect
     jobs:
-      - job: BuildMultiplePackages
-        displayName: 'Build Detected Packages'
-        pool: ${{ parameters.runnerPool }}
-        steps:
-          - bash: |
-              if [ -f "$(Pipeline.Workspace)/dbm-packages.env" ]; then
-                source "$(Pipeline.Workspace)/dbm-packages.env"
-                if [ "$has_packages" != "true" ]; then
-                  echo "##[section]No packages to build"
-                  exit 0
-                fi
-                echo "##vso[task.setvariable variable=pkgsList]$packages_list"
-              fi
-            displayName: 'Read Package Detection Results'
-          - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
-            parameters:
-              packageNames: $(pkgsList)
-              projectName: ${{ parameters.projectName }}
-              packagesFolder: ${{ parameters.packagesFolder }}
-              agentJarPath: ${{ parameters.agentJarPath }}
-              server: $(DBMAESTRO_SERVER)
-              user: $(DBMAESTRO_USER)
-              password: $(DBMAESTRO_PASSWORD)
-              useSsl: 'True'
-              authType: 'DBmaestroAccount'
-              packageType: 'Regular'
-              runnerPool: ${{ parameters.runnerPool }}
-              useWindows: false
+      - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
+        parameters:
+          packageNames: ''
+          projectName: ${{ parameters.projectName }}
+          packagesFolder: ${{ parameters.packagesFolder }}
+          agentJarPath: ${{ parameters.agentJarPath }}
+          server: $(DBMAESTRO_SERVER)
+          user: $(DBMAESTRO_USER)
+          password: $(DBMAESTRO_PASSWORD)
+          useSsl: 'True'
+          authType: 'DBmaestroAccount'
+          packageType: 'Regular'
+          runnerPool: ${{ parameters.runnerPool }}
+          useWindows: false

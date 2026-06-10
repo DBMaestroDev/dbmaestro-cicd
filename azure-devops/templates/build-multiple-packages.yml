@@ -70,7 +70,21 @@ jobs:
         fetchDepth: 1
 
       - bash: |
-          IFS=',' read -ra PACKAGES <<< "${{ parameters.packageNames }}"
+          # If packageNames is empty, try to read from detection file
+          PKG_LIST="${{ parameters.packageNames }}"
+          if [ -z "$PKG_LIST" ] && [ -f "$(Pipeline.Workspace)/dbm-packages.env" ]; then
+            source "$(Pipeline.Workspace)/dbm-packages.env"
+            PKG_LIST="$packages_list"
+          fi
+          if [ -z "$PKG_LIST" ]; then
+            echo "##[section]No packages specified or detected"
+            exit 0
+          fi
+          echo "##vso[task.setvariable variable=RESOLVED_PACKAGE_NAMES]$PKG_LIST"
+        displayName: 'Resolve Package Names'
+
+      - bash: |
+          IFS=',' read -ra PACKAGES <<< "$(RESOLVED_PACKAGE_NAMES)"
           PKG_COUNT=${#PACKAGES[@]}
           
           for i in "${!PACKAGES[@]}"; do
