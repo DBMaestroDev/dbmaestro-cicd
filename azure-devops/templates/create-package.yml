@@ -63,8 +63,10 @@ steps:
           DBMAESTRO_PACKAGE_TYPE: ${{ parameters.packageType }}
           DBMAESTRO_IGNORE_WARNINGS: ${{ parameters.ignoreWarnings }}
         inputs:
-          targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/sh/create-package.sh
+          targetType: inline
+          script: |
+            cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/create-package.sh"
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
@@ -82,6 +84,8 @@ steps:
           DBMAESTRO_PACKAGE_TYPE: ${{ parameters.packageType }}
           DBMAESTRO_IGNORE_WARNINGS: ${{ parameters.ignoreWarnings }}
         inputs:
-          targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/ps/create-package.ps1
+          targetType: inline
           pwsh: true
+          script: |
+            Set-Location "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            & "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/create-package.ps1"

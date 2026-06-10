@@ -51,8 +51,10 @@ steps:
           DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
         inputs:
-          targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/sh/precheck-package.sh
+          targetType: inline
+          script: |
+            cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/precheck-package.sh"
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
@@ -67,6 +69,8 @@ steps:
           DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
         inputs:
-          targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/ps/precheck-package.ps1
+          targetType: inline
           pwsh: true
+          script: |
+            Set-Location "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            & "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/precheck-package.ps1"

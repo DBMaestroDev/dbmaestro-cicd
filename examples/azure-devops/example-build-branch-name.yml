@@ -29,10 +29,6 @@ pr:
       - main
       - Release_Source
 
-variables:
-  DBMAESTRO_SERVER: $(DBMAESTRO_SERVER)
-  DBMAESTRO_USER: $(DBMAESTRO_USER)
-
 stages:
   - stage: Setup
     displayName: 'Setup'
