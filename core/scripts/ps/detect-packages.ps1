@@ -52,6 +52,19 @@ if ($isPullRequest) {
             }
         }
     }
+} elseif ($baseRef) {
+    Write-Host "Detecting packages by comparing to base ref: $baseRef"
+    $changedFiles = git diff --name-only "$baseRef" HEAD
+    Write-Host "Changed files: $($changedFiles -join ', ')"
+
+    foreach ($file in $changedFiles) {
+        if ($file -match '^packages/([^/]+)') {
+            $pkg = $matches[1]
+            if ($pkg -notin $packages) {
+                $packages += $pkg
+            }
+        }
+    }
 }
 
 $packages = $packages | Sort-Object
