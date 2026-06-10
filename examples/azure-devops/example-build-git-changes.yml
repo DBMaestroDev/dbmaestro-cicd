@@ -57,6 +57,9 @@ stages:
       - job: DetectChanges
         displayName: 'Detect Changed Packages'
         pool: ${{ parameters.runnerPool }}
+        outputs:
+          has_packages: $(detectPackages.has_packages)
+          packages_list: $(detectPackages.packages_list)
         steps:
           - checkout: self
             fetchDepth: 0
@@ -93,9 +96,9 @@ stages:
     displayName: 'Build Changed Packages'
     dependsOn: Detect
     variables:
-      hasPkgs: $[ stageDependencies.Detect.DetectChanges.outputs['detectPackages.has_packages'] ]
-      pkgsList: $[ stageDependencies.Detect.DetectChanges.outputs['detectPackages.packages_list'] ]
-    condition: eq(stageDependencies.Detect.DetectChanges.outputs['detectPackages.has_packages'], 'true')
+      hasPkgs: $[ stageDependencies.Detect.DetectChanges.outputs['has_packages'] ]
+      pkgsList: $[ stageDependencies.Detect.DetectChanges.outputs['packages_list'] ]
+    condition: eq(variables['hasPkgs'], 'true')
     jobs:
       - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
         parameters:

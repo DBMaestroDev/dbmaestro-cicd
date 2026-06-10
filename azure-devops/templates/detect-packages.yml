@@ -49,9 +49,11 @@ steps:
             fi
             bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/detect-packages.sh"
             # Promote outputs as pipeline variables
-            while IFS='=' read -r key value; do
-              echo "##vso[task.setvariable variable=${key};isOutput=true]${value}"
-            done < "$DBM_OUTPUT_FILE"
+            if [ -f "$DBM_OUTPUT_FILE" ]; then
+              while IFS='=' read -r key value; do
+                echo "##vso[task.setvariable variable=${key};isOutput=true]${value}"
+              done < "$DBM_OUTPUT_FILE"
+            fi
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
