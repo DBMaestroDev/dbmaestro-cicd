@@ -40,6 +40,8 @@ steps:
           targetType: inline
           script: |
             export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
+            echo "Build.SourceBranch: $(Build.SourceBranch)"
+            echo "Build.SourceBranchName: $(Build.SourceBranchName)"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
             # the base branch to compare against when detecting package changes.
