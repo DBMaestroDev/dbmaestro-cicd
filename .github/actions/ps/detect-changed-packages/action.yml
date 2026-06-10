@@ -51,4 +51,10 @@ runs:
         DETECT_PACKAGE_NAME: ${{ inputs.package_name }}
       run: |
         $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
+        # Fetch the base ref branch to ensure it's available for git diff comparison.
+        # Shallow clones only fetch the current branch, so we need to explicitly fetch
+        # the base branch to compare against when detecting package changes.
+        if ($env:DETECT_BASE_REF) {
+          git fetch origin $env:DETECT_BASE_REF --depth=1 2>$null
+        }
         & "$env:GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/ps/detect-packages.ps1"

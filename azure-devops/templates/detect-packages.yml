@@ -40,6 +40,12 @@ steps:
           targetType: inline
           script: |
             export DBM_OUTPUT_FILE="$(Agent.TempDirectory)/dbm-output.env"
+            # Fetch the base ref branch to ensure it's available for git diff comparison.
+            # Shallow clones only fetch the current branch, so we need to explicitly fetch
+            # the base branch to compare against when detecting package changes.
+            if [ -n "$DETECT_BASE_REF" ]; then
+              git fetch origin "$DETECT_BASE_REF" --depth=1 2>/dev/null || true
+            fi
             bash "$(Build.SourcesDirectory)/core/scripts/sh/detect-packages.sh"
             # Promote outputs as pipeline variables
             while IFS='=' read -r key value; do
@@ -60,6 +66,12 @@ steps:
           pwsh: true
           script: |
             $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
+            # Fetch the base ref branch to ensure it's available for git diff comparison.
+            # Shallow clones only fetch the current branch, so we need to explicitly fetch
+            # the base branch to compare against when detecting package changes.
+            if ($env:DETECT_BASE_REF) {
+              git fetch origin $env:DETECT_BASE_REF --depth=1 2>$null
+            }
             & "$(Build.SourcesDirectory)/core/scripts/ps/detect-packages.ps1"
             # Promote outputs as pipeline variables
             foreach ($line in (Get-Content "$env:DBM_OUTPUT_FILE")) {

@@ -51,4 +51,10 @@ runs:
         DETECT_PACKAGE_NAME: ${{ inputs.package_name }}
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
+        # Fetch the base ref branch to ensure it's available for git diff comparison.
+        # Shallow clones only fetch the current branch, so we need to explicitly fetch
+        # the base branch to compare against when detecting package changes.
+        if [ -n "${{ inputs.base_ref }}" ]; then
+          git fetch origin "${{ inputs.base_ref }}" --depth=1 2>/dev/null || true
+        fi
         bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/detect-packages.sh"
