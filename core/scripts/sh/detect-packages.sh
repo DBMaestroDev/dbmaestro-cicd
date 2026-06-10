@@ -65,7 +65,7 @@ elif [[ "$detect_from_push" == "true" ]]; then
 
 elif [[ -n "$base_ref" ]]; then
   echo "Detecting packages by comparing to base ref: $base_ref"
-  changed_files=$(git diff --name-only "$base_ref" HEAD)
+  changed_files=$(git diff --name-only "origin/$base_ref" HEAD)
   echo "Changed files: $changed_files"
 
   while IFS= read -r file; do

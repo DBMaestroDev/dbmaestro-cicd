@@ -54,7 +54,7 @@ if ($isPullRequest) {
     }
 } elseif ($baseRef) {
     Write-Host "Detecting packages by comparing to base ref: $baseRef"
-    $changedFiles = git diff --name-only "$baseRef" HEAD
+    $changedFiles = git diff --name-only "origin/$baseRef" HEAD
     Write-Host "Changed files: $($changedFiles -join ', ')"
 
     foreach ($file in $changedFiles) {
