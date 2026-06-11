@@ -119,7 +119,6 @@ Six end-to-end scenarios are provided for each platform:
 | Example | Description |
 |---------|-------------|
 | `example-build-branch-name` | Uses the branch/MR name as the package name |
-| `example-build-direct-actions` | Calls templates directly with a comma-separated package list |
 | `example-build-git-changes` | Auto-detects changed packages from git diff |
 | `example-build-manual-input` | Manually specify packages via pipeline trigger input |
 | `example-build-source-control` | Builds from source control (all / specific tasks / specific commit) |

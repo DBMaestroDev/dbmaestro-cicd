@@ -65,8 +65,12 @@ stages:
             fetchDepth: 1
 
           - bash: |
-              # Check out the actual branch (not detached HEAD) for proper git operations
-              git checkout $(Build.SourceBranchName)
+              if [ -n "$SYSTEM_PULLREQUEST_SOURCEBRANCH" ]; then
+                BRANCH="${SYSTEM_PULLREQUEST_SOURCEBRANCH#refs/heads/}"
+              else
+                BRANCH="$(Build.SourceBranchName)"
+              fi
+              git checkout "$BRANCH"
             workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
 
           - bash: |
