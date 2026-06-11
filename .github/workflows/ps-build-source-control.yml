@@ -101,3 +101,20 @@ jobs:
           auth_type: ${{ inputs.auth_type }}
           dbmaestro_user: ${{ inputs.dbmaestro_user }}
           dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+  precheck_package:
+    name: Validate Package
+    runs-on: ${{ inputs.runner }}
+    needs: build_package
+    steps:
+      - name: Precheck Package
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/ps/precheck-package@main
+        with:
+          package_name: ${{ inputs.package_name }}
+          project_name: ${{ inputs.project_name }}
+          agent_jar_path: ${{ inputs.agent_jar_path }}
+          dbmaestro_server: ${{ inputs.dbmaestro_server }}
+          use_ssl: ${{ inputs.use_ssl }}
+          auth_type: ${{ inputs.auth_type }}
+          dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
