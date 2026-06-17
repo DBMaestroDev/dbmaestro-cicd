@@ -1,0 +1,125 @@
+# Example: Integrated PR Workflow - Build, Validate, and Upgrade
+# On pull request: detects changed packages, builds and validates them.
+# On merge to main: upgrades Release_Source, then waits for approval before upgrading Prod_Env_1.
+# PR approval is required before merge (enforce via branch protection rules).
+# Prod_Env_1 approval is enforced via a GitHub Environment with required reviewers.
+
+name: Example - Integrated PR Workflow (Linux)
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+
+# ── Configurable variables ────────────────────────────────────────────────────
+# Set these as repository variables in: Settings → Secrets and variables → Variables
+# Required vars: PROJECT_NAME, RELEASE_ENVIRONMENT, PROD_ENVIRONMENT, PACKAGES_FOLDER,
+#                AGENT_JAR_PATH, USE_SSL, AUTH_TYPE, PACKAGE_TYPE, RUNNER,
+#                DBMAESTRO_SERVER, DBMAESTRO_USER
+
+concurrency:
+  group: dbmaestro-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  # ── Pull Request: detect changed packages ─────────────────────────────────
+  detect_changed_packages:
+    name: Detect Changed Packages
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ vars.RUNNER }}
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has_packages: ${{ steps.detect.outputs.has_packages }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed Packages
+        id: detect
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/detect-changed-packages@main
+        with:
+          is_pull_request: true
+          base_ref: ${{ github.base_ref }}
+
+  # ── Pull Request: build and validate ──────────────────────────────────────
+  build_and_validate:
+    name: Build and Validate
+    if: github.event_name == 'pull_request' && needs.detect_changed_packages.outputs.has_packages == 'true'
+    needs: detect_changed_packages
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@main
+    with:
+      project_name: ${{ vars.PROJECT_NAME }}
+      packages_matrix: ${{ needs.detect_changed_packages.outputs.matrix }}
+      packages_folder: ${{ vars.PACKAGES_FOLDER }}
+      agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
+      use_ssl: ${{ vars.USE_SSL }}
+      auth_type: ${{ vars.AUTH_TYPE }}
+      package_type: ${{ vars.PACKAGE_TYPE }}
+      runner: ${{ vars.RUNNER }}
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+  # ── Merge: upgrade Release_Source ────────────────────────────────────────
+  # Triggered only when a PR is merged into main (push event).
+  # Branch protection requires PR approval before merge is allowed.
+  upgrade_release_source:
+    name: Upgrade Release_Source
+    if: github.event_name == 'push'
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
+    with:
+      target_environment: ${{ vars.RELEASE_ENVIRONMENT }}
+      project_name: ${{ vars.PROJECT_NAME }}
+      agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
+      detect_from_push: true
+      is_pull_request: false
+      use_ssl: ${{ vars.USE_SSL }}
+      auth_type: ${{ vars.AUTH_TYPE }}
+      runner: ${{ vars.RUNNER }}
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+  # ── Approval gate for Prod_Env_1 ─────────────────────────────────────────
+  # Pauses here and waits for a manual approval before proceeding.
+  # Configure the approval in: Settings → Environments → Prod_Env_1 → Required reviewers.
+  approve_prod:
+    name: Approve Prod_Env_1 Upgrade
+    if: github.event_name == 'push'
+    needs: upgrade_release_source
+    runs-on: ${{ vars.RUNNER }}
+    environment: Prod_Env_1
+    steps:
+      - name: Approval granted
+        run: echo "Approval granted — proceeding with Prod_Env_1 upgrade"
+
+  # ── Upgrade Prod_Env_1 ────────────────────────────────────────────────────
+  upgrade_prod:
+    name: Upgrade Prod_Env_1
+    if: github.event_name == 'push'
+    needs: approve_prod
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
+    with:
+      target_environment: ${{ vars.PROD_ENVIRONMENT }}
+      project_name: ${{ vars.PROJECT_NAME }}
+      agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
+      detect_from_push: true
+      is_pull_request: false
+      use_ssl: ${{ vars.USE_SSL }}
+      auth_type: ${{ vars.AUTH_TYPE }}
+      runner: ${{ vars.RUNNER }}
+      dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
+      dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+    secrets:
+      DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}

@@ -1,0 +1,211 @@
+# Example: Integrated PR Workflow - Build, Validate, and Upgrade (Azure DevOps)
+# On pull request: detects changed packages, builds and validates them.
+# On merge to main: upgrades Release_Source, then waits for approval before upgrading Prod_Env_1.
+# PR approval is required before merge (enforce via branch policies).
+# Prod_Env_1 approval is enforced via an Azure DevOps environment gate (see UpgradeProd stage).
+
+resources:
+  repositories:
+    - repository: dbmaestro-cicd
+      type: github
+      name: DBMaestroDev/dbmaestro-cicd
+      endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
+
+# ── Configurable variables ────────────────────────────────────────────────────
+parameters:
+  - name: projectName
+    type: string
+    default: 'Demo-PSQL'
+  - name: targetEnvironment
+    type: string
+    default: 'Release_Source'
+  - name: packagesFolder
+    type: string
+    default: 'packages'
+  - name: agentJarPath
+    type: string
+    default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
+  - name: useSsl
+    type: string
+    default: 'True'
+  - name: authType
+    type: string
+    default: 'DBmaestroAccount'
+  - name: packageType
+    type: string
+    default: 'Regular'
+  - name: runnerPool
+    type: string
+    default: 'dbmaestro-runner'
+
+# Auto-trigger upgrade on merge to main
+trigger:
+  branches:
+    include:
+      - main
+
+# Run build and validate on pull requests targeting main
+pr:
+  branches:
+    include:
+      - main
+
+# Serialize upgrades — prevents concurrent runs against the same environment
+lockBehavior: sequential
+
+# ── Setup: download CLI JAR (shared by both PR and merge runs) ────────────────
+stages:
+  - stage: Setup
+    displayName: 'Setup'
+    jobs:
+      - job: GetCliJar
+        displayName: 'Download DBmaestro CLI'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+
+          - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
+            parameters:
+              jarPath: ${{ parameters.agentJarPath }}
+              useWindows: false
+              version: "26.1.2.13455"
+
+  # ── Pull Request: detect changed packages ──────────────────────────────────
+  - stage: Detect
+    displayName: 'Detect Changed Packages'
+    dependsOn: Setup
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    jobs:
+      - job: DetectChanges
+        displayName: 'Detect Changed Packages'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+
+          - bash: |
+              branch="${SYSTEM_PULLREQUEST_SOURCEBRANCH#refs/heads/}"
+              cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+              git checkout "$branch"
+            displayName: 'Checkout PR source branch'
+
+          - bash: |
+              baseRef="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
+              echo "##vso[task.setvariable variable=resolvedBaseRef]$baseRef"
+            displayName: 'Resolve Base Ref'
+
+          - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
+            parameters:
+              isPullRequest: true
+              baseRef: $(resolvedBaseRef)
+              detectFromPush: false
+              useWindows: false
+
+  # ── Pull Request: build and validate ───────────────────────────────────────
+  - stage: BuildAndValidate
+    displayName: 'Build and Validate'
+    dependsOn: Detect
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    jobs:
+      - template: azure-devops/templates/build-multiple-packages.yml@dbmaestro-cicd
+        parameters:
+          packageNames: ''
+          projectName: ${{ parameters.projectName }}
+          packagesFolder: ${{ parameters.packagesFolder }}
+          agentJarPath: ${{ parameters.agentJarPath }}
+          server: $(DBMAESTRO_SERVER)
+          user: $(DBMAESTRO_USER)
+          password: $(DBMAESTRO_PASSWORD)
+          useSsl: ${{ parameters.useSsl }}
+          authType: ${{ parameters.authType }}
+          packageType: ${{ parameters.packageType }}
+          runnerPool: ${{ parameters.runnerPool }}
+          useWindows: false
+
+  # ── Merge: upgrade Release_Source ─────────────────────────────────────────
+  # Triggered only when a PR is merged (CI push to main).
+  # Branch policies require PR approval before merge is allowed.
+  - stage: UpgradeReleaseSource
+    displayName: 'Upgrade Release_Source'
+    dependsOn: Setup
+    condition: eq(variables['Build.Reason'], 'IndividualCI')
+    lockBehavior: sequential
+    jobs:
+      - job: DetectAndUpgrade
+        displayName: 'Detect and Upgrade Release_Source'
+        pool: ${{ parameters.runnerPool }}
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - checkout: dbmaestro-cicd
+            fetchDepth: 1
+
+          - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
+            parameters:
+              detectFromPush: true
+              useWindows: false
+
+          - template: azure-devops/templates/upgrade-environment.yml@dbmaestro-cicd
+            parameters:
+              packageName: $(detectPackages.packages_list)
+              projectName: ${{ parameters.projectName }}
+              targetEnvironment: 'Release_Source'
+              agentJarPath: ${{ parameters.agentJarPath }}
+              server: $(DBMAESTRO_SERVER)
+              user: $(DBMAESTRO_USER)
+              password: $(DBMAESTRO_PASSWORD)
+              useSsl: ${{ parameters.useSsl }}
+              authType: ${{ parameters.authType }}
+              useWindows: false
+
+  # ── Approval gate + upgrade Prod_Env_1 ────────────────────────────────────
+  # Requires a manual approval in Azure DevOps before proceeding.
+  # Configure the approval in: Project Settings → Environments → Prod_Env_1 → Approvals and checks.
+  - stage: UpgradeProd
+    displayName: 'Upgrade Prod_Env_1'
+    dependsOn: UpgradeReleaseSource
+    condition: |
+      and(
+        eq(variables['Build.Reason'], 'IndividualCI'),
+        eq(dependencies.UpgradeReleaseSource.result, 'Succeeded')
+      )
+    lockBehavior: sequential
+    jobs:
+      - deployment: UpgradeProdEnv
+        displayName: 'Upgrade Prod_Env_1'
+        pool: ${{ parameters.runnerPool }}
+        # The 'Prod_Env_1' environment must exist in Azure DevOps with an approval check configured.
+        # Go to: Pipelines → Environments → Prod_Env_1 → Approvals and checks → Add approval.
+        environment: Prod_Env_1
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  fetchDepth: 0
+
+                - checkout: dbmaestro-cicd
+                  fetchDepth: 1
+
+                - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
+                  parameters:
+                    detectFromPush: true
+                    useWindows: false
+
+                - template: azure-devops/templates/upgrade-environment.yml@dbmaestro-cicd
+                  parameters:
+                    packageName: $(detectPackages.packages_list)
+                    projectName: ${{ parameters.projectName }}
+                    targetEnvironment: 'Prod_Env_1'
+                    agentJarPath: ${{ parameters.agentJarPath }}
+                    server: $(DBMAESTRO_SERVER)
+                    user: $(DBMAESTRO_USER)
+                    password: $(DBMAESTRO_PASSWORD)
+                    useSsl: ${{ parameters.useSsl }}
+                    authType: ${{ parameters.authType }}
+                    useWindows: false
