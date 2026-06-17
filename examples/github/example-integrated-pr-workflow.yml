@@ -1,4 +1,4 @@
-# Example: Integrated PR Workflow - Build, Validate, and Upgrade
+﻿# Example: Integrated PR Workflow - Build, Validate, and Upgrade
 # On pull request: detects changed packages, builds and validates them.
 # On merge to main: upgrades Release_Source, then waits for approval before upgrading Prod_Env_1.
 # PR approval is required before merge (enforce via branch protection rules).
@@ -45,7 +45,7 @@ jobs:
 
       - name: Detect Changed Packages
         id: detect
-        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/detect-changed-packages@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/detect-changed-packages@v1
         with:
           is_pull_request: true
           base_ref: ${{ github.base_ref }}
@@ -55,7 +55,7 @@ jobs:
     name: Build and Validate
     if: github.event_name == 'pull_request' && needs.detect_changed_packages.outputs.has_packages == 'true'
     needs: detect_changed_packages
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@v1
     with:
       project_name: ${{ vars.PROJECT_NAME }}
       packages_matrix: ${{ needs.detect_changed_packages.outputs.matrix }}
@@ -76,7 +76,7 @@ jobs:
   upgrade_release_source:
     name: Upgrade Release_Source
     if: github.event_name == 'push'
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@v1
     with:
       target_environment: ${{ vars.RELEASE_ENVIRONMENT }}
       project_name: ${{ vars.PROJECT_NAME }}
@@ -109,7 +109,7 @@ jobs:
     name: Upgrade Prod_Env_1
     if: github.event_name == 'push'
     needs: approve_prod
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@v1
     with:
       target_environment: ${{ vars.PROD_ENVIRONMENT }}
       project_name: ${{ vars.PROJECT_NAME }}

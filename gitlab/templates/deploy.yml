@@ -1,11 +1,11 @@
-# GitLab CI template: deploy
+﻿# GitLab CI template: deploy
 # Combined deployment pipeline: detect → create → precheck → upgrade
 # Include this single file to get the full deployment pipeline.
 #
 # Usage in your .gitlab-ci.yml:
 #
 #   include:
-#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/deploy.yml'
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
 #
 #   variables:
 #     DBMAESTRO_SERVER: "dbmaestro.example.com"

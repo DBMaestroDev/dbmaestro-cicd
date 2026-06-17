@@ -1,10 +1,10 @@
-# GitLab CI template: precheck-package
+﻿# GitLab CI template: precheck-package
 # Validates a DBmaestro package using the precheck operation.
 #
 # Usage — include and extend in your .gitlab-ci.yml:
 #
 #   include:
-#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/precheck-package.yml'
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
 #
 #   precheck:
 #     extends: .precheck-package

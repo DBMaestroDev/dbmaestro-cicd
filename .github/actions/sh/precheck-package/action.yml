@@ -1,4 +1,4 @@
-# Version: v1.11
+﻿# Version: v1.11
 name: 'Precheck DBmaestro Package'
 description: 'Validates a DBmaestro package using precheck operation'
 inputs:
@@ -40,7 +40,7 @@ runs:
       with:
         repository: DBMaestroDev/dbmaestro-cicd
         path: dbmaestro-cicd
-        ref: main
+        ref: v1
 
     - name: Run precheck validation
       id: precheck

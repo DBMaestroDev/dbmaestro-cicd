@@ -1,4 +1,4 @@
-# Version: v1.8
+﻿# Version: v1.8
 name: 'Create DBmaestro Package'
 description: 'Creates a DBmaestro package from a folder with manifest, tar archive, and package creation'
 inputs:
@@ -52,7 +52,7 @@ runs:
       with:
         repository: DBMaestroDev/dbmaestro-cicd
         path: dbmaestro-cicd
-        ref: main
+        ref: v1
 
     - name: Create Package
       id: create

@@ -1,4 +1,4 @@
-# Version: v1.10
+﻿# Version: v1.10
 # Reusable Workflow: Build Package from Source Control
 # This workflow builds a DBmaestro package from source control (Tasks or Specific Commit)
 # and validates it with precheck
@@ -85,7 +85,7 @@ jobs:
           EOF
 
       - name: Build from Source Control
-        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/build-from-source-control@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/build-from-source-control@v1
         with:
           package_name: ${{ inputs.package_name }}
           project_name: ${{ inputs.project_name }}
@@ -105,7 +105,7 @@ jobs:
     needs: build_package
     steps:
       - name: Precheck Package
-        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/precheck-package@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/precheck-package@v1
         with:
           package_name: ${{ inputs.package_name }}
           project_name: ${{ inputs.project_name }}

@@ -1,4 +1,4 @@
-# Example: Build with Branch Name as Package Name (Azure DevOps)
+﻿# Example: Build with Branch Name as Package Name (Azure DevOps)
 # Uses the current branch name (or PR source branch) as the package name.
 resources:
   repositories:
@@ -6,6 +6,7 @@ resources:
       type: github
       name: DBMaestroDev/dbmaestro-cicd
       endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
+      ref: refs/tags/v1
 
 parameters:
   - name: projectName

@@ -1,4 +1,4 @@
-# Example: Integrated PR Workflow - Build, Validate, and Upgrade (Azure DevOps)
+﻿# Example: Integrated PR Workflow - Build, Validate, and Upgrade (Azure DevOps)
 # On pull request: detects changed packages, builds and validates them.
 # On merge to main: upgrades Release_Source, then waits for approval before upgrading Prod_Env_1.
 # PR approval is required before merge (enforce via branch policies).
@@ -10,6 +10,7 @@ resources:
       type: github
       name: DBMaestroDev/dbmaestro-cicd
       endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
+      ref: refs/tags/v1
 
 # ── Configurable variables ────────────────────────────────────────────────────
 parameters:

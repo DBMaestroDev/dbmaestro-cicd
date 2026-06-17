@@ -1,10 +1,10 @@
-# GitLab CI template: upgrade-environment
+﻿# GitLab CI template: upgrade-environment
 # Upgrades a DBmaestro target environment with a specific package.
 #
 # Usage — include and extend in your .gitlab-ci.yml:
 #
 #   include:
-#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/upgrade-environment.yml'
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/upgrade-environment.yml'
 #
 #   upgrade:
 #     extends: .upgrade-environment

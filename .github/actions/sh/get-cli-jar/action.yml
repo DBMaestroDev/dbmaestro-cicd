@@ -1,4 +1,4 @@
-# Version: v1.7
+﻿# Version: v1.7
 name: 'Get DBmaestro CLI JAR'
 description: 'Downloads the DBmaestro Agent JAR file from GitHub releases'
 inputs:
@@ -23,7 +23,7 @@ runs:
       with:
         repository: DBMaestroDev/dbmaestro-cicd
         path: dbmaestro-cicd
-        ref: main
+        ref: v1
 
     - name: Download DBmaestro Agent JAR
       id: download

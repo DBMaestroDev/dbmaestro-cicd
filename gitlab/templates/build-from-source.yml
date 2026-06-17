@@ -1,10 +1,10 @@
-# GitLab CI template: build-from-source
+﻿# GitLab CI template: build-from-source
 # Builds a DBmaestro package from source control (Tasks or Specific Commit).
 #
 # Usage — include and extend in your .gitlab-ci.yml:
 #
 #   include:
-#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/build-from-source.yml'
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/build-from-source.yml'
 #
 #   build:
 #     extends: .build-from-source

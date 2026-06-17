@@ -1,4 +1,4 @@
-# Example: Upgrade Environment
+﻿# Example: Upgrade Environment
 # Upgrades a DBmaestro environment triggered by push, pull request, or manual dispatch.
 # A concurrency group prevents simultaneous upgrades to the same environment.
 
@@ -45,7 +45,7 @@ concurrency:
 jobs:
   upgrade_on_dispatch_or_push:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@v1
     with:
       package_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.package_name || '' }}
       target_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_environment || github.ref_name }}
@@ -62,7 +62,7 @@ jobs:
 
   upgrade_on_pr:
     if: github.event_name == 'pull_request'
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@v1
     with:
       target_environment: ${{ github.base_ref }}
       project_name: 'Demo-PSQL'

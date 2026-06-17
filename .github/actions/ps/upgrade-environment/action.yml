@@ -1,4 +1,4 @@
-# Version: v1.8
+﻿# Version: v1.8
 name: 'Upgrade Environment'
 description: 'Upgrades a target environment with a specific package using DBmaestro'
 inputs:
@@ -39,7 +39,7 @@ runs:
       with:
         repository: DBMaestroDev/dbmaestro-cicd
         path: dbmaestro-cicd
-        ref: main
+        ref: v1
 
     - name: Summary
       shell: powershell -ExecutionPolicy Bypass -Command ". '{0}'"

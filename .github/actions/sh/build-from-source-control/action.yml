@@ -1,4 +1,4 @@
-# Version: v1.11
+﻿# Version: v1.11
 name: 'Build Package from Source Control'
 description: 'Build a DBmaestro package from source control (Tasks or Specific Commit)'
 author: 'DBmaestro'
@@ -55,7 +55,7 @@ runs:
       with:
         repository: DBMaestroDev/dbmaestro-cicd
         path: dbmaestro-cicd
-        ref: main
+        ref: v1
 
     - name: Build Package from Source Control
       id: build

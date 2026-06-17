@@ -1,4 +1,4 @@
-# GitLab CI example pipeline for DBmaestro deployments
+﻿# GitLab CI example pipeline for DBmaestro deployments
 # Copy this file to your project repository as .gitlab-ci.yml and adjust the variables section.
 #
 # Prerequisites:
@@ -8,7 +8,7 @@
 # 2. Your package folders must live under packages/<package-name>/
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/deploy.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/deploy.yml'
 
 variables:
   # --- DBmaestro connection ---

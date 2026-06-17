@@ -1,4 +1,4 @@
-# Example: Build with Branch Name as Package Name
+﻿# Example: Build with Branch Name as Package Name
 # Uses the current branch name (or PR source branch) as the package name.
 # Useful for workflows where each feature branch maps to a DBmaestro package.
 
@@ -37,7 +37,7 @@ jobs:
   build_and_validate:
     name: Build and Validate Package
     needs: get_package_from_branch
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@v1
     with:
       project_name: 'Demo-PSQL'
       packages_matrix: ${{ needs.get_package_from_branch.outputs.matrix }}

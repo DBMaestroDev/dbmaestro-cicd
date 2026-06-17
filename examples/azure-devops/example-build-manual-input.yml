@@ -1,4 +1,4 @@
-# Example: Build with Manual Package Selection (Azure DevOps)
+﻿# Example: Build with Manual Package Selection (Azure DevOps)
 # Manually trigger this pipeline and enter comma-separated package names.
 resources:
   repositories:
@@ -6,6 +6,7 @@ resources:
       type: github
       name: DBMaestroDev/dbmaestro-cicd
       endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
+      ref: refs/tags/v1
 
 parameters:
   - name: packageNames

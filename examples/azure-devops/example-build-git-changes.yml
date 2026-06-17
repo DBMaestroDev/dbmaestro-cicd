@@ -1,4 +1,4 @@
-# Example: Build with Git Change Detection (Azure DevOps)
+﻿# Example: Build with Git Change Detection (Azure DevOps)
 # Detects which packages changed in the current branch or PR diff and builds them.
 resources:
   repositories:
@@ -6,6 +6,7 @@ resources:
       type: github
       name: DBMaestroDev/dbmaestro-cicd
       endpoint: dbmaestro-cicd  # Replace with your GitHub service connection name if different
+      ref: refs/tags/v1
 
 parameters:
   - name: projectName

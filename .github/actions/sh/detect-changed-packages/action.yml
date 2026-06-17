@@ -1,4 +1,4 @@
-# Version: v1.11
+﻿# Version: v1.11
 name: 'Detect Changed Packages'
 description: 'Detects changed packages from git commits or manual input (Linux/bash)'
 inputs:
@@ -39,7 +39,7 @@ runs:
       with:
         repository: DBMaestroDev/dbmaestro-cicd
         path: dbmaestro-cicd
-        ref: main
+        ref: v1
 
     - name: Detect Packages
       id: detect-packages

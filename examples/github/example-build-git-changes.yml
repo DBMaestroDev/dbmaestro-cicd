@@ -1,4 +1,4 @@
-# Example: Build with Git Change Detection
+﻿# Example: Build with Git Change Detection
 # Automatically detects which packages changed since the base branch and builds them.
 # Triggers on pull requests or can be run manually with a target branch override.
 
@@ -32,7 +32,7 @@ jobs:
 
       - name: Detect Changed Packages
         id: detect
-        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/detect-changed-packages@main
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/detect-changed-packages@v1
         with:
           is_pull_request: ${{ github.event_name == 'pull_request' }}
           base_ref: ${{ github.event_name == 'pull_request' && github.base_ref || inputs.target_branch }}
@@ -41,7 +41,7 @@ jobs:
     name: Build and Validate Packages
     needs: detect_changed_packages
     if: needs.detect_changed_packages.outputs.has_packages == 'true'
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@v1
     with:
       project_name: 'Demo-PSQL'
       packages_matrix: ${{ needs.detect_changed_packages.outputs.matrix }}

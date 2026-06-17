@@ -1,11 +1,11 @@
-# Example: Upgrade Environment (GitLab CI)
+﻿# Example: Upgrade Environment (GitLab CI)
 # Upgrades a DBmaestro environment on push, MR, or manual trigger.
 # resource_group prevents concurrent upgrades to the same environment.
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/get-cli-jar.yml'
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/detect-packages.yml'
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/main/gitlab/templates/upgrade-environment.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/detect-packages.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/upgrade-environment.yml'
 
 stages:
   - setup

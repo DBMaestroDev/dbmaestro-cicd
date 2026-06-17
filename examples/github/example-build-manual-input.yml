@@ -1,4 +1,4 @@
-# Example: Build with Manual Package Selection
+﻿# Example: Build with Manual Package Selection
 # Accepts a comma-separated list of package names as a manual workflow input.
 # Useful for ad-hoc builds or when automation cannot determine the packages.
 
@@ -45,7 +45,7 @@ jobs:
   build_and_validate:
     name: Build and Validate Packages
     needs: prepare_matrix
-    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@main
+    uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-build-validate.yml@v1
     with:
       project_name: ${{ inputs.project_name }}
       packages_matrix: ${{ needs.prepare_matrix.outputs.matrix }}

@@ -1,4 +1,4 @@
-# Azure DevOps example pipeline for DBmaestro deployments
+﻿# Azure DevOps example pipeline for DBmaestro deployments
 # Copy this file to your project repository as azure-pipelines.yml and adjust the parameters section.
 #
 # Prerequisites:
@@ -25,7 +25,7 @@ resources:
       type: github
       name: DBMaestroDev/dbmaestro-cicd
       endpoint: github-dbmaestro     # your GitHub service connection name
-      ref: v1
+      ref: refs/tags/v1
 
 extends:
   template: azure-devops/templates/deploy.yml@dbmaestro-cicd
