@@ -87,6 +87,6 @@ The examples default to the `sh` (Linux/Bash) variant.
 
 Deep-dive documentation for each platform's available actions, inputs, and outputs:
 
-- [GitHub Actions reference](.github/README.md)
+- [GitHub Actions reference](.github/GITHUB_ACTIONS.md)
 - [GitLab CI reference](gitlab/README.md)
 - [Azure DevOps reference](azure-devops/README.md)
