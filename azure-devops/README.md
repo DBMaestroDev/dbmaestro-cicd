@@ -1,10 +1,10 @@
-# Azure DevOps � DBmaestro CI/CD Library
+# Azure DevOps — DBmaestro CI/CD Library
 
 Step templates and pipeline templates for DBmaestro package management and environment upgrades. All logic is delegated to the platform-agnostic scripts in [`core/scripts/`](../core/scripts/).
 
 Each template supports both runner types:
-- **Linux** (`useWindows: false`) � Bash via `Bash@3` task, on any Linux agent
-- **Windows** (`useWindows: true`) � PowerShell via `PowerShell@2` (`pwsh`) task, on a Linux agent with `pwsh` installed **or** a native Windows agent
+- **Linux** (`useWindows: false`) — Bash via `Bash@3` task, on any Linux agent
+- **Windows** (`useWindows: true`) — PowerShell via `PowerShell@2` (`pwsh`) task, on a Linux agent with `pwsh` installed **or** a native Windows agent
 
 > Templates are referenced from the `dbmaestro-cicd` repository resource using `@dbmaestro-cicd`.
 
@@ -93,8 +93,8 @@ steps:
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `version` | Yes | � | JAR version, e.g. `26.1.2.13455` |
-| `jarPath` | Yes | � | Destination path on the agent |
+| `version` | Yes | — | JAR version, e.g. `26.1.2.13455` |
+| `jarPath` | Yes | — | Destination path on the agent |
 | `useWindows` | | `false` | Use PowerShell instead of Bash |
 
 ---
@@ -117,12 +117,12 @@ steps:
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `packageName` | Yes | � | Package name |
-| `projectName` | Yes | � | DBmaestro project name |
-| `server` | Yes | � | Agent server (`host:port`) |
-| `user` | Yes | � | DBmaestro username |
-| `password` | Yes | � | DBmaestro password (secret variable) |
-| `agentJarPath` | Yes | � | Path to agent JAR |
+| `packageName` | Yes | — | Package name |
+| `projectName` | Yes | — | DBmaestro project name |
+| `server` | Yes | — | Agent server (`host:port`) |
+| `user` | Yes | — | DBmaestro username |
+| `password` | Yes | — | DBmaestro password (secret variable) |
+| `agentJarPath` | Yes | — | Path to agent JAR |
 | `packagesFolder` | | `packages` | Root folder with package sub-directories |
 | `useSsl` | | `True` | Enable SSL |
 | `authType` | | `DBmaestroAccount` | Authentication type |
@@ -138,12 +138,12 @@ Validates a package using the DBmaestro PreCheck operation.
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `packageName` | Yes | � | Package name |
-| `projectName` | Yes | � | DBmaestro project name |
-| `server` | Yes | � | Agent server (`host:port`) |
-| `user` | Yes | � | DBmaestro username |
-| `password` | Yes | � | DBmaestro password (secret variable) |
-| `agentJarPath` | Yes | � | Path to agent JAR |
+| `packageName` | Yes | — | Package name |
+| `projectName` | Yes | — | DBmaestro project name |
+| `server` | Yes | — | Agent server (`host:port`) |
+| `user` | Yes | — | DBmaestro username |
+| `password` | Yes | — | DBmaestro password (secret variable) |
+| `agentJarPath` | Yes | — | Path to agent JAR |
 | `useSsl` | | `True` | Enable SSL |
 | `authType` | | `DBmaestroAccount` | Authentication type |
 | `useWindows` | | `false` | Use PowerShell |
@@ -157,12 +157,12 @@ Upgrades a DBmaestro target environment.
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `packageName` | | `` | Package(s) to upgrade (empty = from detect) |
-| `projectName` | Yes | � | DBmaestro project name |
-| `targetEnvironment` | Yes | � | Environment name |
-| `server` | Yes | � | Agent server (`host:port`) |
-| `user` | Yes | � | DBmaestro username |
-| `password` | Yes | � | DBmaestro password (secret variable) |
-| `agentJarPath` | Yes | � | Path to agent JAR |
+| `projectName` | Yes | — | DBmaestro project name |
+| `targetEnvironment` | Yes | — | Environment name |
+| `server` | Yes | — | Agent server (`host:port`) |
+| `user` | Yes | — | DBmaestro username |
+| `password` | Yes | — | DBmaestro password (secret variable) |
+| `agentJarPath` | Yes | — | Path to agent JAR |
 | `detectFromPush` | | `false` | Detect packages from push |
 | `isPullRequest` | | `false` | Run as PR validation |
 | `useSsl` | | `True` | Enable SSL |
@@ -177,15 +177,15 @@ Builds a package from source control.
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `packageName` | Yes | � | Package name |
-| `projectName` | Yes | � | DBmaestro project name |
+| `packageName` | Yes | — | Package name |
+| `projectName` | Yes | — | DBmaestro project name |
 | `envName` | | `Dev_Env_1` | Development environment name |
 | `versionType` | | `` | `Tasks`, `Specific Commit`, or empty (all) |
 | `additionalInformation` | | `` | Task IDs or commit hash |
-| `server` | Yes | � | Agent server (`host:port`) |
-| `user` | Yes | � | DBmaestro username |
-| `password` | Yes | � | DBmaestro password (secret variable) |
-| `agentJarPath` | Yes | � | Path to agent JAR |
+| `server` | Yes | — | Agent server (`host:port`) |
+| `user` | Yes | — | DBmaestro username |
+| `password` | Yes | — | DBmaestro password (secret variable) |
+| `agentJarPath` | Yes | — | Path to agent JAR |
 | `useSsl` | | `True` | Enable SSL |
 | `authType` | | `DBmaestroAccount` | Authentication type |
 | `useWindows` | | `false` | Use PowerShell |
@@ -244,9 +244,9 @@ extends:
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `server` | Yes | � | Agent server (`host:port`) |
-| `projectName` | Yes | � | DBmaestro project name |
-| `targetEnvironment` | Yes | � | Target environment name |
+| `server` | Yes | — | Agent server (`host:port`) |
+| `projectName` | Yes | — | DBmaestro project name |
+| `targetEnvironment` | Yes | — | Target environment name |
 | `agentJarPath` | | `/home/runner/DBmaestroAgent.jar` | JAR path on the runner |
 | `dbmaestroVersion` | | `26.1.2.13455` | JAR version to download |
 | `packages` | | `[]` | List of `{name: string}` objects |
@@ -286,7 +286,7 @@ jobs:
           useWindows: false   # default, can be omitted
           # ...
 
-# PowerShell on same Linux runner (or a Windows runner) � flip useWindows
+# PowerShell on same Linux runner (or a Windows runner) — flip useWindows
 jobs:
   - job: BuildPackages
     pool:

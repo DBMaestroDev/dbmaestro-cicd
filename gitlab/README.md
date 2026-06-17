@@ -1,10 +1,10 @@
-﻿# GitLab CI � DBmaestro CI/CD Library
+# GitLab CI — DBmaestro CI/CD Library
 
 Hidden job templates for DBmaestro package management and environment upgrades. All logic is delegated to the platform-agnostic scripts in [`core/scripts/`](../core/scripts/).
 
 Two variants are available for every template:
-- **Linux** (default) � Bash scripts, `image:` or shell executor on Linux
-- **Windows** (suffix `-windows`) � PowerShell scripts, shell executor on a Linux runner with `pwsh` **or** a native Windows runner
+- **Linux** (default) — Bash scripts, `image:` or shell executor on Linux
+- **Windows** (suffix `-windows`) — PowerShell scripts, shell executor on a Linux runner with `pwsh` **or** a native Windows runner
 
 > Templates are loaded via GitLab `include: remote:` using raw GitHub URLs from the public `DBMaestroDev/dbmaestro-cicd` repository.
 
@@ -52,8 +52,8 @@ Downloads the DBmaestro agent JAR from GitHub releases.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DBMAESTRO_VERSION` | Yes | � | Agent JAR version, e.g. `26.1.0.13224` |
-| `DBMAESTRO_AGENT_JAR` | Yes | � | Destination path for the JAR |
+| `DBMAESTRO_VERSION` | Yes | — | Agent JAR version, e.g. `26.1.0.13224` |
+| `DBMAESTRO_AGENT_JAR` | Yes | — | Destination path for the JAR |
 
 Artifact: the downloaded JAR is stored as a job artifact passed to subsequent jobs.
 
@@ -72,7 +72,7 @@ Detects changed packages from git diff (push or MR).
 
 Output: `dotenv` artifact with `has_packages`, `packages_list`, `matrix`, `packages`.
 
-Use `.detect-packages-mr` for merge request pipelines � it pre-sets `DETECT_IS_PULL_REQUEST=true`.
+Use `.detect-packages-mr` for merge request pipelines — it pre-sets `DETECT_IS_PULL_REQUEST=true`.
 
 ---
 
@@ -82,14 +82,14 @@ Creates a DBmaestro package from a source folder.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DBMAESTRO_PACKAGE_NAME` | Yes | � | Package name |
-| `DBMAESTRO_PROJECT_NAME` | Yes | � | DBmaestro project name |
+| `DBMAESTRO_PACKAGE_NAME` | Yes | — | Package name |
+| `DBMAESTRO_PROJECT_NAME` | Yes | — | DBmaestro project name |
 | `DBMAESTRO_PACKAGES_FOLDER` | | `packages` | Root folder with package sub-directories |
 | `DBMAESTRO_PACKAGE_TYPE` | | `Regular` | `Regular` or `AdHoc` |
-| `DBMAESTRO_AGENT_JAR` | Yes | � | Path to agent JAR |
-| `DBMAESTRO_SERVER` | Yes | � | Server in `host:port` format |
-| `DBMAESTRO_USER` | Yes | � | DBmaestro username |
-| `DBMAESTRO_PASSWORD` | Yes | � | DBmaestro password (masked variable) |
+| `DBMAESTRO_AGENT_JAR` | Yes | — | Path to agent JAR |
+| `DBMAESTRO_SERVER` | Yes | — | Server in `host:port` format |
+| `DBMAESTRO_USER` | Yes | — | DBmaestro username |
+| `DBMAESTRO_PASSWORD` | Yes | — | DBmaestro password (masked variable) |
 | `DBMAESTRO_USE_SSL` | | `True` | Enable SSL |
 | `DBMAESTRO_AUTH_TYPE` | | `DBmaestroAccount` | Authentication type |
 
@@ -111,7 +111,7 @@ Upgrades a DBmaestro target environment.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DBMAESTRO_TARGET_ENV` | Yes | � | Environment name to upgrade |
+| `DBMAESTRO_TARGET_ENV` | Yes | — | Environment name to upgrade |
 | `DBMAESTRO_PACKAGE_NAME` | | `` | Package(s) to upgrade (empty = from detect stage) |
 | `DETECT_IS_PULL_REQUEST` | | `false` | Set `true` to run as PR/MR validation |
 
@@ -123,7 +123,7 @@ Builds a package from source control (all changes, tasks, or specific commit).
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DBMAESTRO_PACKAGE_NAME` | Yes | � | Package name |
+| `DBMAESTRO_PACKAGE_NAME` | Yes | — | Package name |
 | `DBMAESTRO_ENV_NAME` | | `Dev_Env_1` | Development environment name |
 | `DBMAESTRO_VERSION_TYPE` | | `` | `Tasks`, `Specific Commit`, or empty |
 | `DBMAESTRO_ADDITIONAL_INFORMATION` | | `` | Task IDs or commit hash |
@@ -178,7 +178,7 @@ create_package:
     DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
     # ... other variables
 
-# Windows � add -windows suffix; retag to a runner with pwsh installed
+# Windows — add -windows suffix; retag to a runner with pwsh installed
 create_package:
   extends: .create-package-windows
   tags:
@@ -193,7 +193,7 @@ create_package:
 
 ### Mixing Linux and Windows jobs in one pipeline
 
-You can use different variants in different jobs � for example, detect on Linux and create on Windows:
+You can use different variants in different jobs — for example, detect on Linux and create on Windows:
 
 ```yaml
 detect:
