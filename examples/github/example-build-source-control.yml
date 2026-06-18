@@ -29,10 +29,9 @@ on:
         required: true
         type: choice
         options:
-          - 'All Changes (empty)'
           - 'Specific Tasks'
           - 'Specific Commit'
-        default: 'All Changes (empty)'
+        default: 'Specific Tasks'
       tasks_list:
         description: 'Comma-separated task IDs (used when build_type is "Specific Tasks")'
         required: false
