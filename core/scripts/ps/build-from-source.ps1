@@ -12,6 +12,7 @@
 #   DBMAESTRO_ADDITIONAL_INFORMATION  Task list or commit hash (default: "")
 #   DBMAESTRO_USE_SSL                 Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE               Auth type (default: DBmaestroAccount)
+#   DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS  Create downgrade scripts (default: False)
 
 $ErrorActionPreference = 'Stop'
 
@@ -26,6 +27,7 @@ $versionType = if ($env:DBMAESTRO_VERSION_TYPE) { $env:DBMAESTRO_VERSION_TYPE } 
 $additionalInfo = if ($env:DBMAESTRO_ADDITIONAL_INFORMATION) { $env:DBMAESTRO_ADDITIONAL_INFORMATION } else { "" }
 $useSsl = if ($env:DBMAESTRO_USE_SSL) { $env:DBMAESTRO_USE_SSL } else { "True" }
 $authType = if ($env:DBMAESTRO_AUTH_TYPE) { $env:DBMAESTRO_AUTH_TYPE } else { "DBmaestroAccount" }
+$createDowngradeScripts = if ($env:DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS) { $env:DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS } else { "False" }
 
 foreach ($v in @($packageName, $projectName, $envName, $agentJar, $server, $user, $password)) {
     if (-not $v) { Write-Host "ERROR: Required environment variable is missing"; exit 1 }
@@ -43,6 +45,7 @@ Write-Host "Additional Information: $additionalInfo"
     -VersionType "$versionType" `
     -AdditionalInformation "$additionalInfo" `
     -CreatePackage True `
+    -CreateDowngradeScripts "$createDowngradeScripts" `
     -PackageName "$packageName" `
     -Server "$server" `
     -UseSSL "$useSsl" `

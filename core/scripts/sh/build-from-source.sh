@@ -13,6 +13,7 @@
 #   DBMAESTRO_ADDITIONAL_INFORMATION  Task list or commit hash (default: "")
 #   DBMAESTRO_USE_SSL                 Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE               Auth type (default: DBmaestroAccount)
+#   DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS  Create downgrade scripts (default: False)
 
 set -e
 
@@ -27,6 +28,7 @@ VERSION_TYPE="${DBMAESTRO_VERSION_TYPE:-}"
 ADDITIONAL_INFO="${DBMAESTRO_ADDITIONAL_INFORMATION:-}"
 USE_SSL="${DBMAESTRO_USE_SSL:-True}"
 AUTH_TYPE="${DBMAESTRO_AUTH_TYPE:-DBmaestroAccount}"
+CREATE_DOWNGRADE_SCRIPTS="${DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS:-False}"
 
 echo "==== Building package: $PACKAGE_NAME ===="
 echo "Project: $PROJECT_NAME"
@@ -40,6 +42,7 @@ java -jar "$AGENT_JAR" -Build \
   -VersionType "$VERSION_TYPE" \
   -AdditionalInformation "$ADDITIONAL_INFO" \
   -CreatePackage True \
+  -CreateDowngradeScripts "$CREATE_DOWNGRADE_SCRIPTS" \
   -PackageName "$PACKAGE_NAME" \
   -Server "$SERVER" \
   -UseSSL "$USE_SSL" \

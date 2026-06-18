@@ -44,6 +44,9 @@ parameters:
   - name: authType
     type: string
     default: "DBmaestroAccount"
+  - name: createDowngradeScripts
+    type: string
+    default: "False"
   - name: useWindows
     type: boolean
     default: false
@@ -64,6 +67,7 @@ steps:
           DBMAESTRO_ADDITIONAL_INFORMATION: ${{ parameters.additionalInformation }}
           DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+          DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: ${{ parameters.createDowngradeScripts }}
         inputs:
           targetType: filePath
           filePath: $(Build.SourcesDirectory)/core/scripts/sh/build-from-source.sh
@@ -83,6 +87,7 @@ steps:
           DBMAESTRO_ADDITIONAL_INFORMATION: ${{ parameters.additionalInformation }}
           DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+          DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: ${{ parameters.createDowngradeScripts }}
         inputs:
           targetType: filePath
           filePath: $(Build.SourcesDirectory)/core/scripts/ps/build-from-source.ps1

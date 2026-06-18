@@ -41,6 +41,14 @@ on:
         description: 'Commit hash (used when build_type is "Specific Commit")'
         required: false
         type: string
+      create_downgrade_scripts:
+        description: 'Create downgrade scripts'
+        required: false
+        type: choice
+        options:
+          - 'False'
+          - 'True'
+        default: 'False'
 
 jobs:
   prepare_parameters:
@@ -81,6 +89,7 @@ jobs:
       environment-name: ${{ inputs.environment_name }}
       version_type: ${{ needs.prepare_parameters.outputs.version_type }}
       additional_information: ${{ needs.prepare_parameters.outputs.additional_info }}
+      create_downgrade_scripts: ${{ inputs.create_downgrade_scripts }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       use_ssl: 'True'
       auth_type: 'DBmaestroAccount'

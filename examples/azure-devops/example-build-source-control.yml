@@ -36,6 +36,13 @@ parameters:
     displayName: 'Commit hash (optional - used when buildType = Specific Commit)'
     type: string
     default: 'none'
+  - name: createDowngradeScripts
+    displayName: 'Create downgrade scripts'
+    type: string
+    values:
+      - 'False'
+      - 'True'
+    default: 'False'
   - name: agentJarPath
     type: string
     default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
@@ -112,4 +119,5 @@ stages:
               password: $(DBMAESTRO_PASSWORD)
               useSsl: 'True'
               authType: 'DBmaestroAccount'
+              createDowngradeScripts: ${{ parameters.createDowngradeScripts }}
               useWindows: false

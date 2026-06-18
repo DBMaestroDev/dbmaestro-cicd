@@ -28,6 +28,7 @@
     DBMAESTRO_ADDITIONAL_INFORMATION: ""
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: "False"
   script:
     - bash "${CI_PROJECT_DIR}/core/scripts/sh/build-from-source.sh"
 
@@ -44,5 +45,6 @@
     DBMAESTRO_ADDITIONAL_INFORMATION: ""
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: "False"
   script:
     - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/build-from-source.ps1"

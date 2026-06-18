@@ -59,6 +59,11 @@ on:
         required: false
         type: string
         default: ''
+      create_downgrade_scripts:
+        description: 'Create downgrade scripts (True/False)'
+        required: false
+        type: string
+        default: 'False'
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password'
@@ -98,6 +103,7 @@ jobs:
           auth_type: ${{ inputs.auth_type }}
           dbmaestro_user: ${{ inputs.dbmaestro_user }}
           dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+          create_downgrade_scripts: ${{ inputs.create_downgrade_scripts }}
 
   precheck_package:
     name: Validate Package

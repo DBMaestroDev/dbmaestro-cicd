@@ -41,6 +41,10 @@ inputs:
     description: 'Version type: Tasks or Specific Commit'
     required: false
     default: ''
+  create_downgrade_scripts:
+    description: 'Create downgrade scripts (True/False)'
+    required: false
+    default: 'False'
 
 outputs:
   package-created:
@@ -72,6 +76,7 @@ runs:
         DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
         DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+        DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: ${{ inputs.create_downgrade_scripts }}
       run: |
         $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
         & "$env:GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/ps/build-from-source.ps1"
