@@ -19,6 +19,7 @@
 .upgrade-environment:
   variables:
     DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_TAG_NAME: ""
     DBMAESTRO_PROJECT_NAME: ""
     DBMAESTRO_TARGET_ENV: ""
     DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
@@ -33,6 +34,7 @@
 .upgrade-environment-windows:
   variables:
     DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_TAG_NAME: ""
     DBMAESTRO_PROJECT_NAME: ""
     DBMAESTRO_TARGET_ENV: ""
     DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"

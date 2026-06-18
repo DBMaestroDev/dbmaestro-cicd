@@ -24,6 +24,10 @@ parameters:
     displayName: 'Package names to upgrade (comma-separated, leave empty to auto-detect)'
     type: string
     default: ''
+  - name: tagName
+    displayName: 'Tag name to upgrade (use instead of packageNames)'
+    type: string
+    default: ''
   - name: projectName
     type: string
     default: 'Demo-PSQL'
@@ -105,6 +109,7 @@ stages:
           - template: azure-devops/templates/upgrade-environment.yml@dbmaestro-cicd
             parameters:
               packageName: ${{ parameters.packageNames }}
+              tagName: ${{ parameters.tagName }}
               projectName: ${{ parameters.projectName }}
               targetEnvironment: $(resolvedTarget)
               agentJarPath: ${{ parameters.agentJarPath }}

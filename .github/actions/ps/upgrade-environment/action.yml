@@ -4,7 +4,12 @@ description: 'Upgrades a target environment with a specific package using DBmaes
 inputs:
   package_name:
     description: 'Package name to upgrade'
-    required: true
+    required: false
+    default: ''
+  tag_name:
+    description: 'Tag name to upgrade (use instead of package_name)'
+    required: false
+    default: ''
   target_environment:
     description: 'Target environment for upgrade'
     required: true
@@ -67,6 +72,7 @@ runs:
       shell: pwsh
       env:
         DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_TAG_NAME: ${{ inputs.tag_name }}
         DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
         DBMAESTRO_TARGET_ENV: ${{ inputs.target_environment }}
         DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}

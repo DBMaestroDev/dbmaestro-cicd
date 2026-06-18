@@ -17,6 +17,10 @@
 parameters:
   - name: packageName
     type: string
+    default: ""
+  - name: tagName
+    type: string
+    default: ""
   - name: projectName
     type: string
   - name: targetEnvironment
@@ -43,9 +47,10 @@ parameters:
 steps:
   - ${{ if not(parameters.useWindows) }}:
       - task: Bash@3
-        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}'"
+        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}${{ parameters.tagName }}'"
         env:
           DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+          DBMAESTRO_TAG_NAME: ${{ parameters.tagName }}
           DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
           DBMAESTRO_TARGET_ENV: ${{ parameters.targetEnvironment }}
           DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
@@ -60,9 +65,10 @@ steps:
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
-        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}' (Windows)"
+        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}${{ parameters.tagName }}' (Windows)"
         env:
           DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+          DBMAESTRO_TAG_NAME: ${{ parameters.tagName }}
           DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
           DBMAESTRO_TARGET_ENV: ${{ parameters.targetEnvironment }}
           DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}

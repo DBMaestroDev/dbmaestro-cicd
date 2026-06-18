@@ -41,6 +41,11 @@ on:
         required: false
         type: string
         default: ''
+      tag_name:
+        description: 'Tag name to upgrade (use instead of package_name)'
+        required: false
+        type: string
+        default: ''
       project_name:
         description: 'DBmaestro project name'
         required: false
@@ -158,6 +163,7 @@ jobs:
           dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
           dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
           package_name: ${{ matrix.item.package }}
+          tag_name: ${{ inputs.tag_name }}
           project_name: ${{ inputs.project_name }}
           target_environment: ${{ inputs.target_environment }}
           use_ssl: ${{ inputs.use_ssl }}

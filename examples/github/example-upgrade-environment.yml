@@ -9,7 +9,11 @@ on:
     inputs:
       package_name:
         description: 'Package name(s) to upgrade (comma-separated)'
-        required: true
+        required: false
+        type: string
+      tag_name:
+        description: 'Tag name to upgrade (use instead of package_name)'
+        required: false
         type: string
       target_environment:
         description: 'Target environment for upgrade'
@@ -48,6 +52,7 @@ jobs:
     uses: DBMaestroDev/dbmaestro-cicd/.github/workflows/sh-upgrade-environment.yml@v1
     with:
       package_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.package_name || '' }}
+      tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name || '' }}
       target_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_environment || github.ref_name }}
       project_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.project_name || 'Demo-PSQL' }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
