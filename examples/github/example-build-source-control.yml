@@ -46,9 +46,9 @@ on:
         required: false
         type: choice
         options:
-          - 'False'
           - 'True'
-        default: 'False'
+          - 'False'
+        default: 'True'
 
 jobs:
   prepare_parameters:

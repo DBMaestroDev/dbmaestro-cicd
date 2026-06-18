@@ -1,4 +1,4 @@
-﻿# Version: v1.11
+# Version: v1.11
 name: 'Build Package from Source Control'
 description: 'Build a DBmaestro package from source control (Tasks or Specific Commit)'
 author: 'DBmaestro'
@@ -44,7 +44,7 @@ inputs:
   create_downgrade_scripts:
     description: 'Create downgrade scripts (True/False)'
     required: false
-    default: 'False'
+    default: 'True'
 
 outputs:
   package-created:

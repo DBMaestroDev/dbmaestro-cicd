@@ -1,4 +1,4 @@
-﻿# Example: Build from Source Control (GitLab CI)
+# Example: Build from Source Control (GitLab CI)
 # Builds a DBmaestro package from source control by task list, commit hash, or all changes.
 # Trigger via the GitLab "Run pipeline" UI and set the required variables.
 
@@ -24,7 +24,7 @@ variables:
   BUILD_TYPE: 'All'
   TASKS_LIST: ''
   COMMIT_HASH: ''
-  DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: 'False'
+  DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: 'True'
 
 # --- Setup Stage ---
 get_cli_jar:

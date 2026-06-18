@@ -1,4 +1,4 @@
-﻿# Version: v1.10
+# Version: v1.10
 # Reusable Workflow: Build Package from Source Control
 # This workflow builds a DBmaestro package from source control (Tasks or Specific Commit)
 # and validates it with precheck
@@ -63,7 +63,7 @@ on:
         description: 'Create downgrade scripts (True/False)'
         required: false
         type: string
-        default: 'False'
+        default: 'True'
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password'

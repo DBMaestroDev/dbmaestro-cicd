@@ -1,4 +1,4 @@
-﻿# Version: v1.0
+# Version: v1.0
 # Reusable Workflow: Build Package from Source Control (Windows/PowerShell)
 # PowerShell equivalent of sh-build-source-control.yml
 
@@ -62,7 +62,7 @@ on:
         description: 'Create downgrade scripts (True/False)'
         required: false
         type: string
-        default: 'False'
+        default: 'True'
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password'

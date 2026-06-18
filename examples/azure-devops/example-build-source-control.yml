@@ -1,4 +1,4 @@
-﻿# Example: Build from Source Control (Azure DevOps)
+# Example: Build from Source Control (Azure DevOps)
 # Builds a DBmaestro package from source control by task list, commit hash, or all changes.
 # Trigger manually via the Azure DevOps UI and set the required parameters.
 resources:
@@ -42,7 +42,7 @@ parameters:
     values:
       - 'False'
       - 'True'
-    default: 'False'
+    default: 'True'
   - name: agentJarPath
     type: string
     default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'

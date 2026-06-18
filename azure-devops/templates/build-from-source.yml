@@ -46,7 +46,7 @@ parameters:
     default: "DBmaestroAccount"
   - name: createDowngradeScripts
     type: string
-    default: "False"
+    default: "True"
   - name: useWindows
     type: boolean
     default: false
