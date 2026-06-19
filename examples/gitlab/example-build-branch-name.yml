@@ -21,8 +21,9 @@ variables:
   # Set DBMAESTRO_TAGS to apply tags after build (optional, e.g., "TASK-123,TASK-456")
   DBMAESTRO_TAGS: ''
   DBMAESTRO_TAG_TYPE_NAME: 'Task'
-  DOWNLOAD_CLI: 'true'
-  DBMAESTRO_VERSION: '26.1.3.13473'
+  # Set DBMAESTRO_VERSION in Settings → CI/CD → Variables to enable JAR download.
+  # Leave empty (or unset) if the JAR is pre-installed on the runner.
+  DBMAESTRO_VERSION: ''
 
 # --- Build Stage ---
 create_package_from_branch:
@@ -78,7 +79,7 @@ tag_package_from_branch:
       fi
   script:
     - |
-      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+      if [ -n "$DBMAESTRO_VERSION" ]; then
         export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
         bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
       fi

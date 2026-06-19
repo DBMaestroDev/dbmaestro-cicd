@@ -45,15 +45,13 @@ parameters:
   - name: useWindows
     type: boolean
     default: false
-  - name: downloadCli
-    type: boolean
-    default: true
   - name: version
     type: string
     default: ""
 
 steps:
-  - ${{ if and(parameters.downloadCli, ne(parameters.version, '')) }}:
+  # If version is set, download (or reuse cached) the JAR. If empty, the JAR is assumed to be pre-installed on the runner.
+  - ${{ if ne(parameters.version, '') }}:
       - template: azure-devops/templates/get-cli-jar.yml
         parameters:
           version: ${{ parameters.version }}

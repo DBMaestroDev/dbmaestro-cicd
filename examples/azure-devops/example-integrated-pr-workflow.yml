@@ -46,11 +46,6 @@ parameters:
     displayName: 'Tag type name'
     type: string
     default: 'Task'
-  - name: version
-    displayName: 'DBmaestro CLI version to download (e.g., "26.1.3.13473")'
-    type: string
-    default: '26.1.3.13473'
-
 # Auto-trigger upgrade on merge to main
 trigger:
   branches:
@@ -82,7 +77,9 @@ stages:
             parameters:
               jarPath: ${{ parameters.agentJarPath }}
               useWindows: false
-              version: ${{ parameters.version }}
+              # CLI_VERSION pipeline variable controls JAR download. Set in pipeline Variables or a Variable Group.
+              # Leave empty if the JAR is pre-installed on the runner.
+              version: $(CLI_VERSION)
 
   # ── Pull Request: detect changed packages ──────────────────────────────────
   - stage: Detect
@@ -138,7 +135,6 @@ stages:
           packageType: ${{ parameters.packageType }}
           runnerPool: ${{ parameters.runnerPool }}
           useWindows: false
-          downloadCli: false
           tags: ${{ parameters.tags }}
           tagTypeName: ${{ parameters.tagTypeName }}
 

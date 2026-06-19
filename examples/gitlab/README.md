@@ -26,7 +26,7 @@ This guide walks through everything needed to run the DBmaestro example pipeline
 | DBmaestro server | Accessible from the runner. Note the hostname and port (e.g. `agent01.local:8017`). |
 | DBmaestro credentials | Username and password for the account that will create/upgrade packages. |
 | GitLab repository | The repository containing your `packages/` folder with DBmaestro package sub-directories. |
-| Internet access on runner | Required to download the DBmaestro agent JAR from GitHub releases at pipeline runtime. |
+| Internet access on runner | Required to download the DBmaestro agent JAR from GitHub releases at pipeline runtime. Only needed when `DBMAESTRO_VERSION` is set. |
 
 ---
 
@@ -49,7 +49,7 @@ Go to **Settings → CI/CD → Variables** and add the following. Click **Add va
 | `DBMAESTRO_PROJECT_NAME` | *(set in pipeline YAML)* | DBmaestro project name |
 | `DBMAESTRO_TARGET_ENV` | *(set in pipeline YAML)* | Target environment name (e.g. `Release_Source`) |
 | `DBMAESTRO_AGENT_JAR` | `/home/runner/DBmaestroAgent.jar` | Path where the JAR will be downloaded on the runner |
-| `DBMAESTRO_VERSION` | *(required for get-cli-jar)* | Agent JAR version to download (e.g. `26.1.0.13224`) |
+| `DBMAESTRO_VERSION` | *(empty)* | Agent JAR version to download (e.g. `26.1.3.13473`). **Set this to enable automatic JAR download.** Leave empty if the JAR is pre-installed on the runner. |
 | `DBMAESTRO_PACKAGES_FOLDER` | `packages` | Root folder containing package sub-directories |
 | `DBMAESTRO_PACKAGE_TYPE` | `Regular` | `Regular` or `AdHoc` |
 | `DBMAESTRO_USE_SSL` | `True` | Set `False` to disable SSL |
@@ -130,13 +130,11 @@ Then update the `variables:` section at the top to match your environment:
 
 ```yaml
 variables:
-  DBMAESTRO_SERVER: 'agent01.dbmaestro.local:8017'   # your server
-  DBMAESTRO_USER: 'dbm_user'                          # your username
-  DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'                  # your project
-  DBMAESTRO_TARGET_ENV: 'Release_Source'               # your environment
+  DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
+  DBMAESTRO_TARGET_ENV: 'Release_Source'
   DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
-  DBMAESTRO_VERSION: '26.1.0.13224'                    # your JAR version
-  # DBMAESTRO_PASSWORD is set as a masked CI/CD variable — do not put it here
+  # DBMAESTRO_VERSION — set in Settings → CI/CD → Variables (leave empty if JAR is pre-installed)
+  # DBMAESTRO_SERVER, DBMAESTRO_USER, DBMAESTRO_PASSWORD — set as CI/CD variables, not in YAML
 ```
 
 Commit and push. The pipeline activates on the next push or MR.

@@ -58,12 +58,6 @@ on:
         required: false
         type: string
         default: 'Task'
-      cli_version:
-        description: 'DBmaestro CLI version to download (e.g., "26.1.0.13224")'
-        required: false
-        type: string
-        default: ''
-
 jobs:
   prepare_parameters:
     name: Prepare Build Parameters
@@ -106,8 +100,7 @@ jobs:
       create_downgrade_scripts: ${{ inputs.create_downgrade_scripts }}
       tags: ${{ inputs.tags }}
       tag_type_name: ${{ inputs.tag_type_name }}
-      download_cli: true
-      cli_version: ${{ inputs.cli_version }}
+      cli_version: ${{ vars.CLI_VERSION }}  # set CLI_VERSION repo variable; leave empty if JAR is pre-installed
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       use_ssl: 'True'
       auth_type: 'DBmaestroAccount'

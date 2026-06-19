@@ -62,8 +62,7 @@ jobs:
       packages_folder: ${{ vars.PACKAGES_FOLDER }}
       tags: ${{ vars.BUILD_TAGS }}
       tag_type_name: 'Task'
-      download_cli: true
-      cli_version: ${{ vars.CLI_VERSION }}
+      cli_version: ${{ vars.CLI_VERSION }}  # set CLI_VERSION repo variable; leave empty if JAR is pre-installed
       agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
       use_ssl: ${{ vars.USE_SSL }}
       auth_type: ${{ vars.AUTH_TYPE }}
@@ -84,8 +83,7 @@ jobs:
     with:
       target_environment: ${{ vars.RELEASE_ENVIRONMENT }}
       project_name: ${{ vars.PROJECT_NAME }}
-      download_cli: true
-      cli_version: ${{ vars.CLI_VERSION }}
+      cli_version: ${{ vars.CLI_VERSION }}  # set CLI_VERSION repo variable; leave empty if JAR is pre-installed
       agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
       detect_from_push: true
       is_pull_request: false
@@ -119,8 +117,7 @@ jobs:
     with:
       target_environment: ${{ vars.PROD_ENVIRONMENT }}
       project_name: ${{ vars.PROJECT_NAME }}
-      download_cli: true
-      cli_version: ${{ vars.CLI_VERSION }}
+      cli_version: ${{ vars.CLI_VERSION }}  # set CLI_VERSION repo variable; leave empty if JAR is pre-installed
       agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
       detect_from_push: true
       is_pull_request: false

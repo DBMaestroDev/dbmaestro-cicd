@@ -63,6 +63,7 @@ Variables can be set at the pipeline level or in a Variable Group (Library).
 | `DBMAESTRO_PASSWORD` | `••••••••` | **Yes** | DBmaestro account password. Click the lock icon to mark as secret. |
 | `DBMAESTRO_SERVER` | `agent01.local:8017` | No | DBmaestro agent server in `host:port` format |
 | `DBMAESTRO_USER` | `dbm_user` | No | DBmaestro username |
+| `CLI_VERSION` | *(empty)* | No | DBmaestro agent JAR version to download (e.g. `26.1.3.13473`). When set, the JAR is downloaded at that version (re-downloaded only if the version changes). Leave empty if the JAR is pre-installed on the agent. |
 
 ### Pipeline Parameters (set defaults directly in the YAML)
 
@@ -79,7 +80,7 @@ The integrated PR workflow uses `parameters:` at the top of the file. Edit these
 | `packageType` | `Regular` | `Regular` or `AdHoc` |
 | `runnerPool` | `dbmaestro-runner` | Agent pool name |
 
-> **Agent JAR version:** The `get-cli-jar` step downloads the JAR at runtime. Update the `version:` value in the `Setup` stage to match your DBmaestro server version (e.g. `26.1.2.13455`).
+> **JAR download behaviour:** when `CLI_VERSION` is set, the JAR is downloaded at that version (a version marker avoids re-downloading the same version). When empty, the pipeline assumes the JAR is pre-installed on the agent.
 
 ---
 

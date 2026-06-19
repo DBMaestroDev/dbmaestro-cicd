@@ -64,8 +64,11 @@ Variables are not masked in logs. Do not store passwords here.
 | `AUTH_TYPE` | `DBmaestroAccount` | Authentication type |
 | `PACKAGE_TYPE` | `Regular` | `Regular` or `AdHoc` |
 | `RUNNER` | `dbmaestro-runner` | Runner label (`runs-on:` value) |
+| `CLI_VERSION` | *(empty)* | DBmaestro agent JAR version to download (e.g. `26.1.3.13473`). When set, each job downloads the JAR at that version (re-downloads only if the version changes). Leave empty if the JAR is pre-installed on the runner. |
 
 > **Note:** Variables in the `env:` block of a workflow cannot be used in job-level `with:`, `runs-on:`, or `if:` fields — that is why these are repository variables (`vars.*`) rather than workflow `env:` entries.
+
+> **JAR download behaviour:** when `CLI_VERSION` is set, each workflow job downloads the JAR at that version (a local version marker avoids re-downloading the same version). When `CLI_VERSION` is empty, the workflow assumes the JAR is already present at `AGENT_JAR_PATH` and skips the download entirely.
 
 ---
 

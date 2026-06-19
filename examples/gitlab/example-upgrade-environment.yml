@@ -18,8 +18,9 @@ variables:
   DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
   # For manual runs, set TARGET_ENVIRONMENT in the "Run pipeline" UI
   TARGET_ENVIRONMENT: ''
-  DOWNLOAD_CLI: 'true'
-  DBMAESTRO_VERSION: '26.1.3.13473'
+  # Set DBMAESTRO_VERSION in Settings → CI/CD → Variables to enable JAR download.
+  # Leave empty (or unset) if the JAR is pre-installed on the runner.
+  DBMAESTRO_VERSION: ''
 
 # --- Detect Stage (push-triggered only, detect packages from commit) ---
 detect_from_push:
