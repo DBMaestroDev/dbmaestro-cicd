@@ -39,8 +39,8 @@ Write-Host "Environment: $envName"
 Write-Host "Version Type: $versionType"
 Write-Host "Additional Information: $additionalInfo"
 
-$javaCmd = "java -jar `"$agentJar`" -Build -ProjectName `"$projectName`" -EnvName `"$envName`" -VersionType `"$versionType`" -AdditionalInformation `"$additionalInfo`" -CreatePackage True -PackageName `"$packageName`" -Server `"$server`" -UseSSL `"$useSsl`" -AuthType `"$authType`" -UserName `"$user`" -Password `"$password`""
-Write-Host "==== Java command (CreateDowngradeScripts omitted for test): $javaCmd ===="
+$javaCmd = "java -jar `"$agentJar`" -Build -ProjectName `"$projectName`" -EnvName `"$envName`" -VersionType `"$versionType`" -AdditionalInformation `"$additionalInfo`" -CreatePackage True -PackageName `"$packageName`" -CreateDowngradeScripts $createDowngradeScripts -Server `"$server`" -UseSSL `"$useSsl`" -AuthType `"$authType`" -UserName `"$user`" -Password `"$password`""
+Write-Host "==== Java command: $javaCmd ===="
 
 & java -jar "$agentJar" -Build `
     -ProjectName "$projectName" `
@@ -49,6 +49,7 @@ Write-Host "==== Java command (CreateDowngradeScripts omitted for test): $javaCm
     -AdditionalInformation "$additionalInfo" `
     -CreatePackage True `
     -PackageName "$packageName" `
+    -CreateDowngradeScripts $createDowngradeScripts `
     -Server "$server" `
     -UseSSL "$useSsl" `
     -AuthType "$authType" `
