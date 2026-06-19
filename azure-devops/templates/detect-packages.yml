@@ -22,6 +22,9 @@ parameters:
   - name: packageName
     type: string
     default: ""
+  - name: tagName
+    type: string
+    default: ""
   - name: useWindows
     type: boolean
     default: false
@@ -36,6 +39,7 @@ steps:
           DETECT_BASE_REF: ${{ parameters.baseRef }}
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
+          DETECT_TAG_NAME: ${{ parameters.tagName }}
         inputs:
           targetType: inline
           script: |
@@ -64,6 +68,7 @@ steps:
           DETECT_BASE_REF: ${{ parameters.baseRef }}
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
+          DETECT_TAG_NAME: ${{ parameters.tagName }}
         inputs:
           targetType: inline
           pwsh: true

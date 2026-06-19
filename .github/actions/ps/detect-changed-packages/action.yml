@@ -6,6 +6,10 @@ inputs:
     description: 'Package name list to upgrade (comma-separated for multiple packages)'
     required: false
     default: ''
+  tag_name:
+    description: 'Tag name for tag-based upgrade (bypasses git diff detection)'
+    required: false
+    default: ''
   detect_from_push:
     description: 'Detect changed packages from git push (true/false)'
     required: false
@@ -49,6 +53,7 @@ runs:
         DETECT_BASE_REF: ${{ inputs.base_ref }}
         DETECT_FROM_PUSH: ${{ inputs.detect_from_push }}
         DETECT_PACKAGE_NAME: ${{ inputs.package_name }}
+        DETECT_TAG_NAME: ${{ inputs.tag_name }}
       run: |
         $env:DBM_OUTPUT_FILE = $env:GITHUB_OUTPUT
         # Fetch the base ref branch to ensure it's available for git diff comparison.

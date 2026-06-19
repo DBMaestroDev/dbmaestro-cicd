@@ -5,6 +5,7 @@
 #   DETECT_BASE_REF          string       Base branch for PR diff (optional)
 #   DETECT_FROM_PUSH         true|false   Detect changed files from last push commit
 #   DETECT_PACKAGE_NAME      string       Comma-separated package names (manual input)
+#   DETECT_TAG_NAME          string       Tag name for tag-based upgrade (bypasses git diff detection)
 #
 # Outputs written to DBM_OUTPUT_FILE (key=value pairs):
 #   has_packages             true|false
@@ -19,6 +20,28 @@ $isPullRequest = $env:DETECT_IS_PULL_REQUEST -eq "true"
 $detectFromPush = $env:DETECT_FROM_PUSH -eq "true"
 $baseRef = $env:DETECT_BASE_REF
 $packageName = $env:DETECT_PACKAGE_NAME
+$tagName = $env:DETECT_TAG_NAME
+$outputFile = $env:DBM_OUTPUT_FILE
+
+if ($tagName) {
+    Write-Host "Tag input: $tagName"
+    # Tag-based upgrade: no package detection needed; the upgrade script uses the tag directly.
+    $hasPackages = "true"
+    $packagesList = $tagName
+    $matrixJson = '[{"package":""}]'
+    $packagesJson = "[]"
+    Write-Host "has_packages=$hasPackages"
+    Write-Host "packages_list=$packagesList"
+    Write-Host "matrix=$matrixJson"
+    Write-Host "packages=$packagesJson"
+    if ($outputFile) {
+        Add-Content -Path $outputFile -Value "has_packages=$hasPackages"
+        Add-Content -Path $outputFile -Value "packages_list=$packagesList"
+        Add-Content -Path $outputFile -Value "matrix=$matrixJson"
+        Add-Content -Path $outputFile -Value "packages=$packagesJson"
+    }
+    exit 0
+}
 
 if ($isPullRequest) {
     Write-Host "Detecting packages for Pull Request"
@@ -99,7 +122,6 @@ Write-Host "packages_list=$packagesList"
 Write-Host "matrix=$matrixJson"
 Write-Host "packages=$packagesJson"
 
-$outputFile = $env:DBM_OUTPUT_FILE
 if ($outputFile) {
     Add-Content -Path $outputFile -Value "has_packages=$hasPackages"
     Add-Content -Path $outputFile -Value "packages_list=$packagesList"

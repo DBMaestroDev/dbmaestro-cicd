@@ -102,6 +102,7 @@ jobs:
         uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/detect-changed-packages@v1
         with:
           package_name: ${{ inputs.package_name }}
+          tag_name: ${{ inputs.tag_name }}
           detect_from_push: ${{ inputs.detect_from_push }}
 
   # Detect changed packages for pull requests

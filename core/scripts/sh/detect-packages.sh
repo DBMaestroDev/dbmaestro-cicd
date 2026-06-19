@@ -6,6 +6,7 @@
 #   DETECT_BASE_REF          string       Base branch for PR diff (optional)
 #   DETECT_FROM_PUSH         true|false   Detect changed files from last push commit
 #   DETECT_PACKAGE_NAME      string       Comma-separated package names (manual input)
+#   DETECT_TAG_NAME          string       Tag name for tag-based upgrade (bypasses git diff detection)
 #
 # Outputs written to DBM_OUTPUT_FILE (key=value pairs, compatible with GITHUB_OUTPUT / dotenv):
 #   has_packages             true|false
@@ -21,6 +22,27 @@ is_pull_request="${DETECT_IS_PULL_REQUEST:-false}"
 detect_from_push="${DETECT_FROM_PUSH:-false}"
 base_ref="${DETECT_BASE_REF:-}"
 package_name="${DETECT_PACKAGE_NAME:-}"
+tag_name="${DETECT_TAG_NAME:-}"
+
+if [[ -n "$tag_name" ]]; then
+  echo "Tag input: $tag_name"
+  # Tag-based upgrade: no package detection needed; the upgrade script uses the tag directly.
+  has_packages="true"
+  packages_list="$tag_name"
+  matrix='[{"package":""}]'
+  packages_json="[]"
+  echo "has_packages=$has_packages"
+  echo "packages_list=$packages_list"
+  echo "matrix=$matrix"
+  echo "packages=$packages_json"
+  if [[ -n "${DBM_OUTPUT_FILE:-}" ]]; then
+    echo "has_packages=$has_packages" >> "$DBM_OUTPUT_FILE"
+    echo "packages_list=$packages_list" >> "$DBM_OUTPUT_FILE"
+    echo "matrix=$matrix" >> "$DBM_OUTPUT_FILE"
+    echo "packages=$packages_json" >> "$DBM_OUTPUT_FILE"
+  fi
+  exit 0
+fi
 
 if [[ "$is_pull_request" == "true" ]]; then
   echo "Detecting packages for Pull Request"

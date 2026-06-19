@@ -18,8 +18,7 @@
     DETECT_BASE_REF: ""
     DETECT_FROM_PUSH: "false"
     DETECT_PACKAGE_NAME: ""
-  before_script:
-    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+    DETECT_TAG_NAME: ""
   before_script:
     - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
     # Fetch the base ref branch to ensure it's available for git diff comparison.
@@ -46,6 +45,7 @@
     DETECT_BASE_REF: ""
     DETECT_FROM_PUSH: "false"
     DETECT_PACKAGE_NAME: ""
+    DETECT_TAG_NAME: ""
   script:
     - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
     - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/detect-packages.ps1"
