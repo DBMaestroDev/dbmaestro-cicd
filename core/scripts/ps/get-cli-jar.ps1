@@ -15,6 +15,13 @@ $jarPath = $env:DBMAESTRO_JAR_PATH
 if (-not $version) { Write-Host "ERROR: DBMAESTRO_VERSION is required"; exit 1 }
 if (-not $jarPath) { Write-Host "ERROR: DBMAESTRO_JAR_PATH is required"; exit 1 }
 
+if (Test-Path -Path $jarPath) {
+    Write-Host "JAR already exists at $jarPath, skipping download."
+    Write-Host "download_success=true"
+    if ($env:DBM_OUTPUT_FILE) { Add-Content -Path $env:DBM_OUTPUT_FILE -Value "download_success=true" }
+    exit 0
+}
+
 $jarUrl = "https://raw.githubusercontent.com/DBMaestroDev/dbm_jar/refs/tags/v${version}/DBmaestroAgent.jar"
 
 Write-Host "Downloading DBmaestro Agent JAR version $version"

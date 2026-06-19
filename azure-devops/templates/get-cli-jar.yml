@@ -28,9 +28,23 @@ parameters:
     default: false
 
 steps:
+  - task: Cache@2
+    displayName: "Cache DBmaestro JAR v${{ parameters.version }}"
+    inputs:
+      key: '"dbmaestro-jar-${{ parameters.version }}"'
+      path: $(Pipeline.Workspace)/dbm-cache
+      cacheHitVar: DBM_JAR_CACHE_HIT
+
   - ${{ if not(parameters.useWindows) }}:
+      - bash: |
+          mkdir -p "$(dirname "${{ parameters.jarPath }}")"
+          cp "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar" "${{ parameters.jarPath }}"
+        displayName: "DBmaestro: Copy JAR from cache"
+        condition: eq(variables.DBM_JAR_CACHE_HIT, 'true')
+
       - task: Bash@3
         displayName: "DBmaestro: Download Agent JAR"
+        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
         env:
           DBMAESTRO_VERSION: ${{ parameters.version }}
           DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
@@ -38,9 +52,23 @@ steps:
           targetType: filePath
           filePath: $(Build.SourcesDirectory)/core/scripts/sh/get-cli-jar.sh
 
+      - bash: |
+          mkdir -p "$(Pipeline.Workspace)/dbm-cache"
+          cp "${{ parameters.jarPath }}" "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar"
+        displayName: "DBmaestro: Stage JAR for cache"
+        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
+
   - ${{ if parameters.useWindows }}:
+      - pwsh: |
+          $dir = Split-Path "${{ parameters.jarPath }}" -Parent
+          if ($dir) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+          Copy-Item "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar" "${{ parameters.jarPath }}"
+        displayName: "DBmaestro: Copy JAR from cache (Windows)"
+        condition: eq(variables.DBM_JAR_CACHE_HIT, 'true')
+
       - task: PowerShell@2
         displayName: "DBmaestro: Download Agent JAR (Windows)"
+        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
         env:
           DBMAESTRO_VERSION: ${{ parameters.version }}
           DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
@@ -48,3 +76,9 @@ steps:
           targetType: filePath
           filePath: $(Build.SourcesDirectory)/core/scripts/ps/get-cli-jar.ps1
           pwsh: true
+
+      - pwsh: |
+          New-Item -ItemType Directory -Force -Path "$(Pipeline.Workspace)/dbm-cache" | Out-Null
+          Copy-Item "${{ parameters.jarPath }}" "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar"
+        displayName: "DBmaestro: Stage JAR for cache (Windows)"
+        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')

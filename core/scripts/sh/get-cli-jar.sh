@@ -14,6 +14,13 @@ VERSION="${DBMAESTRO_VERSION:?DBMAESTRO_VERSION is required}"
 JAR_PATH="${DBMAESTRO_JAR_PATH:?DBMAESTRO_JAR_PATH is required}"
 JAR_URL="https://raw.githubusercontent.com/DBMaestroDev/dbm_jar/refs/tags/v${VERSION}/DBmaestroAgent.jar"
 
+if [ -f "${JAR_PATH}" ]; then
+  echo "JAR already exists at ${JAR_PATH}, skipping download."
+  echo "download_success=true"
+  [[ -n "${DBM_OUTPUT_FILE:-}" ]] && echo "download_success=true" >> "$DBM_OUTPUT_FILE"
+  exit 0
+fi
+
 echo "Downloading DBmaestro Agent JAR version ${VERSION}"
 echo "From: ${JAR_URL}"
 echo "To: ${JAR_PATH}"

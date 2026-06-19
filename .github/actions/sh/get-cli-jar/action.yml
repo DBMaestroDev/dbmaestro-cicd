@@ -1,4 +1,4 @@
-﻿# Version: v1.7
+# Version: v1.8
 name: 'Get DBmaestro CLI JAR'
 description: 'Downloads the DBmaestro Agent JAR file from GitHub releases'
 inputs:
@@ -14,11 +14,26 @@ outputs:
     value: ${{ inputs.jar-path }}
   download-success:
     description: 'Whether the download was successful'
-    value: ${{ steps.download.outputs.download_success }}
+    value: ${{ steps.result.outputs.download_success }}
 runs:
   using: 'composite'
   steps:
+    - name: Cache DBmaestro JAR
+      id: cache-jar
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/dbm-cache/DBmaestroAgent-${{ inputs.version }}.jar
+        key: dbmaestro-jar-${{ inputs.version }}
+
+    - name: Copy JAR from cache to target path
+      if: steps.cache-jar.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        mkdir -p "$(dirname "${{ inputs.jar-path }}")"
+        cp "${{ github.workspace }}/dbm-cache/DBmaestroAgent-${{ inputs.version }}.jar" "${{ inputs.jar-path }}"
+
     - name: Checkout dbmaestro-cicd repository
+      if: steps.cache-jar.outputs.cache-hit != 'true'
       uses: actions/checkout@v6
       with:
         repository: DBMaestroDev/dbmaestro-cicd
@@ -27,6 +42,7 @@ runs:
 
     - name: Download DBmaestro Agent JAR
       id: download
+      if: steps.cache-jar.outputs.cache-hit != 'true'
       shell: bash
       env:
         DBMAESTRO_VERSION: ${{ inputs.version }}
@@ -34,3 +50,15 @@ runs:
       run: |
         export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
         bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/get-cli-jar.sh"
+
+    - name: Stage JAR for cache
+      if: steps.cache-jar.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p "${{ github.workspace }}/dbm-cache"
+        cp "${{ inputs.jar-path }}" "${{ github.workspace }}/dbm-cache/DBmaestroAgent-${{ inputs.version }}.jar"
+
+    - name: Set result output
+      id: result
+      shell: bash
+      run: echo "download_success=true" >> $GITHUB_OUTPUT

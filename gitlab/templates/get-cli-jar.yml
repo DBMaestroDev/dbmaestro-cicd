@@ -1,4 +1,4 @@
-﻿# GitLab CI template: get-cli-jar
+# GitLab CI template: get-cli-jar
 # Downloads the DBmaestro Agent JAR file.
 #
 # Usage — include and extend in your .gitlab-ci.yml:
@@ -11,26 +11,68 @@
 #     variables:
 #       DBMAESTRO_VERSION: "26.1.0.13224"
 #       DBMAESTRO_JAR_PATH: "/home/runner/DBmaestroAgent.jar"
+#
+# Note: cross-pipeline caching requires DBMAESTRO_JAR_PATH to be within $CI_PROJECT_DIR.
+# For self-hosted runners the skip-if-exists check in the core script handles persistent paths.
 
 .get-cli-jar:
   variables:
     DBMAESTRO_VERSION: ""
     DBMAESTRO_JAR_PATH: "/home/runner/DBmaestroAgent.jar"
+  cache:
+    key: "dbmaestro-jar-$DBMAESTRO_VERSION"
+    paths:
+      - .dbm-cache/
+    policy: pull-push
+  before_script:
+    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+    - |
+      STAGED="${CI_PROJECT_DIR}/.dbm-cache/DBmaestroAgent-${DBMAESTRO_VERSION}.jar"
+      if [ -f "$STAGED" ] && [ ! -f "$DBMAESTRO_JAR_PATH" ]; then
+        echo "Restoring JAR from cache staging to $DBMAESTRO_JAR_PATH"
+        mkdir -p "$(dirname "$DBMAESTRO_JAR_PATH")"
+        cp "$STAGED" "$DBMAESTRO_JAR_PATH"
+      fi
   script:
     - bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+    - |
+      STAGED="${CI_PROJECT_DIR}/.dbm-cache/DBmaestroAgent-${DBMAESTRO_VERSION}.jar"
+      if [ -f "$DBMAESTRO_JAR_PATH" ] && [ ! -f "$STAGED" ]; then
+        mkdir -p "${CI_PROJECT_DIR}/.dbm-cache"
+        cp "$DBMAESTRO_JAR_PATH" "$STAGED"
+      fi
   artifacts:
     reports:
       dotenv: dbm-output.env
-  before_script:
-    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
 
 .get-cli-jar-windows:
   variables:
     DBMAESTRO_VERSION: ""
     DBMAESTRO_JAR_PATH: "/home/runner/DBmaestroAgent.jar"
+  cache:
+    key: "dbmaestro-jar-$DBMAESTRO_VERSION"
+    paths:
+      - .dbm-cache/
+    policy: pull-push
+  before_script:
+    - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+    - |
+      $staged = "$env:CI_PROJECT_DIR/.dbm-cache/DBmaestroAgent-$env:DBMAESTRO_VERSION.jar"
+      if ((Test-Path $staged) -and -not (Test-Path $env:DBMAESTRO_JAR_PATH)) {
+        $dir = Split-Path $env:DBMAESTRO_JAR_PATH -Parent
+        if ($dir) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+        Copy-Item $staged $env:DBMAESTRO_JAR_PATH
+        Write-Host "Restored JAR from cache staging to $env:DBMAESTRO_JAR_PATH"
+      }
   script:
     - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
     - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/get-cli-jar.ps1"
+    - |
+      $staged = "$env:CI_PROJECT_DIR/.dbm-cache/DBmaestroAgent-$env:DBMAESTRO_VERSION.jar"
+      if ((Test-Path $env:DBMAESTRO_JAR_PATH) -and -not (Test-Path $staged)) {
+        New-Item -ItemType Directory -Force -Path "$env:CI_PROJECT_DIR/.dbm-cache" | Out-Null
+        Copy-Item $env:DBMAESTRO_JAR_PATH $staged
+      }
   artifacts:
     reports:
       dotenv: dbm-output.env
