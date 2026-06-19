@@ -53,6 +53,12 @@ parameters:
   - name: useWindows
     type: boolean
     default: false
+  - name: downloadCli
+    type: boolean
+    default: true
+  - name: version
+    type: string
+    default: ""
   - name: tags
     type: string
     default: ""
@@ -74,6 +80,13 @@ jobs:
 
       - checkout: dbmaestro-cicd
         fetchDepth: 1
+
+      - ${{ if and(parameters.downloadCli, ne(parameters.version, '')) }}:
+        - template: azure-devops/templates/get-cli-jar.yml
+          parameters:
+            version: ${{ parameters.version }}
+            jarPath: ${{ parameters.agentJarPath }}
+            useWindows: ${{ parameters.useWindows }}
 
       - bash: |
           # If packageNames is empty, try to read from detection file

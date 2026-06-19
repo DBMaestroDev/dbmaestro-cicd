@@ -3,11 +3,9 @@
 # Trigger via the GitLab "Run pipeline" UI and set the required variables.
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/build-from-source.yml'
 
 stages:
-  - setup
   - build
 
 variables:
@@ -28,20 +26,13 @@ variables:
   # Set DBMAESTRO_TAGS to a comma-separated list to apply tags after build (optional)
   DBMAESTRO_TAGS: ''
   DBMAESTRO_TAG_TYPE_NAME: 'Task'
-
-# --- Setup Stage ---
-get_cli_jar:
-  extends: .get-cli-jar
-  stage: setup
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: always
+  DOWNLOAD_CLI: 'true'
+  DBMAESTRO_VERSION: '26.1.3.13473'
 
 # --- Build Stage ---
 build_from_source:
   extends: .build-from-source
   stage: build
-  needs: [get_cli_jar]
   before_script:
     - |
       case "$BUILD_TYPE" in

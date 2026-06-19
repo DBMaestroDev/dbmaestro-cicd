@@ -29,9 +29,15 @@
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
     DBMAESTRO_PACKAGE_TYPE: "Regular"
     DBMAESTRO_IGNORE_WARNINGS: "True"
+    DOWNLOAD_CLI: "true"
+    DBMAESTRO_VERSION: ""
   before_script:
     - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - bash "${CI_PROJECT_DIR}/core/scripts/sh/create-package.sh"
   artifacts:
     reports:
@@ -50,7 +56,14 @@
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
     DBMAESTRO_PACKAGE_TYPE: "Regular"
     DBMAESTRO_IGNORE_WARNINGS: "True"
+    DOWNLOAD_CLI: "true"
+    DBMAESTRO_VERSION: ""
   script:
+    - |
+      if ($env:DOWNLOAD_CLI -eq "true" -and $env:DBMAESTRO_VERSION) {
+        $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+        pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/get-cli-jar.ps1"
+      }
     - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
     - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/create-package.ps1"
   artifacts:

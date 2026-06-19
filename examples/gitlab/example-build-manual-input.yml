@@ -3,13 +3,11 @@
 # Run via the GitLab "Run pipeline" UI and set PACKAGE_NAMES_INPUT.
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/tag-package.yml'
 
 stages:
-  - setup
   - build
   - validate
   - tag
@@ -28,21 +26,19 @@ variables:
   # Set DBMAESTRO_TAGS to apply tags after build (optional, e.g., "TASK-123,TASK-456")
   DBMAESTRO_TAGS: ''
   DBMAESTRO_TAG_TYPE_NAME: 'Task'
-
-# --- Setup Stage ---
-get_cli_jar:
-  extends: .get-cli-jar
-  stage: setup
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: always
+  DOWNLOAD_CLI: 'true'
+  DBMAESTRO_VERSION: '26.1.3.13473'
 
 # --- Build Stage ---
 create_packages:
   extends: .create-package
   stage: build
-  needs: [get_cli_jar]
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - |
       IFS=',' read -ra PACKAGES <<< "$PACKAGE_NAMES_INPUT"
       SUCCESS_PKGS=""
@@ -74,6 +70,11 @@ precheck_packages:
   needs: [create_packages]
   script:
     - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
+    - |
       IFS=',' read -ra PACKAGES <<< "$PACKAGE_NAMES_INPUT"
       for PKG in "${PACKAGES[@]}"; do
         PKG=$(echo "$PKG" | xargs)
@@ -92,6 +93,11 @@ tag_packages:
   stage: tag
   needs: [precheck_packages]
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - |
       if [ -z "$DBMAESTRO_TAGS" ]; then
         echo "No tags specified. Skipping."

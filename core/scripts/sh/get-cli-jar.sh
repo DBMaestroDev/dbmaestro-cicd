@@ -5,6 +5,12 @@
 #   DBMAESTRO_VERSION     Version to download, e.g. 26.1.0.13224 (required)
 #   DBMAESTRO_JAR_PATH    Destination path including filename (required)
 #
+# Version caching:
+#   A marker file at <DBMAESTRO_JAR_PATH>.version stores the last downloaded version.
+#   If the JAR exists and the marker matches DBMAESTRO_VERSION, the download is skipped.
+#   If the JAR exists but the marker is missing or holds a different version, the JAR is
+#   deleted and re-downloaded so the correct version is always used.
+#
 # Outputs written to DBM_OUTPUT_FILE:
 #   download_success      true|false
 
@@ -12,13 +18,19 @@ set -e
 
 VERSION="${DBMAESTRO_VERSION:?DBMAESTRO_VERSION is required}"
 JAR_PATH="${DBMAESTRO_JAR_PATH:?DBMAESTRO_JAR_PATH is required}"
-JAR_URL="https://raw.githubusercontent.com/DBMaestroDev/dbm_jar/refs/tags/v${VERSION}/DBmaestroAgent.jar"
+JAR_URL="https://raw.githubusercontent.com/DBMaestroDev/DBmaestroCLI/refs/tags/v${VERSION}/DBmaestroAgent.jar"
+VERSION_FILE="${JAR_PATH}.version"
 
 if [ -f "${JAR_PATH}" ]; then
-  echo "JAR already exists at ${JAR_PATH}, skipping download."
-  echo "download_success=true"
-  [[ -n "${DBM_OUTPUT_FILE:-}" ]] && echo "download_success=true" >> "$DBM_OUTPUT_FILE"
-  exit 0
+  if [ -f "${VERSION_FILE}" ] && [ "$(cat "${VERSION_FILE}")" = "${VERSION}" ]; then
+    echo "JAR version ${VERSION} already present at ${JAR_PATH}, skipping download."
+    echo "download_success=true"
+    [[ -n "${DBM_OUTPUT_FILE:-}" ]] && echo "download_success=true" >> "$DBM_OUTPUT_FILE"
+    exit 0
+  else
+    echo "JAR exists but version mismatch (want ${VERSION}, found $(cat "${VERSION_FILE}" 2>/dev/null || echo 'unknown')). Re-downloading."
+    rm -f "${JAR_PATH}" "${VERSION_FILE}"
+  fi
 fi
 
 echo "Downloading DBmaestro Agent JAR version ${VERSION}"
@@ -39,6 +51,8 @@ if curl -fsSL -o "${JAR_PATH}" "${JAR_URL}"; then
     if [[ -n "${DBM_OUTPUT_FILE:-}" ]]; then
       echo "download_success=true" >> "$DBM_OUTPUT_FILE"
     fi
+    # Record downloaded version so future runs can skip re-downloading the same version.
+    echo "${VERSION}" > "${VERSION_FILE}"
   else
     echo "ERROR: Downloaded file is empty or does not exist"
     echo "download_success=false"

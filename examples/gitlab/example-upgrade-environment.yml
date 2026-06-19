@@ -3,12 +3,10 @@
 # resource_group prevents concurrent upgrades to the same environment.
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/detect-packages.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/upgrade-environment.yml'
 
 stages:
-  - setup
   - detect
   - deploy
 
@@ -20,21 +18,13 @@ variables:
   DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
   # For manual runs, set TARGET_ENVIRONMENT in the "Run pipeline" UI
   TARGET_ENVIRONMENT: ''
-
-# --- Setup Stage ---
-get_cli_jar:
-  extends: .get-cli-jar
-  stage: setup
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+  DOWNLOAD_CLI: 'true'
+  DBMAESTRO_VERSION: '26.1.3.13473'
 
 # --- Detect Stage (push-triggered only, detect packages from commit) ---
 detect_from_push:
   extends: .detect-packages
   stage: detect
-  needs: [get_cli_jar]
   variables:
     DETECT_FROM_PUSH: 'true'
   rules:
@@ -56,7 +46,6 @@ upgrade_environment_on_push:
 upgrade_environment_on_mr:
   extends: .upgrade-environment
   stage: deploy
-  needs: [get_cli_jar]
   variables:
     DBMAESTRO_TARGET_ENV: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
     DETECT_IS_PULL_REQUEST: 'true'
@@ -67,7 +56,6 @@ upgrade_environment_on_mr:
 upgrade_environment_manual:
   extends: .upgrade-environment
   stage: deploy
-  needs: [get_cli_jar]
   variables:
     DBMAESTRO_TARGET_ENV: $TARGET_ENVIRONMENT
   resource_group: upgrade-${{ env.DBMAESTRO_PROJECT_NAME }}-$TARGET_ENVIRONMENT

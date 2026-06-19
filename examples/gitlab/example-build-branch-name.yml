@@ -2,13 +2,11 @@
 # Uses the current branch name (or MR source branch) as the package name.
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/tag-package.yml'
 
 stages:
-  - setup
   - build
   - validate
   - tag
@@ -23,20 +21,13 @@ variables:
   # Set DBMAESTRO_TAGS to apply tags after build (optional, e.g., "TASK-123,TASK-456")
   DBMAESTRO_TAGS: ''
   DBMAESTRO_TAG_TYPE_NAME: 'Task'
-
-# --- Setup Stage ---
-get_cli_jar:
-  extends: .get-cli-jar
-  stage: setup
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+  DOWNLOAD_CLI: 'true'
+  DBMAESTRO_VERSION: '26.1.3.13473'
 
 # --- Build Stage ---
 create_package_from_branch:
   extends: .create-package
   stage: build
-  needs: [get_cli_jar]
   variables:
     DBMAESTRO_PACKAGE_NAME: >-
       $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "" ?
@@ -86,6 +77,11 @@ tag_package_from_branch:
         export DBMAESTRO_PACKAGE_NAME="$CI_COMMIT_REF_NAME"
       fi
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - |
       if [ -z "$DBMAESTRO_TAGS" ]; then
         echo "No tags specified. Skipping."

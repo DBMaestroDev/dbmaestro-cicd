@@ -28,7 +28,14 @@
     DBMAESTRO_PASSWORD: ""
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DOWNLOAD_CLI: "true"
+    DBMAESTRO_VERSION: ""
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - bash "${CI_PROJECT_DIR}/core/scripts/sh/upgrade-environment.sh"
 
 .upgrade-environment-windows:
@@ -43,5 +50,12 @@
     DBMAESTRO_PASSWORD: ""
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DOWNLOAD_CLI: "true"
+    DBMAESTRO_VERSION: ""
   script:
+    - |
+      if ($env:DOWNLOAD_CLI -eq "true" -and $env:DBMAESTRO_VERSION) {
+        $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+        pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/get-cli-jar.ps1"
+      }
     - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/upgrade-environment.ps1"

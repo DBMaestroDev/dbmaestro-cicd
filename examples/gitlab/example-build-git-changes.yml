@@ -2,14 +2,12 @@
 # Automatically detects which packages changed in the MR diff and builds them.
 
 include:
-  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/detect-packages.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/tag-package.yml'
 
 stages:
-  - setup
   - detect
   - build
   - validate
@@ -25,20 +23,13 @@ variables:
   # Set DBMAESTRO_TAGS to apply tags after build (optional, e.g., "TASK-123,TASK-456")
   DBMAESTRO_TAGS: ''
   DBMAESTRO_TAG_TYPE_NAME: 'Task'
-
-# --- Setup Stage ---
-get_cli_jar:
-  extends: .get-cli-jar
-  stage: setup
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+  DOWNLOAD_CLI: 'true'
+  DBMAESTRO_VERSION: '26.1.3.13473'
 
 # --- Detect Stage ---
 detect_changed_packages:
   extends: .detect-packages-mr
   stage: detect
-  needs: [get_cli_jar]
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -51,6 +42,11 @@ create_changed_packages:
     - job: detect_changed_packages
       artifacts: true
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - |
       if [ "$has_packages" != "true" ]; then
         echo "No changed packages detected. Skipping."
@@ -78,6 +74,11 @@ precheck_changed_packages:
     - job: create_changed_packages
   script:
     - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
+    - |
       if [ "$has_packages" != "true" ]; then
         echo "No changed packages detected. Skipping."
         exit 0
@@ -103,6 +104,11 @@ tag_changed_packages:
       artifacts: true
     - job: precheck_changed_packages
   script:
+    - |
+      if [ "$DOWNLOAD_CLI" = "true" ] && [ -n "$DBMAESTRO_VERSION" ]; then
+        export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
     - |
       if [ "$has_packages" != "true" ] || [ -z "$DBMAESTRO_TAGS" ]; then
         echo "No packages or tags to apply. Skipping."

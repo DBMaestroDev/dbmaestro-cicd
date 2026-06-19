@@ -73,6 +73,16 @@ on:
         required: false
         type: string
         default: 'Task'
+      download_cli:
+        description: 'Download the DBmaestro CLI JAR before running. Set to false if the JAR is already installed on the runner.'
+        required: false
+        type: boolean
+        default: true
+      cli_version:
+        description: 'DBmaestro CLI version to download (required when download_cli is true, e.g., "26.1.0.13224")'
+        required: false
+        type: string
+        default: ''
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password'
@@ -83,6 +93,13 @@ jobs:
     name: Build Package
     runs-on: ${{ inputs.runner }}
     steps:
+      - name: Download DBmaestro CLI
+        if: ${{ inputs.download_cli && inputs.cli_version != '' }}
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/ps/get-cli-jar@v1
+        with:
+          version: ${{ inputs.cli_version }}
+          jar-path: ${{ inputs.agent_jar_path }}
+
       - name: Build Package Summary
         shell: pwsh
         run: |
@@ -123,6 +140,13 @@ jobs:
     runs-on: ${{ inputs.runner }}
     needs: build_package
     steps:
+      - name: Download DBmaestro CLI
+        if: ${{ inputs.download_cli && inputs.cli_version != '' }}
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/ps/get-cli-jar@v1
+        with:
+          version: ${{ inputs.cli_version }}
+          jar-path: ${{ inputs.agent_jar_path }}
+
       - name: Precheck Package
         uses: DBMaestroDev/dbmaestro-cicd/.github/actions/ps/precheck-package@v1
         with:
@@ -141,6 +165,13 @@ jobs:
     needs: precheck_package
     if: ${{ inputs.tags != '' }}
     steps:
+      - name: Download DBmaestro CLI
+        if: ${{ inputs.download_cli && inputs.cli_version != '' }}
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/ps/get-cli-jar@v1
+        with:
+          version: ${{ inputs.cli_version }}
+          jar-path: ${{ inputs.agent_jar_path }}
+
       - name: Checkout dbmaestro-cicd
         uses: actions/checkout@v6
         with:

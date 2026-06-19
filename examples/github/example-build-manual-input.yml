@@ -26,6 +26,11 @@ on:
         required: false
         type: string
         default: 'Task'
+      cli_version:
+        description: 'DBmaestro CLI version to download (e.g., "26.1.0.13224")'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   prepare_matrix:
@@ -62,6 +67,8 @@ jobs:
       packages_folder: 'packages'
       tags: ${{ inputs.tags }}
       tag_type_name: ${{ inputs.tag_type_name }}
+      download_cli: true
+      cli_version: ${{ inputs.cli_version }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       use_ssl: 'True'
       auth_type: 'DBmaestroAccount'

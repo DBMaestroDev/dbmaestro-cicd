@@ -57,31 +57,17 @@ parameters:
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
+  - name: version
+    displayName: 'DBmaestro CLI version to download (e.g., "26.1.3.13473")'
+    type: string
+    default: '26.1.3.13473'
 
 trigger: none
 pr: none
 
 stages:
-  - stage: Setup
-    displayName: 'Setup'
-    jobs:
-      - job: GetCliJar
-        displayName: 'Download DBmaestro CLI'
-        pool: ${{ parameters.runnerPool }}
-        steps:
-          - checkout: dbmaestro-cicd
-            fetchDepth: 1
-
-          
-          - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
-            parameters:
-              jarPath: ${{ parameters.agentJarPath }}
-              useWindows: false
-              version: "26.1.2.13455"
-
   - stage: Build
     displayName: 'Build Package from Source Control'
-    dependsOn: Setup
     jobs:
       - job: BuildFromSource
         displayName: 'Build Package - ${{ parameters.packageName }}'
@@ -130,4 +116,6 @@ stages:
               createDowngradeScripts: ${{ parameters.createDowngradeScripts }}
               tags: ${{ parameters.tags }}
               tagTypeName: ${{ parameters.tagTypeName }}
+              downloadCli: true
+              version: ${{ parameters.version }}
               useWindows: false

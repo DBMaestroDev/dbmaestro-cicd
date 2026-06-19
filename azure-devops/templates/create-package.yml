@@ -45,8 +45,21 @@ parameters:
   - name: useWindows
     type: boolean
     default: false
+  - name: downloadCli
+    type: boolean
+    default: true
+  - name: version
+    type: string
+    default: ""
 
 steps:
+  - ${{ if and(parameters.downloadCli, ne(parameters.version, '')) }}:
+      - template: azure-devops/templates/get-cli-jar.yml
+        parameters:
+          version: ${{ parameters.version }}
+          jarPath: ${{ parameters.agentJarPath }}
+          useWindows: ${{ parameters.useWindows }}
+
   - ${{ if not(parameters.useWindows) }}:
       - task: Bash@3
         displayName: "DBmaestro: Create Package '${{ parameters.packageName }}'"

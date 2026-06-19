@@ -65,6 +65,16 @@ on:
         required: false
         type: string
         default: 'True'
+      download_cli:
+        description: 'Download the DBmaestro CLI JAR before running. Set to false if the JAR is already installed on the runner.'
+        required: false
+        type: boolean
+        default: true
+      cli_version:
+        description: 'DBmaestro CLI version to download (required when download_cli is true, e.g., "26.1.0.13224")'
+        required: false
+        type: string
+        default: ''
     secrets:
       DBMAESTRO_PASSWORD:
         required: true
@@ -149,6 +159,13 @@ jobs:
       matrix:
         item: ${{ fromJson(needs.detect_changed_packages.outputs.matrix) }}
     steps:
+      - name: Download DBmaestro CLI
+        if: ${{ inputs.download_cli && inputs.cli_version != '' }}
+        uses: DBMaestroDev/dbmaestro-cicd/.github/actions/sh/get-cli-jar@v1
+        with:
+          version: ${{ inputs.cli_version }}
+          jar-path: ${{ inputs.agent_jar_path }}
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:

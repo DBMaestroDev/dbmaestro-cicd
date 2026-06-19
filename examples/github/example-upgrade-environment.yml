@@ -29,6 +29,11 @@ on:
         required: false
         type: string
         default: 'Demo-PSQL'
+      cli_version:
+        description: 'DBmaestro CLI version to download (e.g., "26.1.0.13224")'
+        required: false
+        type: string
+        default: ''
   push:
     branches:
       - Release_Source
@@ -55,6 +60,8 @@ jobs:
       tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name || '' }}
       target_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_environment || github.ref_name }}
       project_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.project_name || 'Demo-PSQL' }}
+      download_cli: true
+      cli_version: ${{ inputs.cli_version || vars.CLI_VERSION }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       detect_from_push: ${{ github.event_name == 'push' }}
       is_pull_request: false
@@ -71,6 +78,8 @@ jobs:
     with:
       target_environment: ${{ github.base_ref }}
       project_name: 'Demo-PSQL'
+      download_cli: true
+      cli_version: ${{ vars.CLI_VERSION }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       is_pull_request: true
       use_ssl: 'True'
