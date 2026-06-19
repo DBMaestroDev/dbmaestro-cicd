@@ -43,8 +43,6 @@ Write-Host "Additional Information: $additionalInfo"
 $omitUseSsl = ($createDowngradeScripts -eq "True" -and $useSsl -eq "False")
 
 if ($omitUseSsl) {
-    $javaCmd = "java -jar `"$agentJar`" -Build -ProjectName `"$projectName`" -EnvName `"$envName`" -VersionType `"$versionType`" -AdditionalInformation `"$additionalInfo`" -CreatePackage True -PackageName `"$packageName`" -CreateDowngradeScripts $createDowngradeScripts -Server `"$server`" -AuthType `"$authType`" -UserName `"$user`" -Password `"$password`""
-    Write-Host "==== Java command: $javaCmd ===="
     & java -jar "$agentJar" -Build `
         -ProjectName "$projectName" `
         -EnvName "$envName" `
@@ -58,8 +56,6 @@ if ($omitUseSsl) {
         -UserName "$user" `
         -Password "$password"
 } else {
-    $javaCmd = "java -jar `"$agentJar`" -Build -ProjectName `"$projectName`" -EnvName `"$envName`" -VersionType `"$versionType`" -AdditionalInformation `"$additionalInfo`" -CreatePackage True -PackageName `"$packageName`" -CreateDowngradeScripts $createDowngradeScripts -Server `"$server`" -UseSSL $useSsl -AuthType `"$authType`" -UserName `"$user`" -Password `"$password`""
-    Write-Host "==== Java command: $javaCmd ===="
     & java -jar "$agentJar" -Build `
         -ProjectName "$projectName" `
         -EnvName "$envName" `
