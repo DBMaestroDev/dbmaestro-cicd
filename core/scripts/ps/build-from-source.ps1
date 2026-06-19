@@ -39,22 +39,37 @@ Write-Host "Environment: $envName"
 Write-Host "Version Type: $versionType"
 Write-Host "Additional Information: $additionalInfo"
 
-$javaCmd = "java -jar `"$agentJar`" -Build -ProjectName `"$projectName`" -EnvName `"$envName`" -VersionType `"$versionType`" -AdditionalInformation `"$additionalInfo`" -CreatePackage True -PackageName `"$packageName`" -CreateDowngradeScripts $createDowngradeScripts -Server `"$server`" -UseSSL `"$useSsl`" -AuthType `"$authType`" -UserName `"$user`" -Password `"$password`""
-Write-Host "==== Java command: $javaCmd ===="
+# Workaround: agent v24 bug — UseSSL False combined with CreateDowngradeScripts True causes "Wrong command format"
+$omitUseSsl = ($createDowngradeScripts -eq "True" -and $useSsl -eq "False")
 
-& java -jar "$agentJar" -Build `
-    -ProjectName "$projectName" `
-    -EnvName "$envName" `
-    -VersionType "$versionType" `
-    -AdditionalInformation "$additionalInfo" `
-    -CreatePackage True `
-    -PackageName "$packageName" `
-    -CreateDowngradeScripts $createDowngradeScripts `
-    -Server "$server" `
-    -UseSSL "$useSsl" `
-    -AuthType "$authType" `
-    -UserName "$user" `
-    -Password "$password"
+if ($omitUseSsl) {
+    & java -jar "$agentJar" -Build `
+        -ProjectName "$projectName" `
+        -EnvName "$envName" `
+        -VersionType "$versionType" `
+        -AdditionalInformation "$additionalInfo" `
+        -CreatePackage True `
+        -PackageName "$packageName" `
+        -CreateDowngradeScripts $createDowngradeScripts `
+        -Server "$server" `
+        -AuthType "$authType" `
+        -UserName "$user" `
+        -Password "$password"
+} else {
+    & java -jar "$agentJar" -Build `
+        -ProjectName "$projectName" `
+        -EnvName "$envName" `
+        -VersionType "$versionType" `
+        -AdditionalInformation "$additionalInfo" `
+        -CreatePackage True `
+        -PackageName "$packageName" `
+        -CreateDowngradeScripts $createDowngradeScripts `
+        -Server "$server" `
+        -UseSSL $useSsl `
+        -AuthType "$authType" `
+        -UserName "$user" `
+        -Password "$password"
+}
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Failed to build package $packageName"

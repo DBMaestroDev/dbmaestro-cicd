@@ -36,18 +36,34 @@ echo "Environment: $ENV_NAME"
 echo "Version Type: $VERSION_TYPE"
 echo "Additional Information: $ADDITIONAL_INFO"
 
-java -jar "$AGENT_JAR" -Build \
-  -ProjectName "$PROJECT_NAME" \
-  -EnvName "$ENV_NAME" \
-  -VersionType "$VERSION_TYPE" \
-  -AdditionalInformation "$ADDITIONAL_INFO" \
-  -CreatePackage True \
-  -PackageName "$PACKAGE_NAME" \
-  -CreateDowngradeScripts "$CREATE_DOWNGRADE_SCRIPTS" \
-  -Server "$SERVER" \
-  -UseSSL "$USE_SSL" \
-  -AuthType "$AUTH_TYPE" \
-  -UserName "$USER" \
-  -Password "$PASSWORD"
+# Workaround: agent v24 bug — UseSSL False combined with CreateDowngradeScripts True causes "Wrong command format"
+if [ "$CREATE_DOWNGRADE_SCRIPTS" = "True" ] && [ "$USE_SSL" = "False" ]; then
+  java -jar "$AGENT_JAR" -Build \
+    -ProjectName "$PROJECT_NAME" \
+    -EnvName "$ENV_NAME" \
+    -VersionType "$VERSION_TYPE" \
+    -AdditionalInformation "$ADDITIONAL_INFO" \
+    -CreatePackage True \
+    -PackageName "$PACKAGE_NAME" \
+    -CreateDowngradeScripts $CREATE_DOWNGRADE_SCRIPTS \
+    -Server "$SERVER" \
+    -AuthType "$AUTH_TYPE" \
+    -UserName "$USER" \
+    -Password "$PASSWORD"
+else
+  java -jar "$AGENT_JAR" -Build \
+    -ProjectName "$PROJECT_NAME" \
+    -EnvName "$ENV_NAME" \
+    -VersionType "$VERSION_TYPE" \
+    -AdditionalInformation "$ADDITIONAL_INFO" \
+    -CreatePackage True \
+    -PackageName "$PACKAGE_NAME" \
+    -CreateDowngradeScripts $CREATE_DOWNGRADE_SCRIPTS \
+    -Server "$SERVER" \
+    -UseSSL $USE_SSL \
+    -AuthType "$AUTH_TYPE" \
+    -UserName "$USER" \
+    -Password "$PASSWORD"
+fi
 
 echo "Package $PACKAGE_NAME built successfully"
