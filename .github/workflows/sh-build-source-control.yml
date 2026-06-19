@@ -64,6 +64,16 @@ on:
         required: false
         type: string
         default: 'True'
+      tags:
+        description: 'Comma-separated list of tags to apply after build'
+        required: false
+        type: string
+        default: ''
+      tag_type_name:
+        description: 'Tag type name'
+        required: false
+        type: string
+        default: 'Task'
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password'
@@ -121,3 +131,36 @@ jobs:
           auth_type: ${{ inputs.auth_type }}
           dbmaestro_user: ${{ inputs.dbmaestro_user }}
           dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+  tag_packages:
+    name: Tag Packages
+    runs-on: ${{ inputs.runner }}
+    needs: precheck_package
+    if: ${{ inputs.tags != '' }}
+    steps:
+      - name: Checkout dbmaestro-cicd
+        uses: actions/checkout@v6
+        with:
+          repository: DBMaestroDev/dbmaestro-cicd
+          ref: v1
+          path: dbmaestro-cicd
+
+      - name: Apply Tags
+        shell: bash
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+          DBMAESTRO_TAG_TYPE_NAME: ${{ inputs.tag_type_name }}
+          DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+          DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+          DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+          DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+          DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+          DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+          DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+        run: |
+          IFS=',' read -ra TAGS <<< "${{ inputs.tags }}"
+          for tag in "${TAGS[@]}"; do
+            tag="$(echo "$tag" | xargs)"
+            [ -z "$tag" ] && continue
+            DBMAESTRO_TAG_NAME="$tag" bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/tag-package.sh"
+          done

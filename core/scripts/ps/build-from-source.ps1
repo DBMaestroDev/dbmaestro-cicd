@@ -39,7 +39,7 @@ Write-Host "Environment: $envName"
 Write-Host "Version Type: $versionType"
 Write-Host "Additional Information: $additionalInfo"
 
-# Workaround: agent v24 bug — UseSSL False combined with CreateDowngradeScripts True causes "Wrong command format"
+# Workaround: agent v24 bug — UseSSL combined with CreateDowngradeScripts causes "Wrong command format"
 $omitUseSsl = ($createDowngradeScripts -eq "True" -and $useSsl -eq "False")
 
 if ($omitUseSsl) {

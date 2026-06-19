@@ -16,6 +16,16 @@ on:
         required: true
         type: string
         default: 'Demo-PSQL'
+      tags:
+        description: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+        required: false
+        type: string
+        default: ''
+      tag_type_name:
+        description: 'Tag type name'
+        required: false
+        type: string
+        default: 'Task'
 
 env:
   AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
@@ -84,3 +94,24 @@ jobs:
           auth_type: 'DBmaestroAccount'
           dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
           dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
+
+      - name: Apply Tags
+        if: ${{ inputs.tags != '' }}
+        shell: bash
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ matrix.item.package }}
+          DBMAESTRO_TAG_TYPE_NAME: ${{ inputs.tag_type_name }}
+          DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+          DBMAESTRO_AGENT_JAR: ${{ env.AGENT_JAR }}
+          DBMAESTRO_SERVER: ${{ vars.DBMAESTRO_SERVER }}
+          DBMAESTRO_USER: ${{ vars.DBMAESTRO_USER }}
+          DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+          DBMAESTRO_USE_SSL: 'True'
+          DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'
+        run: |
+          IFS=',' read -ra TAGS <<< "${{ inputs.tags }}"
+          for tag in "${TAGS[@]}"; do
+            tag="$(echo "$tag" | xargs)"
+            [ -z "$tag" ] && continue
+            DBMAESTRO_TAG_NAME="$tag" bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/tag-package.sh"
+          done

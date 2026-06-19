@@ -1,0 +1,45 @@
+# GitLab CI template: tag-package
+# Adds a tag to a DBmaestro package.
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/tag-package.yml'
+#
+#   tag:
+#     extends: .tag-package
+#     variables:
+#       DBMAESTRO_PACKAGE_NAME: "MyPackage"
+#       DBMAESTRO_TAG_NAME: "TASK-123"
+#       DBMAESTRO_PROJECT_NAME: "MyProject"
+#       DBMAESTRO_SERVER: "dbmaestro.example.com"
+
+.tag-package:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_TAG_TYPE_NAME: "Task"
+    DBMAESTRO_TAG_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/tag-package.sh"
+
+.tag-package-windows:
+  variables:
+    DBMAESTRO_PACKAGE_NAME: ""
+    DBMAESTRO_TAG_TYPE_NAME: "Task"
+    DBMAESTRO_TAG_NAME: ""
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+  script:
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/tag-package.ps1"

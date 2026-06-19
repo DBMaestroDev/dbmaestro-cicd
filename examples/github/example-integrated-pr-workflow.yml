@@ -60,6 +60,8 @@ jobs:
       project_name: ${{ vars.PROJECT_NAME }}
       packages_matrix: ${{ needs.detect_changed_packages.outputs.matrix }}
       packages_folder: ${{ vars.PACKAGES_FOLDER }}
+      tags: ${{ vars.BUILD_TAGS }}
+      tag_type_name: 'Task'
       agent_jar_path: ${{ vars.AGENT_JAR_PATH }}
       use_ssl: ${{ vars.USE_SSL }}
       auth_type: ${{ vars.AUTH_TYPE }}

@@ -38,6 +38,14 @@ parameters:
   - name: runnerPool
     type: string
     default: 'dbmaestro-runner'
+  - name: tags
+    displayName: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+    type: string
+    default: ''
+  - name: tagTypeName
+    displayName: 'Tag type name'
+    type: string
+    default: 'Task'
 
 # Auto-trigger upgrade on merge to main
 trigger:
@@ -126,6 +134,8 @@ stages:
           packageType: ${{ parameters.packageType }}
           runnerPool: ${{ parameters.runnerPool }}
           useWindows: false
+          tags: ${{ parameters.tags }}
+          tagTypeName: ${{ parameters.tagTypeName }}
 
   # ── Merge: upgrade Release_Source ─────────────────────────────────────────
   # Triggered only when a PR is merged (CI push to main).

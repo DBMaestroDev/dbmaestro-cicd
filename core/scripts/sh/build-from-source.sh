@@ -36,7 +36,7 @@ echo "Environment: $ENV_NAME"
 echo "Version Type: $VERSION_TYPE"
 echo "Additional Information: $ADDITIONAL_INFO"
 
-# Workaround: agent v24 bug — UseSSL False combined with CreateDowngradeScripts True causes "Wrong command format"
+# Workaround: agent v24 bug — UseSSL combined with CreateDowngradeScripts causes "Wrong command format"
 if [ "$CREATE_DOWNGRADE_SCRIPTS" = "True" ] && [ "$USE_SSL" = "False" ]; then
   java -jar "$AGENT_JAR" -Build \
     -ProjectName "$PROJECT_NAME" \

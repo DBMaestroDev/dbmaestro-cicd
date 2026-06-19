@@ -25,6 +25,14 @@ parameters:
     displayName: 'Base branch to compare against (manual runs)'
     type: string
     default: 'main'
+  - name: tags
+    displayName: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+    type: string
+    default: ''
+  - name: tagTypeName
+    displayName: 'Tag type name'
+    type: string
+    default: 'Task'
 
 trigger: none
 
@@ -112,3 +120,5 @@ stages:
           packageType: 'Regular'
           runnerPool: ${{ parameters.runnerPool }}
           useWindows: false
+          tags: ${{ parameters.tags }}
+          tagTypeName: ${{ parameters.tagTypeName }}

@@ -50,6 +50,12 @@ parameters:
   - name: useWindows
     type: boolean
     default: false
+  - name: tags
+    type: string
+    default: ""
+  - name: tagTypeName
+    type: string
+    default: "Task"
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
@@ -91,4 +97,50 @@ steps:
         inputs:
           targetType: filePath
           filePath: $(Build.SourcesDirectory)/core/scripts/ps/build-from-source.ps1
+          pwsh: true
+
+  - ${{ if and(not(parameters.useWindows), ne(parameters.tags, '')) }}:
+      - task: Bash@3
+        displayName: "DBmaestro: Tag Package '${{ parameters.packageName }}'"
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+          DBMAESTRO_TAG_TYPE_NAME: ${{ parameters.tagTypeName }}
+          DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+          DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+          DBMAESTRO_SERVER: ${{ parameters.server }}
+          DBMAESTRO_USER: ${{ parameters.user }}
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+          DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        inputs:
+          targetType: inline
+          script: |
+            IFS=',' read -ra TAGS <<< "${{ parameters.tags }}"
+            for tag in "${TAGS[@]}"; do
+              tag="$(echo "$tag" | xargs)"
+              [ -z "$tag" ] && continue
+              DBMAESTRO_TAG_NAME="$tag" bash "$(Build.SourcesDirectory)/core/scripts/sh/tag-package.sh"
+            done
+
+  - ${{ if and(parameters.useWindows, ne(parameters.tags, '')) }}:
+      - task: PowerShell@2
+        displayName: "DBmaestro: Tag Package '${{ parameters.packageName }}' (Windows)"
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
+          DBMAESTRO_TAG_TYPE_NAME: ${{ parameters.tagTypeName }}
+          DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+          DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+          DBMAESTRO_SERVER: ${{ parameters.server }}
+          DBMAESTRO_USER: ${{ parameters.user }}
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+          DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        inputs:
+          targetType: inline
+          script: |
+            $tags = "${{ parameters.tags }}" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+            foreach ($tag in $tags) {
+              $env:DBMAESTRO_TAG_NAME = $tag
+              & "$(Build.SourcesDirectory)/core/scripts/ps/tag-package.ps1"
+            }
           pwsh: true

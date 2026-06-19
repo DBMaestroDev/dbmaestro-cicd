@@ -29,8 +29,19 @@
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
     DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: "True"
+    DBMAESTRO_TAGS: ""
+    DBMAESTRO_TAG_TYPE_NAME: "Task"
   script:
     - bash "${CI_PROJECT_DIR}/core/scripts/sh/build-from-source.sh"
+    - |
+      if [ -n "$DBMAESTRO_TAGS" ]; then
+        IFS=',' read -ra TAGS <<< "$DBMAESTRO_TAGS"
+        for tag in "${TAGS[@]}"; do
+          tag="$(echo "$tag" | xargs)"
+          [ -z "$tag" ] && continue
+          DBMAESTRO_TAG_NAME="$tag" bash "${CI_PROJECT_DIR}/core/scripts/sh/tag-package.sh"
+        done
+      fi
 
 .build-from-source-windows:
   variables:
@@ -46,5 +57,15 @@
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
     DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: "True"
+    DBMAESTRO_TAGS: ""
+    DBMAESTRO_TAG_TYPE_NAME: "Task"
   script:
     - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/build-from-source.ps1"
+    - |
+      if ($env:DBMAESTRO_TAGS) {
+        $tags = $env:DBMAESTRO_TAGS -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+        foreach ($tag in $tags) {
+          $env:DBMAESTRO_TAG_NAME = $tag
+          & pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/tag-package.ps1"
+        }
+      }

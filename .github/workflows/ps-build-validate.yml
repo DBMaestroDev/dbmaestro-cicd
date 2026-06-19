@@ -53,6 +53,16 @@ on:
         required: false
         type: string
         default: 'True'
+      tags:
+        description: 'Comma-separated list of tags to apply after build'
+        required: false
+        type: string
+        default: ''
+      tag_type_name:
+        description: 'Tag type name'
+        required: false
+        type: string
+        default: 'Task'
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password or token'
@@ -107,3 +117,39 @@ jobs:
           package_name: ${{ matrix.item.package }}
           project_name: ${{ inputs.project_name }}
           use_ssl: ${{ inputs.use_ssl }}
+
+  tag_packages:
+    name: Tag Packages
+    runs-on: ${{ inputs.runner }}
+    needs: validate_package
+    if: ${{ inputs.tags != '' }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        item: ${{ fromJson(inputs.packages_matrix) }}
+    steps:
+      - name: Checkout dbmaestro-cicd
+        uses: actions/checkout@v6
+        with:
+          repository: DBMaestroDev/dbmaestro-cicd
+          ref: v1
+          path: dbmaestro-cicd
+
+      - name: Apply Tags
+        shell: pwsh
+        env:
+          DBMAESTRO_PACKAGE_NAME: ${{ matrix.item.package }}
+          DBMAESTRO_TAG_TYPE_NAME: ${{ inputs.tag_type_name }}
+          DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+          DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+          DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+          DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+          DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+          DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+          DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+        run: |
+          $tags = "${{ inputs.tags }}" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+          foreach ($tag in $tags) {
+            $env:DBMAESTRO_TAG_NAME = $tag
+            & "$env:GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/ps/tag-package.ps1"
+          }

@@ -1,0 +1,61 @@
+# Version: v1.0
+name: 'Tag Package'
+description: 'Adds a tag to a DBmaestro package (PowerShell/Windows)'
+inputs:
+  agent_jar_path:
+    description: 'Path to DBmaestro Agent JAR file'
+    required: true
+  auth_type:
+    description: 'DBmaestro authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  DBMAESTRO_PASSWORD:
+    description: 'DBmaestro password'
+    required: true
+  DBMAESTRO_USER:
+    description: 'DBmaestro username'
+    required: true
+  dbmaestro_server:
+    description: 'DBmaestro server URL'
+    required: true
+  package_name:
+    description: 'Package name to tag'
+    required: true
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  tag_name:
+    description: 'Tag name/value to apply'
+    required: true
+  tag_type_name:
+    description: 'Tag type name'
+    required: false
+    default: 'Task'
+  use_ssl:
+    description: 'Use SSL for DBmaestro connection'
+    required: false
+    default: 'True'
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: v1
+
+    - name: Tag Package
+      shell: pwsh
+      env:
+        DBMAESTRO_PACKAGE_NAME: ${{ inputs.package_name }}
+        DBMAESTRO_TAG_TYPE_NAME: ${{ inputs.tag_type_name }}
+        DBMAESTRO_TAG_NAME: ${{ inputs.tag_name }}
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.DBMAESTRO_USER }}
+        DBMAESTRO_PASSWORD: ${{ inputs.DBMAESTRO_PASSWORD }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: '& "$env:GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/ps/tag-package.ps1"'

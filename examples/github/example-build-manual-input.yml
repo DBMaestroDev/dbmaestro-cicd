@@ -16,6 +16,16 @@ on:
         required: false
         type: string
         default: 'Demo-PSQL'
+      tags:
+        description: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+        required: false
+        type: string
+        default: ''
+      tag_type_name:
+        description: 'Tag type name'
+        required: false
+        type: string
+        default: 'Task'
 
 jobs:
   prepare_matrix:
@@ -50,6 +60,8 @@ jobs:
       project_name: ${{ inputs.project_name }}
       packages_matrix: ${{ needs.prepare_matrix.outputs.matrix }}
       packages_folder: 'packages'
+      tags: ${{ inputs.tags }}
+      tag_type_name: ${{ inputs.tag_type_name }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       use_ssl: 'True'
       auth_type: 'DBmaestroAccount'

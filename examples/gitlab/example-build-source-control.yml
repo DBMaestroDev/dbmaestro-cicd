@@ -25,6 +25,9 @@ variables:
   TASKS_LIST: ''
   COMMIT_HASH: ''
   DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: 'True'
+  # Set DBMAESTRO_TAGS to a comma-separated list to apply tags after build (optional)
+  DBMAESTRO_TAGS: ''
+  DBMAESTRO_TAG_TYPE_NAME: 'Task'
 
 # --- Setup Stage ---
 get_cli_jar:

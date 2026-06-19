@@ -21,6 +21,14 @@ parameters:
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
+  - name: tags
+    displayName: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+    type: string
+    default: ''
+  - name: tagTypeName
+    displayName: 'Tag type name'
+    type: string
+    default: 'Task'
 
 trigger: none
 
@@ -104,3 +112,23 @@ stages:
               useSsl: 'True'
               authType: 'DBmaestroAccount'
               useWindows: false
+
+          - ${{ if ne(parameters.tags, '') }}:
+            - bash: |
+                IFS=',' read -ra TAGS <<< "${{ parameters.tags }}"
+                for tag in "${TAGS[@]}"; do
+                  tag="$(echo "$tag" | xargs)"
+                  [ -z "$tag" ] && continue
+                  DBMAESTRO_TAG_NAME="$tag" bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/tag-package.sh"
+                done
+              displayName: 'Tag Package'
+              env:
+                DBMAESTRO_PACKAGE_NAME: $(resolvedPackageName)
+                DBMAESTRO_TAG_TYPE_NAME: ${{ parameters.tagTypeName }}
+                DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+                DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+                DBMAESTRO_SERVER: $(DBMAESTRO_SERVER)
+                DBMAESTRO_USER: $(DBMAESTRO_USER)
+                DBMAESTRO_PASSWORD: $(DBMAESTRO_PASSWORD)
+                DBMAESTRO_USE_SSL: 'True'
+                DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'

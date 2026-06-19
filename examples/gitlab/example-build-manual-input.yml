@@ -6,11 +6,13 @@ include:
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-cli-jar.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/tag-package.yml'
 
 stages:
   - setup
   - build
   - validate
+  - tag
   - summary
 
 variables:
@@ -23,6 +25,9 @@ variables:
   # Set this variable in the GitLab "Run pipeline" UI
   # Format: comma-separated, e.g., "V15,V16,V33"
   PACKAGE_NAMES_INPUT: ''
+  # Set DBMAESTRO_TAGS to apply tags after build (optional, e.g., "TASK-123,TASK-456")
+  DBMAESTRO_TAGS: ''
+  DBMAESTRO_TAG_TYPE_NAME: 'Task'
 
 # --- Setup Stage ---
 get_cli_jar:
@@ -81,11 +86,38 @@ precheck_packages:
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: always
 
+# --- Tag Stage ---
+tag_packages:
+  extends: .tag-package
+  stage: tag
+  needs: [precheck_packages]
+  script:
+    - |
+      if [ -z "$DBMAESTRO_TAGS" ]; then
+        echo "No tags specified. Skipping."
+        exit 0
+      fi
+      IFS=',' read -ra PACKAGES <<< "$PACKAGE_NAMES_INPUT"
+      IFS=',' read -ra TAGS <<< "$DBMAESTRO_TAGS"
+      for PKG in "${PACKAGES[@]}"; do
+        PKG=$(echo "$PKG" | xargs)
+        [ -z "$PKG" ] && continue
+        export DBMAESTRO_PACKAGE_NAME="$PKG"
+        for tag in "${TAGS[@]}"; do
+          tag="$(echo "$tag" | xargs)"
+          [ -z "$tag" ] && continue
+          DBMAESTRO_TAG_NAME="$tag" bash "$CI_PROJECT_DIR/core/scripts/sh/tag-package.sh"
+        done
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+
 # --- Summary Stage ---
 pipeline_summary:
   stage: summary
   image: alpine:latest
-  needs: [precheck_packages]
+  needs: [tag_packages]
   when: always
   script:
     - |

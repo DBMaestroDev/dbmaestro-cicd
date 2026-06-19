@@ -6,12 +6,14 @@ include:
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/detect-packages.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/create-package.yml'
   - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/precheck-package.yml'
+  - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/tag-package.yml'
 
 stages:
   - setup
   - detect
   - build
   - validate
+  - tag
 
 variables:
   DBMAESTRO_PROJECT_NAME: 'Demo-PSQL'
@@ -20,6 +22,9 @@ variables:
   DBMAESTRO_AUTH_TYPE: 'DBmaestroAccount'
   DBMAESTRO_PACKAGE_TYPE: 'Regular'
   DBMAESTRO_AGENT_JAR: '/home/runner/DBmaestroAgent.jar'
+  # Set DBMAESTRO_TAGS to apply tags after build (optional, e.g., "TASK-123,TASK-456")
+  DBMAESTRO_TAGS: ''
+  DBMAESTRO_TAG_TYPE_NAME: 'Task'
 
 # --- Setup Stage ---
 get_cli_jar:
@@ -84,6 +89,36 @@ precheck_changed_packages:
         export DBMAESTRO_PACKAGE_NAME="$PKG"
         echo "Prechecking package: $PKG"
         bash "$CI_PROJECT_DIR/core/scripts/sh/precheck-package.sh"
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# --- Tag Stage ---
+tag_changed_packages:
+  extends: .tag-package
+  stage: tag
+  needs:
+    - job: detect_changed_packages
+      artifacts: true
+    - job: precheck_changed_packages
+  script:
+    - |
+      if [ "$has_packages" != "true" ] || [ -z "$DBMAESTRO_TAGS" ]; then
+        echo "No packages or tags to apply. Skipping."
+        exit 0
+      fi
+      IFS=',' read -ra PACKAGES <<< "$packages_list"
+      IFS=',' read -ra TAGS <<< "$DBMAESTRO_TAGS"
+      for PKG in "${PACKAGES[@]}"; do
+        PKG=$(echo "$PKG" | xargs)
+        [ -z "$PKG" ] && continue
+        export DBMAESTRO_PACKAGE_NAME="$PKG"
+        for tag in "${TAGS[@]}"; do
+          tag="$(echo "$tag" | xargs)"
+          [ -z "$tag" ] && continue
+          DBMAESTRO_TAG_NAME="$tag" bash "$CI_PROJECT_DIR/core/scripts/sh/tag-package.sh"
+        done
       done
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

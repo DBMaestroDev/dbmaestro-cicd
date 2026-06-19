@@ -10,6 +10,17 @@ on:
       - Release_Source
       - main
   workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+        required: false
+        type: string
+        default: ''
+      tag_type_name:
+        description: 'Tag type name'
+        required: false
+        type: string
+        default: 'Task'
 
 jobs:
   get_package_from_branch:
@@ -42,6 +53,8 @@ jobs:
       project_name: 'Demo-PSQL'
       packages_matrix: ${{ needs.get_package_from_branch.outputs.matrix }}
       packages_folder: 'packages'
+      tags: ${{ inputs.tags }}
+      tag_type_name: ${{ inputs.tag_type_name }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       use_ssl: 'True'
       auth_type: 'DBmaestroAccount'

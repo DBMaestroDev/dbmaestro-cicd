@@ -25,6 +25,14 @@ parameters:
   - name: runnerPool
     type: string
     default: 'dbmaestro-linux'
+  - name: tags
+    displayName: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+    type: string
+    default: ''
+  - name: tagTypeName
+    displayName: 'Tag type name'
+    type: string
+    default: 'Task'
 
 trigger: none
 pr: none
@@ -64,6 +72,8 @@ stages:
           packageType: 'Regular'
           runnerPool: ${{ parameters.runnerPool }}
           useWindows: false
+          tags: ${{ parameters.tags }}
+          tagTypeName: ${{ parameters.tagTypeName }}
 
   - stage: Summary
     displayName: 'Pipeline Summary'

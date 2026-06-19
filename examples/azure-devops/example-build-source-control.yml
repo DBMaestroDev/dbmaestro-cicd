@@ -43,6 +43,14 @@ parameters:
       - 'False'
       - 'True'
     default: 'True'
+  - name: tags
+    displayName: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+    type: string
+    default: ''
+  - name: tagTypeName
+    displayName: 'Tag type name'
+    type: string
+    default: 'Task'
   - name: agentJarPath
     type: string
     default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
@@ -120,4 +128,6 @@ stages:
               useSsl: 'True'
               authType: 'DBmaestroAccount'
               createDowngradeScripts: ${{ parameters.createDowngradeScripts }}
+              tags: ${{ parameters.tags }}
+              tagTypeName: ${{ parameters.tagTypeName }}
               useWindows: false

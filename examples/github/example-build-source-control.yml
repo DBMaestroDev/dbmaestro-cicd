@@ -48,6 +48,16 @@ on:
           - 'True'
           - 'False'
         default: 'True'
+      tags:
+        description: 'Comma-separated tags to apply after build (optional, e.g., "TASK-123,TASK-456")'
+        required: false
+        type: string
+        default: ''
+      tag_type_name:
+        description: 'Tag type name'
+        required: false
+        type: string
+        default: 'Task'
 
 jobs:
   prepare_parameters:
@@ -89,6 +99,8 @@ jobs:
       version_type: ${{ needs.prepare_parameters.outputs.version_type }}
       additional_information: ${{ needs.prepare_parameters.outputs.additional_info }}
       create_downgrade_scripts: ${{ inputs.create_downgrade_scripts }}
+      tags: ${{ inputs.tags }}
+      tag_type_name: ${{ inputs.tag_type_name }}
       agent_jar_path: '/home/runner/DBmaestroAgent.jar'
       use_ssl: 'True'
       auth_type: 'DBmaestroAccount'
