@@ -45,8 +45,8 @@ Write-Host "Additional Information: $additionalInfo"
     -VersionType "$versionType" `
     -AdditionalInformation "$additionalInfo" `
     -CreatePackage True `
-    -CreateDowngradeScripts "$createDowngradeScripts" `
     -PackageName "$packageName" `
+    -CreateDowngradeScripts "$createDowngradeScripts" `
     -Server "$server" `
     -UseSSL "$useSsl" `
     -AuthType "$authType" `

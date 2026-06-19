@@ -42,8 +42,8 @@ java -jar "$AGENT_JAR" -Build \
   -VersionType "$VERSION_TYPE" \
   -AdditionalInformation "$ADDITIONAL_INFO" \
   -CreatePackage True \
-  -CreateDowngradeScripts "$CREATE_DOWNGRADE_SCRIPTS" \
   -PackageName "$PACKAGE_NAME" \
+  -CreateDowngradeScripts "$CREATE_DOWNGRADE_SCRIPTS" \
   -Server "$SERVER" \
   -UseSSL "$USE_SSL" \
   -AuthType "$AUTH_TYPE" \
