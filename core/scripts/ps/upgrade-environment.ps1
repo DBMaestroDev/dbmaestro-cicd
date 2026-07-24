@@ -16,6 +16,8 @@ $ErrorActionPreference = 'Stop'
 
 $packageName = $env:DBMAESTRO_PACKAGE_NAME
 $tagName = $env:DBMAESTRO_TAG_NAME
+if ($packageName -eq "none") { $packageName = "" }
+if ($tagName -eq "none") { $tagName = "" }
 $projectName = $env:DBMAESTRO_PROJECT_NAME
 $targetEnv = $env:DBMAESTRO_TARGET_ENV
 $agentJar = $env:DBMAESTRO_AGENT_JAR

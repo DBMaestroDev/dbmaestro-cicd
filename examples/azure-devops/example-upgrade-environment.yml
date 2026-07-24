@@ -21,13 +21,13 @@ parameters:
       - 'Prod_Env_1'
       - 'Prod_Env_3'
   - name: packageNames
-    displayName: 'Package names to upgrade (comma-separated, leave empty to auto-detect)'
+    displayName: 'Package names to upgrade (comma-separated, leave as none to auto-detect)'
     type: string
-    default: ''
+    default: 'none'
   - name: tagName
-    displayName: 'Tag name to upgrade (use instead of packageNames)'
+    displayName: 'Tag name to upgrade (use instead of packageNames, leave as none to ignore)'
     type: string
-    default: ''
+    default: 'none'
   - name: projectName
     type: string
     default: 'Demo-PSQL'
