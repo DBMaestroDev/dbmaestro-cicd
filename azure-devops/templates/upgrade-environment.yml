@@ -50,7 +50,7 @@ parameters:
 steps:
   # If version is set, download (or reuse cached) the JAR. If empty, the JAR is assumed to be pre-installed on the runner.
   - ${{ if ne(parameters.version, '') }}:
-      - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
+      - template: get-cli-jar.yml@dbmaestro-cicd
         parameters:
           version: ${{ parameters.version }}
           jarPath: ${{ parameters.agentJarPath }}
