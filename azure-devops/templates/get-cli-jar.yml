@@ -12,6 +12,8 @@
 #         ref: v1
 #
 #   steps:
+#     - checkout: self
+#     - checkout: dbmaestro-cicd
 #     - template: azure-devops/templates/get-cli-jar.yml@dbmaestro-cicd
 #       parameters:
 #         version: "26.1.0.13224"
@@ -50,7 +52,7 @@ steps:
           DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/sh/get-cli-jar.sh
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/get-cli-jar.sh
 
       - bash: |
           mkdir -p "$(Pipeline.Workspace)/dbm-cache"
@@ -74,7 +76,7 @@ steps:
           DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/ps/get-cli-jar.ps1
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/get-cli-jar.ps1
           pwsh: true
 
       - pwsh: |

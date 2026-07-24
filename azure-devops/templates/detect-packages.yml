@@ -4,7 +4,17 @@
 #
 # Usage in your azure-pipelines.yml:
 #
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
 #   steps:
+#     - checkout: self
+#     - checkout: dbmaestro-cicd
 #     - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
 #       parameters:
 #         detectFromPush: true

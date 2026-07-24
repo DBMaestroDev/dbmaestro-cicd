@@ -3,7 +3,17 @@
 #
 # Usage in your azure-pipelines.yml:
 #
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
 #   steps:
+#     - checkout: self
+#     - checkout: dbmaestro-cicd
 #     - template: azure-devops/templates/upgrade-environment.yml@dbmaestro-cicd
 #       parameters:
 #         packageName: "MyPackage"
@@ -72,7 +82,7 @@ steps:
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/sh/upgrade-environment.sh
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/upgrade-environment.sh
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
@@ -90,5 +100,5 @@ steps:
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/ps/upgrade-environment.ps1
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/upgrade-environment.ps1
           pwsh: true

@@ -3,7 +3,17 @@
 #
 # Usage in your azure-pipelines.yml:
 #
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
 #   steps:
+#     - checkout: self
+#     - checkout: dbmaestro-cicd
 #     - template: azure-devops/templates/tag-package.yml@dbmaestro-cicd
 #       parameters:
 #         packageName: "MyPackage"
@@ -71,7 +81,7 @@ steps:
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/sh/tag-package.sh
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/tag-package.sh
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
@@ -89,5 +99,5 @@ steps:
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/ps/tag-package.ps1
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/tag-package.ps1
           pwsh: true

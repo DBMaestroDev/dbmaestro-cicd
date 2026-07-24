@@ -3,7 +3,17 @@
 #
 # Usage in your azure-pipelines.yml:
 #
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
 #   steps:
+#     - checkout: self
+#     - checkout: dbmaestro-cicd
 #     - template: azure-devops/templates/build-from-source.yml@dbmaestro-cicd
 #       parameters:
 #         packageName: "MyPackage"
@@ -87,7 +97,7 @@ steps:
           DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: ${{ parameters.createDowngradeScripts }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/sh/build-from-source.sh
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/build-from-source.sh
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
@@ -107,7 +117,7 @@ steps:
           DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: ${{ parameters.createDowngradeScripts }}
         inputs:
           targetType: filePath
-          filePath: $(Build.SourcesDirectory)/core/scripts/ps/build-from-source.ps1
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/build-from-source.ps1
           pwsh: true
 
   - ${{ if and(not(parameters.useWindows), ne(parameters.tags, '')) }}:
@@ -130,7 +140,7 @@ steps:
             for tag in "${TAGS[@]}"; do
               tag="$(echo "$tag" | xargs)"
               [ -z "$tag" ] && continue
-              DBMAESTRO_TAG_NAME="$tag" bash "$(Build.SourcesDirectory)/core/scripts/sh/tag-package.sh"
+              DBMAESTRO_TAG_NAME="$tag" bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/tag-package.sh"
             done
 
   - ${{ if and(parameters.useWindows, ne(parameters.tags, '')) }}:
@@ -152,6 +162,6 @@ steps:
             $tags = "${{ parameters.tags }}" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
             foreach ($tag in $tags) {
               $env:DBMAESTRO_TAG_NAME = $tag
-              & "$(Build.SourcesDirectory)/core/scripts/ps/tag-package.ps1"
+              & "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/tag-package.ps1"
             }
           pwsh: true
