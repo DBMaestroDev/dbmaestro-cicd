@@ -30,6 +30,14 @@ if [ -f "${JAR_PATH}" ]; then
   else
     echo "JAR exists but version mismatch (want ${VERSION}, found $(cat "${VERSION_FILE}" 2>/dev/null || echo 'unknown')). Re-downloading."
     rm -f "${JAR_PATH}" "${VERSION_FILE}"
+    # If the file still exists, rm -f was blocked (e.g. a protected system install).
+    # Fall back to using the existing JAR rather than failing the step.
+    if [ -f "${JAR_PATH}" ]; then
+      echo "Warning: cannot replace JAR at ${JAR_PATH} (write-protected). Using existing file."
+      echo "download_success=true"
+      [[ -n "${DBM_OUTPUT_FILE:-}" ]] && echo "download_success=true" >> "$DBM_OUTPUT_FILE"
+      exit 0
+    fi
   fi
 fi
 

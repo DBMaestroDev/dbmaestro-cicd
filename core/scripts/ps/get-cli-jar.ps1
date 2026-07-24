@@ -34,6 +34,14 @@ if (Test-Path -Path $jarPath) {
         Write-Host "JAR exists but version mismatch (want $version, found $cached). Re-downloading."
         Remove-Item -Path $jarPath -Force -ErrorAction SilentlyContinue
         Remove-Item -Path $versionFile -Force -ErrorAction SilentlyContinue
+        # If the file still exists, the path is write-protected (e.g. a system-managed install).
+        # Fall back to using the existing JAR rather than failing the step.
+        if (Test-Path -Path $jarPath) {
+            Write-Host "Warning: cannot replace JAR at $jarPath (write-protected). Using existing file."
+            Write-Host "download_success=true"
+            if ($env:DBM_OUTPUT_FILE) { Add-Content -Path $env:DBM_OUTPUT_FILE -Value "download_success=true" }
+            exit 0
+        }
     }
 }
 
