@@ -68,7 +68,7 @@ steps:
 
   - ${{ if not(parameters.useWindows) }}:
       - task: Bash@3
-        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}${{ parameters.tagName }}'"
+        displayName: "DBmaestro: Upgrade (package: ${{ parameters.packageName }}, tag: ${{ parameters.tagName }})"
         env:
           DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
           DBMAESTRO_TAG_NAME: ${{ parameters.tagName }}
@@ -86,7 +86,7 @@ steps:
 
   - ${{ if parameters.useWindows }}:
       - task: PowerShell@2
-        displayName: "DBmaestro: Upgrade '${{ parameters.targetEnvironment }}' with '${{ parameters.packageName }}${{ parameters.tagName }}' (Windows)"
+        displayName: "DBmaestro: Upgrade (package: ${{ parameters.packageName }}, tag: ${{ parameters.tagName }}) (Windows)"
         env:
           DBMAESTRO_PACKAGE_NAME: ${{ parameters.packageName }}
           DBMAESTRO_TAG_NAME: ${{ parameters.tagName }}
