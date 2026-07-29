@@ -97,6 +97,8 @@ steps:
 | `jarPath` | Yes | — | Destination path on the agent |
 | `useWindows` | | `false` | Use PowerShell instead of Bash |
 
+> **Available versions:** see the published tags/releases at [DBMaestroDev/DBmaestroCLI](https://github.com/DBMaestroDev/DBmaestroCLI). `version` accepts either format, e.g. `26.1.2.13455` or `v26.1.2.13455`.
+
 ---
 
 ### `create-package.yml`

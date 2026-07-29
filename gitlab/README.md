@@ -57,6 +57,8 @@ Downloads the DBmaestro agent JAR from GitHub releases.
 
 Artifact: the downloaded JAR is stored as a job artifact passed to subsequent jobs.
 
+> **Available versions:** see the published tags/releases at [DBMaestroDev/DBmaestroCLI](https://github.com/DBMaestroDev/DBmaestroCLI). `DBMAESTRO_VERSION` accepts either format, e.g. `26.1.0.13224` or `v26.1.0.13224`.
+
 ---
 
 ### `.detect-packages` / `.detect-packages-mr` / `.detect-packages-windows`

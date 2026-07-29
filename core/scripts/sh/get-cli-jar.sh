@@ -2,7 +2,7 @@
 # get-cli-jar.sh — Download the DBmaestro Agent JAR file
 #
 # Environment variables (inputs):
-#   DBMAESTRO_VERSION     Version to download, e.g. 26.1.0.13224 (required)
+#   DBMAESTRO_VERSION     Version to download, e.g. 26.1.0.13224 or v26.1.0.13224 (required)
 #   DBMAESTRO_JAR_PATH    Destination path including filename (required)
 #
 # Version caching:
@@ -17,6 +17,7 @@
 set -e
 
 VERSION="${DBMAESTRO_VERSION:?DBMAESTRO_VERSION is required}"
+VERSION="${VERSION#[vV]}"
 JAR_PATH="${DBMAESTRO_JAR_PATH:?DBMAESTRO_JAR_PATH is required}"
 JAR_URL="https://raw.githubusercontent.com/DBMaestroDev/DBmaestroCLI/refs/tags/v${VERSION}/DBmaestroAgent.jar"
 VERSION_FILE="${JAR_PATH}.version"

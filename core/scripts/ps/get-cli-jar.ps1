@@ -1,7 +1,7 @@
 # get-cli-jar.ps1 — Download the DBmaestro Agent JAR file
 #
 # Environment variables (inputs):
-#   DBMAESTRO_VERSION     Version to download, e.g. 26.1.0.13224 (required)
+#   DBMAESTRO_VERSION     Version to download, e.g. 26.1.0.13224 or v26.1.0.13224 (required)
 #   DBMAESTRO_JAR_PATH    Destination path including filename (required)
 #
 # Version caching:
@@ -20,6 +20,8 @@ $jarPath = $env:DBMAESTRO_JAR_PATH
 
 if (-not $version) { Write-Host "ERROR: DBMAESTRO_VERSION is required"; exit 1 }
 if (-not $jarPath) { Write-Host "ERROR: DBMAESTRO_JAR_PATH is required"; exit 1 }
+
+$version = $version -replace '^[vV]', ''
 
 $versionFile = "$jarPath.version"
 

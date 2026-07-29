@@ -82,6 +82,8 @@ The integrated PR workflow uses `parameters:` at the top of the file. Edit these
 
 > **JAR download behaviour:** when `CLI_VERSION` is set, the JAR is downloaded at that version (a version marker avoids re-downloading the same version). When empty, the pipeline assumes the JAR is pre-installed on the agent.
 
+> **Available versions:** see the published tags/releases at [DBMaestroDev/DBmaestroCLI](https://github.com/DBMaestroDev/DBmaestroCLI). `CLI_VERSION` accepts either format, e.g. `26.1.3.13473` or `v26.1.3.13473`.
+
 ---
 
 ## Step 3 — Configure the Prod_Env_1 Approval Gate

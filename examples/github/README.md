@@ -70,6 +70,8 @@ Variables are not masked in logs. Do not store passwords here.
 
 > **JAR download behaviour:** when `CLI_VERSION` is set, each workflow job downloads the JAR at that version (a local version marker avoids re-downloading the same version). When `CLI_VERSION` is empty, the workflow assumes the JAR is already present at `AGENT_JAR_PATH` and skips the download entirely.
 
+> **Available versions:** see the published tags/releases at [DBMaestroDev/DBmaestroCLI](https://github.com/DBMaestroDev/DBmaestroCLI). `CLI_VERSION` accepts either format, e.g. `26.1.3.13473` or `v26.1.3.13473`.
+
 ---
 
 ## Step 3 — Configure the Prod_Env_1 Approval Gate

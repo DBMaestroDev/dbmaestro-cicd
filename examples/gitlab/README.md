@@ -57,6 +57,8 @@ Go to **Settings → CI/CD → Variables** and add the following. Click **Add va
 
 > **Protected variables** are only available to jobs running on protected branches or tags. If your pipelines run on feature branches, do not mark variables as protected unless you also protect those branches.
 
+> **Available versions:** see the published tags/releases at [DBMaestroDev/DBmaestroCLI](https://github.com/DBMaestroDev/DBmaestroCLI). `DBMAESTRO_VERSION` accepts either format, e.g. `26.1.3.13473` or `v26.1.3.13473`.
+
 > **Group-level variables** (Settings at the group level) are inherited by all projects in the group, which is useful for sharing `DBMAESTRO_SERVER`, `DBMAESTRO_USER`, and `DBMAESTRO_PASSWORD` across multiple repositories.
 
 ---
