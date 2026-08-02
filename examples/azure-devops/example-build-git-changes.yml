@@ -62,7 +62,7 @@ stages:
                 BRANCH="$(Build.SourceBranchName)"
               fi
               git checkout "$BRANCH"
-            workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
+            workingDirectory: $(Build.SourcesDirectory)
 
           - bash: |
               IS_PR="false"

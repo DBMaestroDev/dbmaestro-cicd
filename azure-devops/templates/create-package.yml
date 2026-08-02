@@ -86,7 +86,7 @@ steps:
         inputs:
           targetType: inline
           script: |
-            cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            cd "$(Build.SourcesDirectory)"
             bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/create-package.sh"
 
   - ${{ if parameters.useWindows }}:
@@ -108,5 +108,5 @@ steps:
           targetType: inline
           pwsh: true
           script: |
-            Set-Location "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            Set-Location "$(Build.SourcesDirectory)"
             & "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/create-package.ps1"

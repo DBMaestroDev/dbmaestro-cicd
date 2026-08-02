@@ -53,7 +53,7 @@ steps:
         inputs:
           targetType: inline
           script: |
-            cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+            cd "$(Build.SourcesDirectory)"
             export DBM_OUTPUT_FILE="$(Pipeline.Workspace)/dbm-packages.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
@@ -83,6 +83,7 @@ steps:
           targetType: inline
           pwsh: true
           script: |
+            Set-Location "$(Build.SourcesDirectory)"
             $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch

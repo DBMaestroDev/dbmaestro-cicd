@@ -171,6 +171,6 @@ jobs:
             fi
           done
         displayName: 'Create and Precheck Packages Sequentially'
-        workingDirectory: $(Build.SourcesDirectory)/$(Build.Repository.Name)
+        workingDirectory: $(Build.SourcesDirectory)
         env:
           DBMAESTRO_PASSWORD: ${{ parameters.password }}

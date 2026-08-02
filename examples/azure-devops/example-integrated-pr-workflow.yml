@@ -99,7 +99,7 @@ stages:
 
           - bash: |
               branch="${SYSTEM_PULLREQUEST_SOURCEBRANCH#refs/heads/}"
-              cd "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
+              cd "$(Build.SourcesDirectory)"
               git checkout "$branch"
             displayName: 'Checkout PR source branch'
 
