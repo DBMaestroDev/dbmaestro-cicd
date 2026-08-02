@@ -120,7 +120,7 @@ steps:
           filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/build-from-source.ps1
           pwsh: true
 
-  - ${{ if and(not(parameters.useWindows), ne(parameters.tags, '')) }}:
+  - ${{ if and(not(parameters.useWindows), ne(parameters.tags, ''), ne(parameters.tags, 'none')) }}:
       - task: Bash@3
         displayName: "DBmaestro: Tag Package '${{ parameters.packageName }}'"
         env:
@@ -143,7 +143,7 @@ steps:
               DBMAESTRO_TAG_NAME="$tag" bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/tag-package.sh"
             done
 
-  - ${{ if and(parameters.useWindows, ne(parameters.tags, '')) }}:
+  - ${{ if and(parameters.useWindows, ne(parameters.tags, ''), ne(parameters.tags, 'none')) }}:
       - task: PowerShell@2
         displayName: "DBmaestro: Tag Package '${{ parameters.packageName }}' (Windows)"
         env:

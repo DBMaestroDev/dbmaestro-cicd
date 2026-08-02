@@ -153,7 +153,7 @@ jobs:
             fi
             echo "##[endgroup]"
 
-            if [ -n "${{ parameters.tags }}" ]; then
+            if [ -n "${{ parameters.tags }}" ] && [ "${{ parameters.tags }}" != "none" ]; then
               echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Tagging $PKG ==="
               IFS=',' read -ra TAGS <<< "${{ parameters.tags }}"
               for tag in "${TAGS[@]}"; do
