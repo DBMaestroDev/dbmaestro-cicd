@@ -7,8 +7,10 @@
 #   DBMAESTRO_TARGET_ENV      Target environment name (required)
 #   DBMAESTRO_AGENT_JAR       Path to DBmaestroAgent.jar (required)
 #   DBMAESTRO_SERVER          DBmaestro server URL (required)
-#   DBMAESTRO_USER            DBmaestro username (required)
-#   DBMAESTRO_PASSWORD        DBmaestro password (required)
+#   DBMAESTRO_USER            DBmaestro username (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_PASSWORD        DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
+#                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
 #   DBMAESTRO_USE_SSL         Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE       Auth type (default: DBmaestroAccount)
 
@@ -26,9 +28,16 @@ $user = $env:DBMAESTRO_USER
 $password = $env:DBMAESTRO_PASSWORD
 $useSsl = if ($env:DBMAESTRO_USE_SSL) { $env:DBMAESTRO_USE_SSL } else { "True" }
 $authType = if ($env:DBMAESTRO_AUTH_TYPE) { $env:DBMAESTRO_AUTH_TYPE } else { "DBmaestroAccount" }
+$accessTokenFilePath = $env:DBMAESTRO_ACCESS_TOKEN_FILE_PATH
+if ($accessTokenFilePath -eq "none") { $accessTokenFilePath = "" }
 
-foreach ($v in @($projectName, $targetEnv, $agentJar, $server, $user, $password)) {
+foreach ($v in @($projectName, $targetEnv, $agentJar, $server)) {
     if (-not $v) { Write-Host "ERROR: Required environment variable is missing"; exit 1 }
+}
+if (-not $accessTokenFilePath) {
+    foreach ($v in @($user, $password)) {
+        if (-not $v) { Write-Host "ERROR: Required environment variable is missing"; exit 1 }
+    }
 }
 
 if (-not $packageName -and -not $tagName) {
@@ -38,6 +47,12 @@ if (-not $packageName -and -not $tagName) {
 if ($packageName -and $tagName) {
     Write-Host "ERROR: DBMAESTRO_PACKAGE_NAME and DBMAESTRO_TAG_NAME cannot both be set"
     exit 1
+}
+
+$authArgs = if ($accessTokenFilePath) {
+    @("-AccessTokenFilePath", $accessTokenFilePath)
+} else {
+    @("-AuthType", $authType, "-UserName", $user, "-Password", $password)
 }
 
 Write-Host "==== Upgrade on $targetEnv environment... ===="
@@ -52,9 +67,7 @@ if ($tagName) {
         -TagName "$tagName" `
         -Server "$server" `
         -UseSSL "$useSsl" `
-        -AuthType "$authType" `
-        -UserName "$user" `
-        -Password "$password"
+        @authArgs
 } else {
     Write-Host "==== Package name: $packageName ===="
     & java -jar "$agentJar" -Upgrade `
@@ -63,9 +76,7 @@ if ($tagName) {
         -PackageName "$packageName" `
         -Server "$server" `
         -UseSSL "$useSsl" `
-        -AuthType "$authType" `
-        -UserName "$user" `
-        -Password "$password"
+        @authArgs
 }
 
 if ($LASTEXITCODE -ne 0) {

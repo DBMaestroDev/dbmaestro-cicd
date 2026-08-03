@@ -5,8 +5,10 @@
 #   DBMAESTRO_PROJECT_NAME        DBmaestro project name (required)
 #   DBMAESTRO_AGENT_JAR           Path to DBmaestroAgent.jar (required)
 #   DBMAESTRO_SERVER              DBmaestro server hostname (required)
-#   DBMAESTRO_USER                DBmaestro username (required)
-#   DBMAESTRO_PASSWORD            DBmaestro password (required)
+#   DBMAESTRO_USER                DBmaestro username (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_PASSWORD            DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
+#                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
 #   DBMAESTRO_PACKAGES_FOLDER     Root folder containing packages (default: packages)
 #   DBMAESTRO_USE_SSL             Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE           Auth type (default: DBmaestroAccount)
@@ -29,12 +31,24 @@ $useSsl = if ($env:DBMAESTRO_USE_SSL) { $env:DBMAESTRO_USE_SSL } else { "True" }
 $authType = if ($env:DBMAESTRO_AUTH_TYPE) { $env:DBMAESTRO_AUTH_TYPE } else { "DBmaestroAccount" }
 $packageType = if ($env:DBMAESTRO_PACKAGE_TYPE) { $env:DBMAESTRO_PACKAGE_TYPE } else { "Regular" }
 $ignoreWarnings = if ($env:DBMAESTRO_IGNORE_WARNINGS) { $env:DBMAESTRO_IGNORE_WARNINGS } else { "True" }
+$accessTokenFilePath = $env:DBMAESTRO_ACCESS_TOKEN_FILE_PATH
+if ($accessTokenFilePath -eq "none") { $accessTokenFilePath = "" }
 
-foreach ($v in @('packageName','projectName','agentJar','server','user','password')) {
+foreach ($v in @('packageName','projectName','agentJar','server')) {
     if (-not (Get-Variable -Name $v -ValueOnly)) {
         Write-Host "ERROR: DBMAESTRO_$(($v -creplace '([A-Z])', '_$1').ToUpper().TrimStart('_')) is required"
         exit 1
     }
+}
+if (-not $accessTokenFilePath) {
+    if (-not $user)     { Write-Host "ERROR: DBMAESTRO_USER is required"; exit 1 }
+    if (-not $password) { Write-Host "ERROR: DBMAESTRO_PASSWORD is required"; exit 1 }
+}
+
+$authArgs = if ($accessTokenFilePath) {
+    @("-AccessTokenFilePath", $accessTokenFilePath)
+} else {
+    @("-AuthType", $authType, "-UserName", $user, "-Password", $password)
 }
 
 # Validate package folder
@@ -70,9 +84,7 @@ Write-Host "Creating package $packageName in DBmaestro"
     -FilePath "$zipFile" `
     -Server "$server" `
     -UseSSL "$useSsl" `
-    -AuthType "$authType" `
-    -UserName "$user" `
-    -Password "$password"
+    @authArgs
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Package created successfully"

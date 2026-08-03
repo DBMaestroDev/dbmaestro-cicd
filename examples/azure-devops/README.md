@@ -65,6 +65,8 @@ Variables can be set at the pipeline level or in a Variable Group (Library).
 | `DBMAESTRO_USER` | `dbm_user` | No | DBmaestro username |
 | `CLI_VERSION` | *(empty)* | No | DBmaestro agent JAR version to download (e.g. `26.1.3.13473`). When set, the JAR is downloaded at that version (re-downloaded only if the version changes). Leave empty if the JAR is pre-installed on the agent. |
 
+> **Access-token auth:** every step template also accepts `accessTokenFilePath` as an alternative to `user`/`password` — see [`azure-devops/README.md`](../../azure-devops/README.md) for details. These examples use the user/password flow for simplicity.
+
 ### Pipeline Parameters (set defaults directly in the YAML)
 
 The integrated PR workflow uses `parameters:` at the top of the file. Edit these defaults to match your environment before running the pipeline:

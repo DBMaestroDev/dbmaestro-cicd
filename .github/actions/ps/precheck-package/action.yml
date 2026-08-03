@@ -1,4 +1,4 @@
-﻿# Version: v1.0
+﻿# Version: v1.1
 name: 'Precheck DBmaestro Package'
 description: 'Validates a DBmaestro package using precheck operation (PowerShell/Windows)'
 inputs:
@@ -11,13 +11,19 @@ inputs:
     default: 'DBmaestroAccount'
   dbmaestro_password:
     description: 'DBmaestro password or token'
-    required: true
+    required: false
+    default: ''
   dbmaestro_server:
     description: 'DBmaestro server hostname'
     required: true
   dbmaestro_user:
     description: 'DBmaestro username'
-    required: true
+    required: false
+    default: ''
+  access_token_file_path:
+    description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/dbmaestro_password)'
+    required: false
+    default: ''
   package_name:
     description: 'Name of the package to validate'
     required: true
@@ -52,6 +58,7 @@ runs:
         DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
         DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
         DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
         DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
       run: |

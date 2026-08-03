@@ -1,4 +1,4 @@
-﻿# Version: v1.8
+﻿# Version: v1.9
 name: 'Create DBmaestro Package'
 description: 'Creates a DBmaestro package from a folder with manifest, tar archive, and package creation'
 inputs:
@@ -28,10 +28,16 @@ inputs:
     default: 'DBmaestroAccount'
   dbmaestro_user:
     description: 'DBmaestro username'
-    required: true
+    required: false
+    default: ''
   dbmaestro_password:
     description: 'DBmaestro password or token'
-    required: true
+    required: false
+    default: ''
+  access_token_file_path:
+    description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/dbmaestro_password)'
+    required: false
+    default: ''
   package_type:
     description: 'Package type (Regular or AdHoc)'
     required: false
@@ -64,6 +70,7 @@ runs:
         DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
         DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
         DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
         DBMAESTRO_PACKAGES_FOLDER: ${{ inputs.packages_folder }}
         DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}

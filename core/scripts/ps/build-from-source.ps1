@@ -6,8 +6,10 @@
 #   DBMAESTRO_ENV_NAME                Development environment name (required)
 #   DBMAESTRO_AGENT_JAR               Path to DBmaestroAgent.jar (required)
 #   DBMAESTRO_SERVER                  DBmaestro server URL (required)
-#   DBMAESTRO_USER                    DBmaestro username (required)
-#   DBMAESTRO_PASSWORD                DBmaestro password (required)
+#   DBMAESTRO_USER                    DBmaestro username (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_PASSWORD                DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
+#                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
 #   DBMAESTRO_VERSION_TYPE            Tasks or Specific Commit (default: "")
 #   DBMAESTRO_ADDITIONAL_INFORMATION  Task list or commit hash (default: "")
 #   DBMAESTRO_USE_SSL                 Use SSL (default: True)
@@ -28,9 +30,22 @@ $additionalInfo = if ($env:DBMAESTRO_ADDITIONAL_INFORMATION) { $env:DBMAESTRO_AD
 $useSsl = if ($env:DBMAESTRO_USE_SSL) { $env:DBMAESTRO_USE_SSL } else { "True" }
 $authType = if ($env:DBMAESTRO_AUTH_TYPE) { $env:DBMAESTRO_AUTH_TYPE } else { "DBmaestroAccount" }
 $createDowngradeScripts = if ($env:DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS) { $env:DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS } else { "True" }
+$accessTokenFilePath = $env:DBMAESTRO_ACCESS_TOKEN_FILE_PATH
+if ($accessTokenFilePath -eq "none") { $accessTokenFilePath = "" }
 
-foreach ($v in @($packageName, $projectName, $envName, $agentJar, $server, $user, $password)) {
+foreach ($v in @($packageName, $projectName, $envName, $agentJar, $server)) {
     if (-not $v) { Write-Host "ERROR: Required environment variable is missing"; exit 1 }
+}
+if (-not $accessTokenFilePath) {
+    foreach ($v in @($user, $password)) {
+        if (-not $v) { Write-Host "ERROR: Required environment variable is missing"; exit 1 }
+    }
+}
+
+$authArgs = if ($accessTokenFilePath) {
+    @("-AccessTokenFilePath", $accessTokenFilePath)
+} else {
+    @("-AuthType", $authType, "-UserName", $user, "-Password", $password)
 }
 
 Write-Host "==== Building package: $packageName ===="
@@ -52,9 +67,7 @@ if ($omitUseSsl) {
         -PackageName "$packageName" `
         -CreateDowngradeScripts $createDowngradeScripts `
         -Server "$server" `
-        -AuthType "$authType" `
-        -UserName "$user" `
-        -Password "$password"
+        @authArgs
 } else {
     & java -jar "$agentJar" -Build `
         -ProjectName "$projectName" `
@@ -66,9 +79,7 @@ if ($omitUseSsl) {
         -CreateDowngradeScripts $createDowngradeScripts `
         -Server "$server" `
         -UseSSL $useSsl `
-        -AuthType "$authType" `
-        -UserName "$user" `
-        -Password "$password"
+        @authArgs
 }
 
 if ($LASTEXITCODE -ne 0) {

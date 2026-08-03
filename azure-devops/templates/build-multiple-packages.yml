@@ -13,6 +13,7 @@
 #         server: "dbmaestro.example.com"
 #         user: $(DBMAESTRO_USER)
 #         password: $(DBMAESTRO_PASSWORD)
+#         # accessTokenFilePath: $(DBMAESTRO_ACCESS_TOKEN_FILE_PATH)  # alternative to user/password
 
 parameters:
   - name: packageNames
@@ -30,8 +31,13 @@ parameters:
     type: string
   - name: user
     type: string
+    default: ""
   - name: password
     type: string
+    default: ""
+  - name: accessTokenFilePath
+    type: string
+    default: ""
   - name: useSsl
     type: string
     default: "True"
@@ -120,6 +126,7 @@ jobs:
             export DBMAESTRO_SERVER="${{ parameters.server }}"
             export DBMAESTRO_USER="${{ parameters.user }}"
             export DBMAESTRO_PASSWORD="${{ parameters.password }}"
+            export DBMAESTRO_ACCESS_TOKEN_FILE_PATH="${{ parameters.accessTokenFilePath }}"
             export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
             export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
             export DBMAESTRO_PACKAGE_TYPE="${{ parameters.packageType }}"
@@ -142,9 +149,10 @@ jobs:
             export DBMAESTRO_SERVER="${{ parameters.server }}"
             export DBMAESTRO_USER="${{ parameters.user }}"
             export DBMAESTRO_PASSWORD="${{ parameters.password }}"
+            export DBMAESTRO_ACCESS_TOKEN_FILE_PATH="${{ parameters.accessTokenFilePath }}"
             export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
             export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
-            
+
             # Invoke the precheck-package script
             if [ "${{ parameters.useWindows }}" = "False" ]; then
               bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/precheck-package.sh" || exit 1

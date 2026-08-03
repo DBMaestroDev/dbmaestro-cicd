@@ -1,4 +1,4 @@
-﻿# Version: v1.10
+﻿# Version: v1.11
 # Reusable Workflow for Environment Upgrade (Linux)
 # Can be called from other workflows to upgrade environments
 # Packages must be built and validated prior to upgrade
@@ -24,8 +24,14 @@ on:
         type: string
       dbmaestro_user:
         description: 'DBmaestro username'
-        required: true
+        required: false
         type: string
+        default: ''
+      access_token_file_path:
+        description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/DBMAESTRO_PASSWORD)'
+        required: false
+        type: string
+        default: ''
       detect_from_push:
         description: 'Detect changed packages from git push (true/false)'
         required: false
@@ -72,7 +78,7 @@ on:
         default: ''
     secrets:
       DBMAESTRO_PASSWORD:
-        required: true
+        required: false
     outputs:
       upgraded_packages:
         description: 'List of packages that were upgraded'
@@ -177,6 +183,7 @@ jobs:
           DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
           dbmaestro_server: ${{ vars.DBMAESTRO_SERVER }}
           dbmaestro_user: ${{ vars.DBMAESTRO_USER }}
+          access_token_file_path: ${{ inputs.access_token_file_path }}
           package_name: ${{ matrix.item.package }}
           tag_name: ${{ inputs.tag_name }}
           project_name: ${{ inputs.project_name }}

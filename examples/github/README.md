@@ -37,6 +37,8 @@ Go to **Settings → Secrets and variables → Actions → Secrets** and add:
 |-------------|-------------|
 | `DBMAESTRO_PASSWORD` | DBmaestro account password. Mark as secret — it will be masked in logs. |
 
+> **Access-token auth:** every action/reusable workflow also accepts `access_token_file_path` as an alternative to `dbmaestro_user`/`dbmaestro_password` — see [`.github/GITHUB_ACTIONS.md`](../../.github/GITHUB_ACTIONS.md) for details. These examples use the user/password flow for simplicity.
+
 ---
 
 ## Step 2 — Configure Repository Variables

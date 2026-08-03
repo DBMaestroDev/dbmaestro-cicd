@@ -42,6 +42,8 @@ Go to **Settings → CI/CD → Variables** and add the following. Click **Add va
 | `DBMAESTRO_SERVER` | Variable | No | No | `agent01.local:8017` | DBmaestro agent server in `host:port` format |
 | `DBMAESTRO_USER` | Variable | No | No | `dbm_user` | DBmaestro username |
 
+> **Access-token auth:** every template also accepts `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` as an alternative to `DBMAESTRO_USER`/`DBMAESTRO_PASSWORD` — see [`gitlab/README.md`](../../gitlab/README.md) for details. These examples use the user/password flow for simplicity.
+
 ### Recommended Variables
 
 | Variable | Default (if not set) | Description |

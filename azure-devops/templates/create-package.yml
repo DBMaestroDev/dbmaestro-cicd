@@ -22,6 +22,7 @@
 #         server: "dbmaestro.example.com"
 #         user: $(DBMAESTRO_USER)
 #         password: $(DBMAESTRO_PASSWORD)
+#         # accessTokenFilePath: $(DBMAESTRO_ACCESS_TOKEN_FILE_PATH)  # alternative to user/password
 
 parameters:
   - name: packageName
@@ -35,8 +36,13 @@ parameters:
     type: string
   - name: user
     type: string
+    default: ""
   - name: password
     type: string
+    default: ""
+  - name: accessTokenFilePath
+    type: string
+    default: ""
   - name: packagesFolder
     type: string
     default: "packages"
@@ -78,6 +84,7 @@ steps:
           DBMAESTRO_SERVER: ${{ parameters.server }}
           DBMAESTRO_USER: ${{ parameters.user }}
           DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ parameters.accessTokenFilePath }}
           DBMAESTRO_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
           DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
@@ -99,6 +106,7 @@ steps:
           DBMAESTRO_SERVER: ${{ parameters.server }}
           DBMAESTRO_USER: ${{ parameters.user }}
           DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ parameters.accessTokenFilePath }}
           DBMAESTRO_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
           DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
           DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}

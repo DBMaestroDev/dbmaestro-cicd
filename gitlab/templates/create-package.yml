@@ -15,6 +15,7 @@
 #       DBMAESTRO_SERVER: "dbmaestro.example.com"
 #       DBMAESTRO_USER: "$DBMAESTRO_USER"       # CI/CD variable
 #       DBMAESTRO_PASSWORD: "$DBMAESTRO_PASSWORD" # CI/CD secret
+#       # DBMAESTRO_ACCESS_TOKEN_FILE_PATH: "/path/to/token"  # alternative to user/password
 
 .create-package:
   variables:
@@ -24,6 +25,7 @@
     DBMAESTRO_SERVER: ""
     DBMAESTRO_USER: ""
     DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ""
     DBMAESTRO_PACKAGES_FOLDER: "packages"
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
@@ -50,6 +52,7 @@
     DBMAESTRO_SERVER: ""
     DBMAESTRO_USER: ""
     DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ""
     DBMAESTRO_PACKAGES_FOLDER: "packages"
     DBMAESTRO_USE_SSL: "True"
     DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"

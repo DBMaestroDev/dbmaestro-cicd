@@ -81,9 +81,10 @@ Builds and validates packages from a JSON matrix (create → precheck, sequentia
 | `package_type` | | `Regular` | `Regular` or `AdHoc` |
 | `runner` | | `dbmaestro-runner` | Runner label |
 | `dbmaestro_server` | Yes | — | Server in `host:port` format |
-| `dbmaestro_user` | Yes | — | DBmaestro username |
+| `dbmaestro_user` | | `` | DBmaestro username (required unless `access_token_file_path` is set) |
+| `access_token_file_path` | | `` | Path to a DBmaestro access-token file (alternative to `dbmaestro_user`/`DBMAESTRO_PASSWORD`) |
 
-Secret required: `DBMAESTRO_PASSWORD`
+Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 
 ---
 
@@ -103,9 +104,10 @@ Builds a package from source control (all changes, specific tasks, or a specific
 | `auth_type` | | `DBmaestroAccount` | Authentication type |
 | `runner` | | `dbmaestro-runner` | Runner label |
 | `dbmaestro_server` | Yes | — | Server in `host:port` format |
-| `dbmaestro_user` | Yes | — | DBmaestro username |
+| `dbmaestro_user` | | `` | DBmaestro username (required unless `access_token_file_path` is set) |
+| `access_token_file_path` | | `` | Path to a DBmaestro access-token file (alternative to `dbmaestro_user`/`DBMAESTRO_PASSWORD`) |
 
-Secret required: `DBMAESTRO_PASSWORD`
+Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 
 ---
 
@@ -125,9 +127,10 @@ Upgrades a DBmaestro target environment. Supports push detection, PR mode, and m
 | `auth_type` | | `DBmaestroAccount` | Authentication type |
 | `runner` | | `dbmaestro-runner` | Runner label |
 | `dbmaestro_server` | Yes | — | Server in `host:port` format |
-| `dbmaestro_user` | Yes | — | DBmaestro username |
+| `dbmaestro_user` | | `` | DBmaestro username (required unless `access_token_file_path` is set) |
+| `access_token_file_path` | | `` | Path to a DBmaestro access-token file (alternative to `dbmaestro_user`/`DBMAESTRO_PASSWORD`) |
 
-Secret required: `DBMAESTRO_PASSWORD`
+Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 
 ---
 
@@ -152,9 +155,10 @@ PowerShell equivalent of `sh-build-validate.yml`. Runs on a Linux runner with `p
 | `package_type` | | `Regular` | `Regular` or `AdHoc` |
 | `runner` | | `dbmaestro-runner` | Runner label |
 | `dbmaestro_server` | Yes | — | Server in `host:port` format |
-| `dbmaestro_user` | Yes | — | DBmaestro username |
+| `dbmaestro_user` | | `` | DBmaestro username (required unless `access_token_file_path` is set) |
+| `access_token_file_path` | | `` | Path to a DBmaestro access-token file (alternative to `dbmaestro_user`/`DBMAESTRO_PASSWORD`) |
 
-Secret required: `DBMAESTRO_PASSWORD`
+Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 
 ---
 
@@ -174,9 +178,10 @@ PowerShell equivalent of `sh-build-source-control.yml`. Runs on a Linux runner w
 | `auth_type` | | `DBmaestroAccount` | Authentication type |
 | `runner` | | `dbmaestro-runner` | Runner label |
 | `dbmaestro_server` | Yes | — | Server in `host:port` format |
-| `dbmaestro_user` | Yes | — | DBmaestro username |
+| `dbmaestro_user` | | `` | DBmaestro username (required unless `access_token_file_path` is set) |
+| `access_token_file_path` | | `` | Path to a DBmaestro access-token file (alternative to `dbmaestro_user`/`DBMAESTRO_PASSWORD`) |
 
-Secret required: `DBMAESTRO_PASSWORD`
+Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 
 ---
 
@@ -214,8 +219,9 @@ Secret required: `DBMAESTRO_PASSWORD`
 | `project_name` | DBmaestro project name |
 | `agent_jar_path` | Path to DBmaestro agent JAR |
 | `dbmaestro_server` | Server in `host:port` format |
-| `dbmaestro_user` | DBmaestro username |
-| `dbmaestro_password` | DBmaestro password (secret) |
+| `dbmaestro_user` | DBmaestro username (required unless `access_token_file_path` is set) |
+| `dbmaestro_password` | DBmaestro password (secret; required unless `access_token_file_path` is set) |
+| `access_token_file_path` | Path to a DBmaestro access-token file (alternative to `dbmaestro_user`/`dbmaestro_password`) |
 | `use_ssl` | Enable SSL (`True`/`False`) |
 | `auth_type` | Authentication type |
 

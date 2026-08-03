@@ -1,4 +1,4 @@
-﻿# Version: v1.10
+﻿# Version: v1.11
 # Reusable workflow for building and validating DBmaestro packages
 # Can be called from other workflows with different configurations
 # Accepts a list of packages to build and validate
@@ -24,8 +24,14 @@ on:
         type: string
       dbmaestro_user:
         description: 'DBmaestro username'
-        required: true
+        required: false
         type: string
+        default: ''
+      access_token_file_path:
+        description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/DBMAESTRO_PASSWORD)'
+        required: false
+        type: string
+        default: ''
       package_type:
         description: 'Package type (Regular or AdHoc)'
         required: false
@@ -72,7 +78,7 @@ on:
     secrets:
       DBMAESTRO_PASSWORD:
         description: 'DBmaestro password or token'
-        required: true
+        required: false
 
 jobs:
   create_package:
@@ -103,6 +109,7 @@ jobs:
           dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
           dbmaestro_server: ${{ inputs.dbmaestro_server }}
           dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          access_token_file_path: ${{ inputs.access_token_file_path }}
           package_name: ${{ matrix.item.package }}
           package_type: ${{ inputs.package_type }}
           packages_folder: ${{ inputs.packages_folder }}
@@ -138,6 +145,7 @@ jobs:
           dbmaestro_password: ${{ secrets.DBMAESTRO_PASSWORD }}
           dbmaestro_server: ${{ inputs.dbmaestro_server }}
           dbmaestro_user: ${{ inputs.dbmaestro_user }}
+          access_token_file_path: ${{ inputs.access_token_file_path }}
           package_name: ${{ matrix.item.package }}
           project_name: ${{ inputs.project_name }}
           use_ssl: ${{ inputs.use_ssl }}
@@ -178,6 +186,7 @@ jobs:
           DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
           DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
           DBMAESTRO_PASSWORD: ${{ secrets.DBMAESTRO_PASSWORD }}
+          DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
           DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
           DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
         run: |

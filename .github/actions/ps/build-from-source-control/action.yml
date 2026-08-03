@@ -1,4 +1,4 @@
-# Version: v1.0
+# Version: v1.1
 name: 'Build Package from Source Control'
 description: 'Build a DBmaestro package from source control (Tasks or Specific Commit) — PowerShell/Windows'
 author: 'DBmaestro'
@@ -17,13 +17,19 @@ inputs:
     default: 'DBmaestroAccount'
   dbmaestro_password:
     description: 'DBmaestro password'
-    required: true
+    required: false
+    default: ''
   dbmaestro_server:
     description: 'DBmaestro server URL'
     required: true
   dbmaestro_user:
     description: 'DBmaestro username'
-    required: true
+    required: false
+    default: ''
+  access_token_file_path:
+    description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/dbmaestro_password)'
+    required: false
+    default: ''
   environment-name:
     description: 'Development environment name'
     required: true
@@ -74,6 +80,7 @@ runs:
         DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
         DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
         DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
         DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
         DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS: ${{ inputs.create_downgrade_scripts }}

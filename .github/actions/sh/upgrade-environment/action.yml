@@ -1,4 +1,4 @@
-﻿# Version: v1.11
+﻿# Version: v1.12
 name: 'Upgrade Environment'
 description: 'Upgrades a target environment with a specific package using DBmaestro (Linux/bash)'
 inputs:
@@ -11,10 +11,16 @@ inputs:
     default: 'DBmaestroAccount'
   dbmaestro_password:
     description: 'DBmaestro password'
-    required: true
+    required: false
+    default: ''
   dbmaestro_user:
     description: 'DBmaestro username'
-    required: true
+    required: false
+    default: ''
+  access_token_file_path:
+    description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/dbmaestro_password)'
+    required: false
+    default: ''
   dbmaestro_server:
     description: 'DBmaestro server URL'
     required: true
@@ -81,6 +87,7 @@ runs:
         DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
         DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
         DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
         DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
       run: bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/upgrade-environment.sh"

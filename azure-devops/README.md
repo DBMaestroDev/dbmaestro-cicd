@@ -122,8 +122,9 @@ steps:
 | `packageName` | Yes | — | Package name |
 | `projectName` | Yes | — | DBmaestro project name |
 | `server` | Yes | — | Agent server (`host:port`) |
-| `user` | Yes | — | DBmaestro username |
-| `password` | Yes | — | DBmaestro password (secret variable) |
+| `user` | | `` | DBmaestro username (required unless `accessTokenFilePath` is set) |
+| `password` | | `` | DBmaestro password (secret variable; required unless `accessTokenFilePath` is set) |
+| `accessTokenFilePath` | | `` | Path to a DBmaestro access-token file (alternative to `user`/`password`) |
 | `agentJarPath` | Yes | — | Path to agent JAR |
 | `packagesFolder` | | `packages` | Root folder with package sub-directories |
 | `useSsl` | | `True` | Enable SSL |
@@ -143,8 +144,9 @@ Validates a package using the DBmaestro PreCheck operation.
 | `packageName` | Yes | — | Package name |
 | `projectName` | Yes | — | DBmaestro project name |
 | `server` | Yes | — | Agent server (`host:port`) |
-| `user` | Yes | — | DBmaestro username |
-| `password` | Yes | — | DBmaestro password (secret variable) |
+| `user` | | `` | DBmaestro username (required unless `accessTokenFilePath` is set) |
+| `password` | | `` | DBmaestro password (secret variable; required unless `accessTokenFilePath` is set) |
+| `accessTokenFilePath` | | `` | Path to a DBmaestro access-token file (alternative to `user`/`password`) |
 | `agentJarPath` | Yes | — | Path to agent JAR |
 | `useSsl` | | `True` | Enable SSL |
 | `authType` | | `DBmaestroAccount` | Authentication type |
@@ -162,8 +164,9 @@ Upgrades a DBmaestro target environment.
 | `projectName` | Yes | — | DBmaestro project name |
 | `targetEnvironment` | Yes | — | Environment name |
 | `server` | Yes | — | Agent server (`host:port`) |
-| `user` | Yes | — | DBmaestro username |
-| `password` | Yes | — | DBmaestro password (secret variable) |
+| `user` | | `` | DBmaestro username (required unless `accessTokenFilePath` is set) |
+| `password` | | `` | DBmaestro password (secret variable; required unless `accessTokenFilePath` is set) |
+| `accessTokenFilePath` | | `` | Path to a DBmaestro access-token file (alternative to `user`/`password`) |
 | `agentJarPath` | Yes | — | Path to agent JAR |
 | `detectFromPush` | | `false` | Detect packages from push |
 | `isPullRequest` | | `false` | Run as PR validation |
@@ -185,8 +188,9 @@ Builds a package from source control.
 | `versionType` | | `` | `Tasks`, `Specific Commit`, or empty (all) |
 | `additionalInformation` | | `` | Task IDs or commit hash |
 | `server` | Yes | — | Agent server (`host:port`) |
-| `user` | Yes | — | DBmaestro username |
-| `password` | Yes | — | DBmaestro password (secret variable) |
+| `user` | | `` | DBmaestro username (required unless `accessTokenFilePath` is set) |
+| `password` | | `` | DBmaestro password (secret variable; required unless `accessTokenFilePath` is set) |
+| `accessTokenFilePath` | | `` | Path to a DBmaestro access-token file (alternative to `user`/`password`) |
 | `agentJarPath` | Yes | — | Path to agent JAR |
 | `useSsl` | | `True` | Enable SSL |
 | `authType` | | `DBmaestroAccount` | Authentication type |
@@ -329,9 +333,10 @@ Configure in **Pipelines ? Library ? Variable groups** or directly in the pipeli
 
 | Name | Secret | Description |
 |------|--------|-------------|
-| `DBMAESTRO_PASSWORD` | **Yes** | DBmaestro account password |
+| `DBMAESTRO_PASSWORD` | **Yes** (unless using an access token file) | DBmaestro account password |
 | `DBMAESTRO_SERVER` | | Agent hostname and port, e.g. `agent01.local:8017` |
 | `DBMAESTRO_USER` | | DBmaestro username |
+| `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` | | Path to a file containing a DBmaestro access token — alternative to `DBMAESTRO_USER`/`DBMAESTRO_PASSWORD` |
 
 Reference secrets in YAML as `$(DBMAESTRO_PASSWORD)` and pass them through the `env:` map on tasks to avoid leaking to logs.
 

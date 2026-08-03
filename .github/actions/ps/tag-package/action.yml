@@ -1,4 +1,4 @@
-# Version: v1.0
+# Version: v1.1
 name: 'Tag Package'
 description: 'Adds a tag to a DBmaestro package (PowerShell/Windows)'
 inputs:
@@ -11,10 +11,16 @@ inputs:
     default: 'DBmaestroAccount'
   DBMAESTRO_PASSWORD:
     description: 'DBmaestro password'
-    required: true
+    required: false
+    default: ''
   DBMAESTRO_USER:
     description: 'DBmaestro username'
-    required: true
+    required: false
+    default: ''
+  access_token_file_path:
+    description: 'Path to a file containing a DBmaestro access token (alternative to DBMAESTRO_USER/DBMAESTRO_PASSWORD)'
+    required: false
+    default: ''
   dbmaestro_server:
     description: 'DBmaestro server URL'
     required: true
@@ -56,6 +62,7 @@ runs:
         DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
         DBMAESTRO_USER: ${{ inputs.DBMAESTRO_USER }}
         DBMAESTRO_PASSWORD: ${{ inputs.DBMAESTRO_PASSWORD }}
+        DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
         DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
         DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
       run: '& "$env:GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/ps/tag-package.ps1"'

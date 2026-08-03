@@ -90,8 +90,9 @@ Creates a DBmaestro package from a source folder.
 | `DBMAESTRO_PACKAGE_TYPE` | | `Regular` | `Regular` or `AdHoc` |
 | `DBMAESTRO_AGENT_JAR` | Yes | — | Path to agent JAR |
 | `DBMAESTRO_SERVER` | Yes | — | Server in `host:port` format |
-| `DBMAESTRO_USER` | Yes | — | DBmaestro username |
-| `DBMAESTRO_PASSWORD` | Yes | — | DBmaestro password (masked variable) |
+| `DBMAESTRO_USER` | | `` | DBmaestro username (required unless `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` is set) |
+| `DBMAESTRO_PASSWORD` | | `` | DBmaestro password (masked variable; required unless `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` is set) |
+| `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` | | `` | Path to a DBmaestro access-token file (alternative to `DBMAESTRO_USER`/`DBMAESTRO_PASSWORD`) |
 | `DBMAESTRO_USE_SSL` | | `True` | Enable SSL |
 | `DBMAESTRO_AUTH_TYPE` | | `DBmaestroAccount` | Authentication type |
 
@@ -219,6 +220,7 @@ Set these in **Settings ? CI/CD ? Variables** at the project or group level:
 | `DBMAESTRO_PASSWORD` | Yes | **Yes** | DBmaestro account password |
 | `DBMAESTRO_SERVER` | | | Agent hostname and port |
 | `DBMAESTRO_USER` | | | DBmaestro username |
+| `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` | | | Path to a file containing a DBmaestro access token — alternative to `DBMAESTRO_USER`/`DBMAESTRO_PASSWORD` |
 | `DBMAESTRO_PROJECT_NAME` | | | DBmaestro project name |
 | `DBMAESTRO_AGENT_JAR` | | | JAR path on the runner |
 | `DBMAESTRO_VERSION` | | | Agent JAR version |
