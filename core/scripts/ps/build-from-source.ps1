@@ -12,7 +12,7 @@
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
 #   DBMAESTRO_VERSION_TYPE            Tasks or Specific Commit (default: "")
 #   DBMAESTRO_ADDITIONAL_INFORMATION  Task list or commit hash (default: "")
-#   DBMAESTRO_USE_SSL                 Use SSL (default: True)
+#   DBMAESTRO_USE_SSL                 Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
 #   DBMAESTRO_AUTH_TYPE               Auth type (default: DBmaestroAccount)
 #   DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS  Create downgrade scripts (default: True)
 
@@ -54,33 +54,22 @@ Write-Host "Environment: $envName"
 Write-Host "Version Type: $versionType"
 Write-Host "Additional Information: $additionalInfo"
 
-# Workaround: agent v24 bug — UseSSL combined with CreateDowngradeScripts causes "Wrong command format"
-$omitUseSsl = ($createDowngradeScripts -eq "True" -and $useSsl -eq "False")
+# Workaround: agent v24 bug — UseSSL combined with CreateDowngradeScripts causes "Wrong command format".
+# Also omit -UseSSL when using access-token auth.
+$omitUseSsl = ($createDowngradeScripts -eq "True" -and $useSsl -eq "False") -or $accessTokenFilePath
+$sslArgs = if ($omitUseSsl) { @() } else { @("-UseSSL", $useSsl) }
 
-if ($omitUseSsl) {
-    & java -jar "$agentJar" -Build `
-        -ProjectName "$projectName" `
-        -EnvName "$envName" `
-        -VersionType "$versionType" `
-        -AdditionalInformation "$additionalInfo" `
-        -CreatePackage True `
-        -PackageName "$packageName" `
-        -CreateDowngradeScripts $createDowngradeScripts `
-        -Server "$server" `
-        @authArgs
-} else {
-    & java -jar "$agentJar" -Build `
-        -ProjectName "$projectName" `
-        -EnvName "$envName" `
-        -VersionType "$versionType" `
-        -AdditionalInformation "$additionalInfo" `
-        -CreatePackage True `
-        -PackageName "$packageName" `
-        -CreateDowngradeScripts $createDowngradeScripts `
-        -Server "$server" `
-        -UseSSL $useSsl `
-        @authArgs
-}
+& java -jar "$agentJar" -Build `
+    -ProjectName "$projectName" `
+    -EnvName "$envName" `
+    -VersionType "$versionType" `
+    -AdditionalInformation "$additionalInfo" `
+    -CreatePackage True `
+    -PackageName "$packageName" `
+    -CreateDowngradeScripts $createDowngradeScripts `
+    -Server "$server" `
+    @sslArgs `
+    @authArgs
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Failed to build package $packageName"

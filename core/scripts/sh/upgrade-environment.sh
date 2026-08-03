@@ -12,7 +12,7 @@
 #   DBMAESTRO_PASSWORD        DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
 #   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
-#   DBMAESTRO_USE_SSL         Use SSL (default: True)
+#   DBMAESTRO_USE_SSL         Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
 #   DBMAESTRO_AUTH_TYPE       Auth type (default: DBmaestroAccount)
 
 set -e
@@ -48,8 +48,10 @@ fi
 
 if [ -n "$ACCESS_TOKEN_FILE_PATH" ]; then
   AUTH_ARGS=(-AccessTokenFilePath "$ACCESS_TOKEN_FILE_PATH")
+  SSL_ARGS=()
 else
   AUTH_ARGS=(-AuthType "$AUTH_TYPE" -UserName "$USER" -Password "$PASSWORD")
+  SSL_ARGS=(-UseSSL "$USE_SSL")
 fi
 
 echo "==== Upgrade on $TARGET_ENV environment... ===="
@@ -63,7 +65,7 @@ if [ -n "$TAG_NAME" ]; then
     -EnvName "$TARGET_ENV" \
     -TagName "$TAG_NAME" \
     -Server "$SERVER" \
-    -UseSSL "$USE_SSL" \
+    "${SSL_ARGS[@]}" \
     "${AUTH_ARGS[@]}"
 else
   echo "==== Package name: $PACKAGE_NAME ===="
@@ -72,7 +74,7 @@ else
     -EnvName "$TARGET_ENV" \
     -PackageName "$PACKAGE_NAME" \
     -Server "$SERVER" \
-    -UseSSL "$USE_SSL" \
+    "${SSL_ARGS[@]}" \
     "${AUTH_ARGS[@]}"
 fi
 
