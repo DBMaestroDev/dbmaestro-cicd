@@ -103,93 +103,161 @@ jobs:
             jarPath: ${{ parameters.agentJarPath }}
             useWindows: ${{ parameters.useWindows }}
 
-      - bash: |
-          # If packageNames is empty, try to read from detection file
-          PKG_LIST="${{ parameters.packageNames }}"
-          if [ -z "$PKG_LIST" ] && [ -f "$(Pipeline.Workspace)/dbm-packages.env" ]; then
-            source "$(Pipeline.Workspace)/dbm-packages.env"
-            PKG_LIST="$packages_list"
-          fi
-          if [ -z "$PKG_LIST" ]; then
-            echo "##[section]No packages specified or detected"
-            exit 0
-          fi
-          echo "##vso[task.setvariable variable=RESOLVED_PACKAGE_NAMES]$PKG_LIST"
-        displayName: 'Resolve Package Names'
+      - ${{ if not(parameters.useWindows) }}:
+          - bash: |
+              # If packageNames is empty, try to read from detection file
+              PKG_LIST="${{ parameters.packageNames }}"
+              if [ -z "$PKG_LIST" ] && [ -f "$(Pipeline.Workspace)/dbm-packages.env" ]; then
+                source "$(Pipeline.Workspace)/dbm-packages.env"
+                PKG_LIST="$packages_list"
+              fi
+              if [ -z "$PKG_LIST" ]; then
+                echo "##[section]No packages specified or detected"
+                exit 0
+              fi
+              echo "##vso[task.setvariable variable=RESOLVED_PACKAGE_NAMES]$PKG_LIST"
+            displayName: 'Resolve Package Names'
 
-      - bash: |
-          IFS=',' read -ra PACKAGES <<< "$(RESOLVED_PACKAGE_NAMES)"
-          PKG_COUNT=${#PACKAGES[@]}
-          
-          for i in "${!PACKAGES[@]}"; do
-            PKG="${PACKAGES[$i]}"
-            PKG=$(echo "$PKG" | xargs)
-            [ -z "$PKG" ] && continue
-            
-            PKG_NUM=$((i+1))
-            echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Creating $PKG ==="
-            
-            # Set environment for create-package
-            export DBMAESTRO_PACKAGE_NAME="$PKG"
-            export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
-            export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
-            export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
-            export DBMAESTRO_SERVER="${{ parameters.server }}"
-            export DBMAESTRO_USER="${{ parameters.user }}"
-            export DBMAESTRO_PASSWORD="${{ parameters.password }}"
-            export DBMAESTRO_ACCESS_TOKEN_FILE_PATH="${{ parameters.accessTokenFilePath }}"
-            export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
-            export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
-            export DBMAESTRO_PACKAGE_TYPE="${{ parameters.packageType }}"
-            export DBMAESTRO_IGNORE_WARNINGS="${{ parameters.ignoreWarnings }}"
-            
-            # Invoke the create-package script
-            if [ "${{ parameters.useWindows }}" = "False" ]; then
-              bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/create-package.sh" || exit 1
-            else
-              pwsh -Command "& '$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\create-package.ps1'" -ErrorAction Stop
-            fi
-            echo "##[endgroup]"
-            
-            echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Prechecking $PKG ==="
-            
-            # Set environment for precheck-package
-            export DBMAESTRO_PACKAGE_NAME="$PKG"
-            export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
-            export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
-            export DBMAESTRO_SERVER="${{ parameters.server }}"
-            export DBMAESTRO_USER="${{ parameters.user }}"
-            export DBMAESTRO_PASSWORD="${{ parameters.password }}"
-            export DBMAESTRO_ACCESS_TOKEN_FILE_PATH="${{ parameters.accessTokenFilePath }}"
-            export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
-            export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
+      - ${{ if parameters.useWindows }}:
+          - pwsh: |
+              # If packageNames is empty, try to read from detection file
+              $pkgList = "${{ parameters.packageNames }}"
+              $envFile = "$(Pipeline.Workspace)/dbm-packages.env"
+              if (-not $pkgList -and (Test-Path $envFile)) {
+                foreach ($line in Get-Content $envFile) {
+                  if ($line -match '^packages_list=(.*)$') { $pkgList = $matches[1] }
+                }
+              }
+              if (-not $pkgList) {
+                Write-Host "##[section]No packages specified or detected"
+                exit 0
+              }
+              Write-Host "##vso[task.setvariable variable=RESOLVED_PACKAGE_NAMES]$pkgList"
+            displayName: 'Resolve Package Names (Windows)'
 
-            # Invoke the precheck-package script
-            if [ "${{ parameters.useWindows }}" = "False" ]; then
-              bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/precheck-package.sh" || exit 1
-            else
-              pwsh -Command "& '$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\precheck-package.ps1'" -ErrorAction Stop
-            fi
-            echo "##[endgroup]"
+      - ${{ if not(parameters.useWindows) }}:
+          - bash: |
+              IFS=',' read -ra PACKAGES <<< "$(RESOLVED_PACKAGE_NAMES)"
+              PKG_COUNT=${#PACKAGES[@]}
 
-            if [ -n "${{ parameters.tags }}" ] && [ "${{ parameters.tags }}" != "none" ]; then
-              echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Tagging $PKG ==="
-              IFS=',' read -ra TAGS <<< "${{ parameters.tags }}"
-              for tag in "${TAGS[@]}"; do
-                tag="$(echo "$tag" | xargs)"
-                [ -z "$tag" ] && continue
-                export DBMAESTRO_TAG_NAME="$tag"
-                export DBMAESTRO_TAG_TYPE_NAME="${{ parameters.tagTypeName }}"
-                if [ "${{ parameters.useWindows }}" = "False" ]; then
-                  bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/tag-package.sh" || exit 1
-                else
-                  pwsh -Command "& '$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\tag-package.ps1'" -ErrorAction Stop
+              for i in "${!PACKAGES[@]}"; do
+                PKG="${PACKAGES[$i]}"
+                PKG=$(echo "$PKG" | xargs)
+                [ -z "$PKG" ] && continue
+
+                PKG_NUM=$((i+1))
+                echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Creating $PKG ==="
+
+                # Set environment for create-package
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_PACKAGES_FOLDER="${{ parameters.packagesFolder }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="${{ parameters.server }}"
+                export DBMAESTRO_USER="${{ parameters.user }}"
+                export DBMAESTRO_PASSWORD="${{ parameters.password }}"
+                export DBMAESTRO_ACCESS_TOKEN_FILE_PATH="${{ parameters.accessTokenFilePath }}"
+                export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
+                export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
+                export DBMAESTRO_PACKAGE_TYPE="${{ parameters.packageType }}"
+                export DBMAESTRO_IGNORE_WARNINGS="${{ parameters.ignoreWarnings }}"
+
+                bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/create-package.sh" || exit 1
+                echo "##[endgroup]"
+
+                echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Prechecking $PKG ==="
+
+                # Set environment for precheck-package
+                export DBMAESTRO_PACKAGE_NAME="$PKG"
+                export DBMAESTRO_PROJECT_NAME="${{ parameters.projectName }}"
+                export DBMAESTRO_AGENT_JAR="${{ parameters.agentJarPath }}"
+                export DBMAESTRO_SERVER="${{ parameters.server }}"
+                export DBMAESTRO_USER="${{ parameters.user }}"
+                export DBMAESTRO_PASSWORD="${{ parameters.password }}"
+                export DBMAESTRO_ACCESS_TOKEN_FILE_PATH="${{ parameters.accessTokenFilePath }}"
+                export DBMAESTRO_USE_SSL="${{ parameters.useSsl }}"
+                export DBMAESTRO_AUTH_TYPE="${{ parameters.authType }}"
+
+                bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/precheck-package.sh" || exit 1
+                echo "##[endgroup]"
+
+                if [ -n "${{ parameters.tags }}" ] && [ "${{ parameters.tags }}" != "none" ]; then
+                  echo "##[group]=== Package $PKG_NUM/$PKG_COUNT: Tagging $PKG ==="
+                  IFS=',' read -ra TAGS <<< "${{ parameters.tags }}"
+                  for tag in "${TAGS[@]}"; do
+                    tag="$(echo "$tag" | xargs)"
+                    [ -z "$tag" ] && continue
+                    export DBMAESTRO_TAG_NAME="$tag"
+                    export DBMAESTRO_TAG_TYPE_NAME="${{ parameters.tagTypeName }}"
+                    bash "$(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/tag-package.sh" || exit 1
+                  done
+                  echo "##[endgroup]"
                 fi
               done
-              echo "##[endgroup]"
-            fi
-          done
-        displayName: 'Create and Precheck Packages Sequentially'
-        workingDirectory: ${{ parameters.sourcesPath }}
-        env:
-          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+            displayName: 'Create and Precheck Packages Sequentially'
+            workingDirectory: ${{ parameters.sourcesPath }}
+            env:
+              DBMAESTRO_PASSWORD: ${{ parameters.password }}
+
+      - ${{ if parameters.useWindows }}:
+          - pwsh: |
+              $packages = "$(RESOLVED_PACKAGE_NAMES)" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+              $pkgCount = $packages.Count
+
+              for ($i = 0; $i -lt $pkgCount; $i++) {
+                $pkg = $packages[$i]
+                $pkgNum = $i + 1
+                Write-Host "##[group]=== Package $pkgNum/$pkgCount: Creating $pkg ==="
+
+                # Set environment for create-package
+                $env:DBMAESTRO_PACKAGE_NAME = $pkg
+                $env:DBMAESTRO_PROJECT_NAME = "${{ parameters.projectName }}"
+                $env:DBMAESTRO_PACKAGES_FOLDER = "${{ parameters.packagesFolder }}"
+                $env:DBMAESTRO_AGENT_JAR = "${{ parameters.agentJarPath }}"
+                $env:DBMAESTRO_SERVER = "${{ parameters.server }}"
+                $env:DBMAESTRO_USER = "${{ parameters.user }}"
+                $env:DBMAESTRO_PASSWORD = "${{ parameters.password }}"
+                $env:DBMAESTRO_ACCESS_TOKEN_FILE_PATH = "${{ parameters.accessTokenFilePath }}"
+                $env:DBMAESTRO_USE_SSL = "${{ parameters.useSsl }}"
+                $env:DBMAESTRO_AUTH_TYPE = "${{ parameters.authType }}"
+                $env:DBMAESTRO_PACKAGE_TYPE = "${{ parameters.packageType }}"
+                $env:DBMAESTRO_IGNORE_WARNINGS = "${{ parameters.ignoreWarnings }}"
+
+                & "$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\create-package.ps1"
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+                Write-Host "##[endgroup]"
+
+                Write-Host "##[group]=== Package $pkgNum/$pkgCount: Prechecking $pkg ==="
+
+                # Set environment for precheck-package
+                $env:DBMAESTRO_PACKAGE_NAME = $pkg
+                $env:DBMAESTRO_PROJECT_NAME = "${{ parameters.projectName }}"
+                $env:DBMAESTRO_AGENT_JAR = "${{ parameters.agentJarPath }}"
+                $env:DBMAESTRO_SERVER = "${{ parameters.server }}"
+                $env:DBMAESTRO_USER = "${{ parameters.user }}"
+                $env:DBMAESTRO_PASSWORD = "${{ parameters.password }}"
+                $env:DBMAESTRO_ACCESS_TOKEN_FILE_PATH = "${{ parameters.accessTokenFilePath }}"
+                $env:DBMAESTRO_USE_SSL = "${{ parameters.useSsl }}"
+                $env:DBMAESTRO_AUTH_TYPE = "${{ parameters.authType }}"
+
+                & "$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\precheck-package.ps1"
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+                Write-Host "##[endgroup]"
+
+                $tagsParam = "${{ parameters.tags }}"
+                if ($tagsParam -and $tagsParam -ne "none") {
+                  Write-Host "##[group]=== Package $pkgNum/$pkgCount: Tagging $pkg ==="
+                  $tagList = $tagsParam -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+                  foreach ($tag in $tagList) {
+                    $env:DBMAESTRO_TAG_NAME = $tag
+                    $env:DBMAESTRO_TAG_TYPE_NAME = "${{ parameters.tagTypeName }}"
+                    & "$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\tag-package.ps1"
+                    if ($LASTEXITCODE -ne 0) { exit 1 }
+                  }
+                  Write-Host "##[endgroup]"
+                }
+              }
+            displayName: 'Create and Precheck Packages Sequentially (Windows)'
+            workingDirectory: ${{ parameters.sourcesPath }}
+            env:
+              DBMAESTRO_PASSWORD: ${{ parameters.password }}
