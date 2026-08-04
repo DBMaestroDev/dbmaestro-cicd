@@ -45,6 +45,10 @@ parameters:
     displayName: 'Path to the checked-out repository to detect changes in'
     type: string
     default: '$(Build.SourcesDirectory)'
+  - name: packagesFolder
+    displayName: 'Root folder that packages live under (matched as "<packagesFolder>/<packageName>/..." in the diff)'
+    type: string
+    default: 'packages'
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
@@ -57,6 +61,7 @@ steps:
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
           DETECT_TAG_NAME: ${{ parameters.tagName }}
+          DETECT_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
         inputs:
           targetType: inline
           script: |
@@ -86,6 +91,7 @@ steps:
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
           DETECT_TAG_NAME: ${{ parameters.tagName }}
+          DETECT_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
         inputs:
           targetType: inline
           pwsh: true
