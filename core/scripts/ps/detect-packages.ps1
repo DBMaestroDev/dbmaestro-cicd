@@ -50,6 +50,7 @@ if ($isPullRequest) {
     } else {
         $changedFiles = git diff --name-only HEAD~1 HEAD
     }
+    $LASTEXITCODE = 0   # a failed/empty diff means "no packages", not a script failure - see detectFromPush below
     Write-Host "Changed files: $($changedFiles -join ', ')"
 
     foreach ($file in $changedFiles) {
@@ -65,6 +66,7 @@ if ($isPullRequest) {
     $packages = $packageName -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 } elseif ($detectFromPush) {
     $changedFiles = git diff --name-only HEAD~1 HEAD
+    $LASTEXITCODE = 0   # a failed/empty diff (e.g. single-commit history) means "no packages", not a script failure
     Write-Host "Changed files: $($changedFiles -join ', ')"
 
     foreach ($file in $changedFiles) {
@@ -78,6 +80,7 @@ if ($isPullRequest) {
 } elseif ($baseRef) {
     Write-Host "Detecting packages by comparing to base ref: $baseRef"
     $changedFiles = git diff --name-only "origin/$baseRef" HEAD
+    $LASTEXITCODE = 0   # a failed/empty diff (e.g. origin/$baseRef not resolvable in this checkout) means "no packages", not a script failure
     Write-Host "Changed files: $($changedFiles -join ', ')"
 
     foreach ($file in $changedFiles) {
