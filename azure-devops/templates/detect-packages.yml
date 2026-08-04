@@ -97,7 +97,14 @@ steps:
           pwsh: true
           script: |
             Set-Location "${{ parameters.sourcesPath }}"
-            $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
+            # Pipeline.Workspace (not Agent.TempDirectory) - this file is the
+            # handoff to a LATER STAGE's job (e.g. build-multiple-packages.yml's
+            # "Resolve Package Names" step). Agent.TempDirectory is a per-job
+            # ephemeral temp folder; Pipeline.Workspace is the stable per-run
+            # work folder other steps/stages actually read this file back from.
+            # Must match the bash branch above and whatever downstream step
+            # reads packages_list from this file.
+            $env:DBM_OUTPUT_FILE = "$(Pipeline.Workspace)/dbm-packages.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
             # the base branch to compare against when detecting package changes.
