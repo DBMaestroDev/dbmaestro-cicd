@@ -96,7 +96,11 @@ if ($isPullRequest) {
     }
 }
 
-$packages = $packages | Sort-Object
+$packages = @($packages | Sort-Object)   # @() forces array context - without it, a
+                                          # single-element result collapses to a bare
+                                          # scalar string, and $packages[0] below would
+                                          # index into that STRING's characters instead
+                                          # of the array (e.g. "adhoc_V1"[0] -> "a")
 
 if ($packages.Count -eq 0) {
     Write-Host "No packages detected"
