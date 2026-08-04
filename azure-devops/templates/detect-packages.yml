@@ -18,6 +18,9 @@
 #     - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
 #       parameters:
 #         detectFromPush: true
+#         # Optional: detect changes in a different checked-out repo than self
+#         # (e.g. a secondary resources.repositories entry), instead of self.
+#         # sourcesPath: '$(Build.SourcesDirectory)/otherRepoAlias'
 
 parameters:
   - name: isPullRequest
@@ -38,6 +41,10 @@ parameters:
   - name: useWindows
     type: boolean
     default: false
+  - name: sourcesPath
+    displayName: 'Path to the checked-out repository to detect changes in'
+    type: string
+    default: '$(Build.SourcesDirectory)'
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
@@ -53,7 +60,7 @@ steps:
         inputs:
           targetType: inline
           script: |
-            cd "$(Build.SourcesDirectory)"
+            cd "${{ parameters.sourcesPath }}"
             export DBM_OUTPUT_FILE="$(Pipeline.Workspace)/dbm-packages.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
@@ -83,7 +90,7 @@ steps:
           targetType: inline
           pwsh: true
           script: |
-            Set-Location "$(Build.SourcesDirectory)"
+            Set-Location "${{ parameters.sourcesPath }}"
             $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch

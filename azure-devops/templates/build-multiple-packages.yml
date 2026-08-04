@@ -14,6 +14,10 @@
 #         user: $(DBMAESTRO_USER)
 #         password: $(DBMAESTRO_PASSWORD)
 #         # accessTokenFilePath: $(DBMAESTRO_ACCESS_TOKEN_FILE_PATH)  # alternative to user/password
+#         # Optional: build from a secondary checked-out repo instead of self
+#         # (e.g. a resources.repositories entry declared by the caller):
+#         # sourcesRepository: otherRepoAlias
+#         # sourcesPath: '$(Build.SourcesDirectory)/otherRepoAlias'
 
 parameters:
   - name: packageNames
@@ -68,6 +72,14 @@ parameters:
   - name: tagTypeName
     type: string
     default: "Task"
+  - name: sourcesRepository
+    displayName: 'Repository resource alias to check out and build packages from'
+    type: string
+    default: 'self'
+  - name: sourcesPath
+    displayName: 'Path to the checked-out repository containing packagesFolder'
+    type: string
+    default: '$(Build.SourcesDirectory)'
 
 jobs:
   - job: BuildMultiplePackages
@@ -78,7 +90,7 @@ jobs:
       pool:
         name: ${{ parameters.runnerPool }}
     steps:
-      - checkout: self
+      - checkout: ${{ parameters.sourcesRepository }}
         fetchDepth: 1
 
       - checkout: dbmaestro-cicd
@@ -179,6 +191,6 @@ jobs:
             fi
           done
         displayName: 'Create and Precheck Packages Sequentially'
-        workingDirectory: $(Build.SourcesDirectory)
+        workingDirectory: ${{ parameters.sourcesPath }}
         env:
           DBMAESTRO_PASSWORD: ${{ parameters.password }}
