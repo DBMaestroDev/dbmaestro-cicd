@@ -203,7 +203,10 @@ jobs:
 
       - ${{ if parameters.useWindows }}:
           - pwsh: |
+              Write-Host "DEBUG raw env:RESOLVED_PACKAGE_NAMES = [$env:RESOLVED_PACKAGE_NAMES]"
+              Get-ChildItem Env: | Where-Object { $_.Name -like '*PACKAGE*' -or $_.Name -like '*RESOLVED*' } | ForEach-Object { Write-Host "DEBUG env $($_.Name) = [$($_.Value)]" }
               $packages = $env:RESOLVED_PACKAGE_NAMES -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+              Write-Host "DEBUG packages array count=$($packages.Count) values=$($packages -join '|')"
               $pkgCount = $packages.Count
 
               function Fail($pkg, $stage) {
