@@ -115,6 +115,7 @@ jobs:
                 echo "##[section]No packages specified or detected"
                 exit 0
               fi
+              echo "Resolved packages: $PKG_LIST"
               echo "##vso[task.setvariable variable=RESOLVED_PACKAGE_NAMES]$PKG_LIST"
             displayName: 'Resolve Package Names'
 
@@ -132,6 +133,7 @@ jobs:
                 Write-Host "##[section]No packages specified or detected"
                 exit 0
               }
+              Write-Host "Resolved packages: $pkgList"
               Write-Host "##vso[task.setvariable variable=RESOLVED_PACKAGE_NAMES]$pkgList"
             displayName: 'Resolve Package Names (Windows)'
 
