@@ -204,10 +204,18 @@ jobs:
               $packages = "$(RESOLVED_PACKAGE_NAMES)" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
               $pkgCount = $packages.Count
 
+              function Fail($pkg, $stage) {
+                # ##vso[task.logissue] surfaces a proper attributable error in the
+                # ADO UI (which package, which stage) instead of a bare non-zero
+                # exit code with no context.
+                Write-Host "##vso[task.logissue type=error]Package '$pkg' failed during $stage (exit code $LASTEXITCODE)"
+                exit 1
+              }
+
               for ($i = 0; $i -lt $pkgCount; $i++) {
                 $pkg = $packages[$i]
                 $pkgNum = $i + 1
-                Write-Host "##[group]=== Package $pkgNum/$pkgCount: Creating $pkg ==="
+                Write-Host "##[group]=== Package ${pkgNum}/${pkgCount}: Creating $pkg ==="
 
                 # Set environment for create-package
                 $env:DBMAESTRO_PACKAGE_NAME = $pkg
@@ -224,10 +232,10 @@ jobs:
                 $env:DBMAESTRO_IGNORE_WARNINGS = "${{ parameters.ignoreWarnings }}"
 
                 & "$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\create-package.ps1"
-                if ($LASTEXITCODE -ne 0) { exit 1 }
+                if ($LASTEXITCODE -ne 0) { Fail $pkg 'create-package' }
                 Write-Host "##[endgroup]"
 
-                Write-Host "##[group]=== Package $pkgNum/$pkgCount: Prechecking $pkg ==="
+                Write-Host "##[group]=== Package ${pkgNum}/${pkgCount}: Prechecking $pkg ==="
 
                 # Set environment for precheck-package
                 $env:DBMAESTRO_PACKAGE_NAME = $pkg
@@ -241,18 +249,18 @@ jobs:
                 $env:DBMAESTRO_AUTH_TYPE = "${{ parameters.authType }}"
 
                 & "$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\precheck-package.ps1"
-                if ($LASTEXITCODE -ne 0) { exit 1 }
+                if ($LASTEXITCODE -ne 0) { Fail $pkg 'precheck-package' }
                 Write-Host "##[endgroup]"
 
                 $tagsParam = "${{ parameters.tags }}"
                 if ($tagsParam -and $tagsParam -ne "none") {
-                  Write-Host "##[group]=== Package $pkgNum/$pkgCount: Tagging $pkg ==="
+                  Write-Host "##[group]=== Package ${pkgNum}/${pkgCount}: Tagging $pkg ==="
                   $tagList = $tagsParam -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
                   foreach ($tag in $tagList) {
                     $env:DBMAESTRO_TAG_NAME = $tag
                     $env:DBMAESTRO_TAG_TYPE_NAME = "${{ parameters.tagTypeName }}"
                     & "$(Build.SourcesDirectory)\dbmaestro-cicd\core\scripts\ps\tag-package.ps1"
-                    if ($LASTEXITCODE -ne 0) { exit 1 }
+                    if ($LASTEXITCODE -ne 0) { Fail $pkg 'tag-package' }
                   }
                   Write-Host "##[endgroup]"
                 }
