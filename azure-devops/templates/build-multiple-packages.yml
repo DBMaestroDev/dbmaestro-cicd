@@ -203,7 +203,7 @@ jobs:
 
       - ${{ if parameters.useWindows }}:
           - pwsh: |
-              $packages = "$(RESOLVED_PACKAGE_NAMES)" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+              $packages = $env:RESOLVED_PACKAGE_NAMES -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
               $pkgCount = $packages.Count
 
               function Fail($pkg, $stage) {
