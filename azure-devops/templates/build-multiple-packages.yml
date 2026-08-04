@@ -91,7 +91,6 @@ jobs:
         name: ${{ parameters.runnerPool }}
     steps:
       - checkout: ${{ parameters.sourcesRepository }}
-        fetchDepth: 1
 
       - checkout: dbmaestro-cicd
         fetchDepth: 1

@@ -20,7 +20,11 @@ parameters:
     default: '$(Pipeline.Workspace)/DBmaestroAgent.jar'
   - name: runnerPool
     type: string
-    default: 'dbmaestro-linux'
+    default: 'dbmaestro-linux'  # When useWindows is true, point this at a Windows-capable pool
+  - name: useWindows
+    displayName: 'Run on a Windows agent (PowerShell) instead of Linux (Bash)'
+    type: boolean
+    default: false
   - name: baseBranch
     displayName: 'Base branch to compare against (manual runs)'
     type: string
@@ -55,34 +59,60 @@ stages:
           - checkout: dbmaestro-cicd
             fetchDepth: 1
 
-          - bash: |
-              if [ -n "$SYSTEM_PULLREQUEST_SOURCEBRANCH" ]; then
-                BRANCH="${SYSTEM_PULLREQUEST_SOURCEBRANCH#refs/heads/}"
-              else
-                BRANCH="$(Build.SourceBranchName)"
-              fi
-              git checkout "$BRANCH"
-            workingDirectory: $(Build.SourcesDirectory)
+          - ${{ if not(parameters.useWindows) }}:
+              - bash: |
+                  if [ -n "$SYSTEM_PULLREQUEST_SOURCEBRANCH" ]; then
+                    BRANCH="${SYSTEM_PULLREQUEST_SOURCEBRANCH#refs/heads/}"
+                  else
+                    BRANCH="$(Build.SourceBranchName)"
+                  fi
+                  git checkout "$BRANCH"
+                workingDirectory: $(Build.SourcesDirectory)
 
-          - bash: |
-              IS_PR="false"
-              BASE_REF="${{ parameters.baseBranch }}"
+          - ${{ if parameters.useWindows }}:
+              - pwsh: |
+                  if ($env:SYSTEM_PULLREQUEST_SOURCEBRANCH) {
+                    $branch = $env:SYSTEM_PULLREQUEST_SOURCEBRANCH -replace '^refs/heads/', ''
+                  } else {
+                    $branch = "$(Build.SourceBranchName)"
+                  }
+                  git checkout $branch
+                workingDirectory: $(Build.SourcesDirectory)
 
-              if [ -n "$SYSTEM_PULLREQUEST_TARGETBRANCH" ]; then
-                IS_PR="true"
-                BASE_REF="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
-              fi
+          - ${{ if not(parameters.useWindows) }}:
+              - bash: |
+                  IS_PR="false"
+                  BASE_REF="${{ parameters.baseBranch }}"
 
-              echo "##vso[task.setvariable variable=resolvedIsPr]$IS_PR"
-              echo "##vso[task.setvariable variable=resolvedBaseRef]$BASE_REF"
-            displayName: 'Resolve Detection Parameters'
+                  if [ -n "$SYSTEM_PULLREQUEST_TARGETBRANCH" ]; then
+                    IS_PR="true"
+                    BASE_REF="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
+                  fi
+
+                  echo "##vso[task.setvariable variable=resolvedIsPr]$IS_PR"
+                  echo "##vso[task.setvariable variable=resolvedBaseRef]$BASE_REF"
+                displayName: 'Resolve Detection Parameters'
+
+          - ${{ if parameters.useWindows }}:
+              - pwsh: |
+                  $isPr = "false"
+                  $baseRef = "${{ parameters.baseBranch }}"
+
+                  if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
+                    $isPr = "true"
+                    $baseRef = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
+                  }
+
+                  Write-Host "##vso[task.setvariable variable=resolvedIsPr]$isPr"
+                  Write-Host "##vso[task.setvariable variable=resolvedBaseRef]$baseRef"
+                displayName: 'Resolve Detection Parameters (Windows)'
 
           - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
             parameters:
               isPullRequest: $(resolvedIsPr)
               baseRef: $(resolvedBaseRef)
               detectFromPush: false
-              useWindows: false
+              useWindows: ${{ parameters.useWindows }}
 
   - stage: Build
     displayName: 'Build Changed Packages'
@@ -101,7 +131,7 @@ stages:
           authType: 'DBmaestroAccount'
           packageType: 'Regular'
           runnerPool: ${{ parameters.runnerPool }}
-          useWindows: false
+          useWindows: ${{ parameters.useWindows }}
           # CLI_VERSION pipeline variable controls JAR download. Set in pipeline Variables or a Variable Group.
           # Leave empty if the JAR is pre-installed on the runner.
           version: $(CLI_VERSION)
