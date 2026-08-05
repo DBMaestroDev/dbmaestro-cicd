@@ -58,9 +58,9 @@ java -jar "$AGENT_JAR" -Build \
   -AdditionalInformation "$ADDITIONAL_INFO" \
   -CreatePackage True \
   -PackageName "$PACKAGE_NAME" \
-  -CreateDowngradeScripts $CREATE_DOWNGRADE_SCRIPTS \
+  -CreateDowngradeScripts "$CREATE_DOWNGRADE_SCRIPTS" \
   -Server "$SERVER" \
-  -UseSSL $USE_SSL \
+  -UseSSL "$USE_SSL" \
   "${AUTH_ARGS[@]}"
 
 echo "Package $PACKAGE_NAME built successfully"

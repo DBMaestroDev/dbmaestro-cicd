@@ -61,7 +61,7 @@ Write-Host "Additional Information: $additionalInfo"
     -AdditionalInformation "$additionalInfo" `
     -CreatePackage True `
     -PackageName "$packageName" `
-    -CreateDowngradeScripts $createDowngradeScripts `
+    -CreateDowngradeScripts "$createDowngradeScripts" `
     -Server "$server" `
     -UseSSL "$useSsl" `
     @authArgs
