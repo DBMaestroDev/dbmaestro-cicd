@@ -7,6 +7,7 @@
 #   DETECT_FROM_PUSH         true|false   Detect changed files from last push commit
 #   DETECT_PACKAGE_NAME      string       Comma-separated package names (manual input)
 #   DETECT_TAG_NAME          string       Tag name for tag-based upgrade (bypasses git diff detection)
+#   DETECT_PACKAGES_FOLDER   string       Root folder packages live under (default: "packages")
 #
 # Outputs written to DBM_OUTPUT_FILE (key=value pairs, compatible with GITHUB_OUTPUT / dotenv):
 #   has_packages             true|false
@@ -23,6 +24,8 @@ detect_from_push="${DETECT_FROM_PUSH:-false}"
 base_ref="${DETECT_BASE_REF:-}"
 package_name="${DETECT_PACKAGE_NAME:-}"
 tag_name="${DETECT_TAG_NAME:-}"
+packages_folder="${DETECT_PACKAGES_FOLDER:-packages}"
+package_pattern="^${packages_folder}/([^/]+)"
 
 if [[ -n "$tag_name" ]]; then
   echo "Tag input: $tag_name"
@@ -54,7 +57,7 @@ if [[ "$is_pull_request" == "true" ]]; then
   echo "Changed files: $changed_files"
 
   while IFS= read -r file; do
-    if [[ "$file" =~ ^packages/([^/]+) ]]; then
+    if [[ "$file" =~ $package_pattern ]]; then
       pkg="${BASH_REMATCH[1]}"
       if [[ ! " ${packages[*]} " =~ " ${pkg} " ]]; then
         packages+=("$pkg")
@@ -77,7 +80,7 @@ elif [[ "$detect_from_push" == "true" ]]; then
   echo "Changed files: $changed_files"
 
   while IFS= read -r file; do
-    if [[ "$file" =~ ^packages/([^/]+) ]]; then
+    if [[ "$file" =~ $package_pattern ]]; then
       pkg="${BASH_REMATCH[1]}"
       if [[ ! " ${packages[*]} " =~ " ${pkg} " ]]; then
         packages+=("$pkg")
@@ -91,7 +94,7 @@ elif [[ -n "$base_ref" ]]; then
   echo "Changed files: $changed_files"
 
   while IFS= read -r file; do
-    if [[ "$file" =~ ^packages/([^/]+) ]]; then
+    if [[ "$file" =~ $package_pattern ]]; then
       pkg="${BASH_REMATCH[1]}"
       if [[ ! " ${packages[*]} " =~ " ${pkg} " ]]; then
         packages+=("$pkg")

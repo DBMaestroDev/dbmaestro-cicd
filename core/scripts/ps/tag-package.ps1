@@ -55,7 +55,7 @@ Write-Host "==== Tag name: $tagName ===="
     -TagTypeName "$tagTypeName" `
     -TagName "$tagName" `
     -Server "$server" `
-    -UseSSL $useSsl `
+    -UseSSL "$useSsl" `
     @authArgs
 
 if ($LASTEXITCODE -ne 0) {

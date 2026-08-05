@@ -18,6 +18,9 @@
 #     - template: azure-devops/templates/detect-packages.yml@dbmaestro-cicd
 #       parameters:
 #         detectFromPush: true
+#         # Optional: detect changes in a different checked-out repo than self
+#         # (e.g. a secondary resources.repositories entry), instead of self.
+#         # sourcesPath: '$(Build.SourcesDirectory)/otherRepoAlias'
 
 parameters:
   - name: isPullRequest
@@ -38,6 +41,14 @@ parameters:
   - name: useWindows
     type: boolean
     default: false
+  - name: sourcesPath
+    displayName: 'Path to the checked-out repository to detect changes in'
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  - name: packagesFolder
+    displayName: 'Root folder that packages live under (matched as "<packagesFolder>/<packageName>/..." in the diff)'
+    type: string
+    default: 'packages'
 
 steps:
   - ${{ if not(parameters.useWindows) }}:
@@ -50,10 +61,11 @@ steps:
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
           DETECT_TAG_NAME: ${{ parameters.tagName }}
+          DETECT_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
         inputs:
           targetType: inline
           script: |
-            cd "$(Build.SourcesDirectory)"
+            cd "${{ parameters.sourcesPath }}"
             export DBM_OUTPUT_FILE="$(Pipeline.Workspace)/dbm-packages.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
@@ -79,12 +91,20 @@ steps:
           DETECT_FROM_PUSH: ${{ lower(format('{0}', parameters.detectFromPush)) }}
           DETECT_PACKAGE_NAME: ${{ parameters.packageName }}
           DETECT_TAG_NAME: ${{ parameters.tagName }}
+          DETECT_PACKAGES_FOLDER: ${{ parameters.packagesFolder }}
         inputs:
           targetType: inline
           pwsh: true
           script: |
-            Set-Location "$(Build.SourcesDirectory)"
-            $env:DBM_OUTPUT_FILE = "$(Agent.TempDirectory)\dbm-output.env"
+            Set-Location "${{ parameters.sourcesPath }}"
+            # Pipeline.Workspace (not Agent.TempDirectory) - this file is the
+            # handoff to a LATER STAGE's job (e.g. build-multiple-packages.yml's
+            # "Resolve Package Names" step). Agent.TempDirectory is a per-job
+            # ephemeral temp folder; Pipeline.Workspace is the stable per-run
+            # work folder other steps/stages actually read this file back from.
+            # Must match the bash branch above and whatever downstream step
+            # reads packages_list from this file.
+            $env:DBM_OUTPUT_FILE = "$(Pipeline.Workspace)/dbm-packages.env"
             # Fetch the base ref branch to ensure it's available for git diff comparison.
             # Shallow clones only fetch the current branch, so we need to explicitly fetch
             # the base branch to compare against when detecting package changes.
