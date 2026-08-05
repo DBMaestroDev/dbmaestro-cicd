@@ -9,7 +9,7 @@
 #   DBMAESTRO_PASSWORD        DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
 #   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
-#   DBMAESTRO_USE_SSL         Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_USE_SSL         Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE       Auth type (default: DBmaestroAccount)
 #
 # Outputs written to DBM_OUTPUT_FILE:
@@ -42,14 +42,13 @@ $authArgs = if ($accessTokenFilePath) {
 } else {
     @("-AuthType", $authType, "-UserName", $user, "-Password", $password)
 }
-$sslArgs = if ($accessTokenFilePath) { @() } else { @("-UseSSL", $useSsl) }
 
 Write-Host "Pre-checking package $packageName"
 & java -jar "$agentJar" -PreCheck `
     -ProjectName "$projectName" `
     -PackageName "$packageName" `
     -Server "$server" `
-    @sslArgs `
+    -UseSSL "$useSsl" `
     @authArgs
 
 if ($LASTEXITCODE -eq 0) {

@@ -11,7 +11,7 @@
 #   DBMAESTRO_PASSWORD        DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
 #   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
-#   DBMAESTRO_USE_SSL         Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_USE_SSL         Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE       Auth type (default: DBmaestroAccount)
 
 $ErrorActionPreference = 'Stop'
@@ -43,7 +43,6 @@ $authArgs = if ($accessTokenFilePath) {
 } else {
     @("-AuthType", $authType, "-UserName", $user, "-Password", $password)
 }
-$sslArgs = if ($accessTokenFilePath) { @() } else { @("-UseSSL", $useSsl) }
 
 Write-Host "==== Tagging package: $packageName ===="
 Write-Host "==== Project name: $projectName ===="
@@ -56,7 +55,7 @@ Write-Host "==== Tag name: $tagName ===="
     -TagTypeName "$tagTypeName" `
     -TagName "$tagName" `
     -Server "$server" `
-    @sslArgs `
+    -UseSSL "$useSsl" `
     @authArgs
 
 if ($LASTEXITCODE -ne 0) {

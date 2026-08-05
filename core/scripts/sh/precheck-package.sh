@@ -10,7 +10,7 @@
 #   DBMAESTRO_PASSWORD        DBmaestro password (required unless DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
 #   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
-#   DBMAESTRO_USE_SSL         Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_USE_SSL         Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE       Auth type (default: DBmaestroAccount)
 #
 # Outputs written to DBM_OUTPUT_FILE:
@@ -36,10 +36,8 @@ fi
 
 if [ -n "$ACCESS_TOKEN_FILE_PATH" ]; then
   AUTH_ARGS=(-AccessTokenFilePath "$ACCESS_TOKEN_FILE_PATH")
-  SSL_ARGS=()
 else
   AUTH_ARGS=(-AuthType "$AUTH_TYPE" -UserName "$USER" -Password "$PASSWORD")
-  SSL_ARGS=(-UseSSL "$USE_SSL")
 fi
 
 echo "Pre-checking package $PACKAGE_NAME"
@@ -47,7 +45,7 @@ java -jar "$AGENT_JAR" -PreCheck \
   -ProjectName "$PROJECT_NAME" \
   -PackageName "$PACKAGE_NAME" \
   -Server "$SERVER" \
-  "${SSL_ARGS[@]}" \
+  -UseSSL "$USE_SSL" \
   "${AUTH_ARGS[@]}"
 
 echo "Precheck validation passed"

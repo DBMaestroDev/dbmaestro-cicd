@@ -13,7 +13,7 @@
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
 #   DBMAESTRO_VERSION_TYPE            Tasks or Specific Commit (default: "")
 #   DBMAESTRO_ADDITIONAL_INFORMATION  Task list or commit hash (default: "")
-#   DBMAESTRO_USE_SSL                 Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_USE_SSL                 Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE               Auth type (default: DBmaestroAccount)
 #   DBMAESTRO_CREATE_DOWNGRADE_SCRIPTS  Create downgrade scripts (default: True)
 
@@ -51,14 +51,6 @@ echo "Environment: $ENV_NAME"
 echo "Version Type: $VERSION_TYPE"
 echo "Additional Information: $ADDITIONAL_INFO"
 
-# Workaround: agent v24 bug — UseSSL combined with CreateDowngradeScripts causes "Wrong command format".
-# Also omit -UseSSL when using access-token auth.
-if { [ "$CREATE_DOWNGRADE_SCRIPTS" = "True" ] && [ "$USE_SSL" = "False" ]; } || [ -n "$ACCESS_TOKEN_FILE_PATH" ]; then
-  SSL_ARGS=()
-else
-  SSL_ARGS=(-UseSSL $USE_SSL)
-fi
-
 java -jar "$AGENT_JAR" -Build \
   -ProjectName "$PROJECT_NAME" \
   -EnvName "$ENV_NAME" \
@@ -68,7 +60,7 @@ java -jar "$AGENT_JAR" -Build \
   -PackageName "$PACKAGE_NAME" \
   -CreateDowngradeScripts $CREATE_DOWNGRADE_SCRIPTS \
   -Server "$SERVER" \
-  "${SSL_ARGS[@]}" \
+  -UseSSL $USE_SSL \
   "${AUTH_ARGS[@]}"
 
 echo "Package $PACKAGE_NAME built successfully"

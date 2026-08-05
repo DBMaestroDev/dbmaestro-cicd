@@ -10,7 +10,7 @@
 #   DBMAESTRO_ACCESS_TOKEN_FILE_PATH  Path to an access-token file (optional; "none"/empty = disabled).
 #                                     When set, used INSTEAD of DBMAESTRO_AUTH_TYPE/USER/PASSWORD.
 #   DBMAESTRO_PACKAGES_FOLDER     Root folder containing packages (default: packages)
-#   DBMAESTRO_USE_SSL             Use SSL (default: True; ignored when DBMAESTRO_ACCESS_TOKEN_FILE_PATH is set)
+#   DBMAESTRO_USE_SSL             Use SSL (default: True)
 #   DBMAESTRO_AUTH_TYPE           Auth type (default: DBmaestroAccount)
 #   DBMAESTRO_PACKAGE_TYPE        Package type Regular|AdHoc (default: Regular)
 #   DBMAESTRO_IGNORE_WARNINGS     Ignore script warnings (default: True)
@@ -50,7 +50,6 @@ $authArgs = if ($accessTokenFilePath) {
 } else {
     @("-AuthType", $authType, "-UserName", $user, "-Password", $password)
 }
-$sslArgs = if ($accessTokenFilePath) { @() } else { @("-UseSSL", $useSsl) }
 
 # Validate package folder
 $packagePath = Join-Path $packagesFolder $packageName
@@ -84,7 +83,7 @@ Write-Host "Creating package $packageName in DBmaestro"
     -IgnoreScriptWarnings "$ignoreWarnings" `
     -FilePath "$zipFile" `
     -Server "$server" `
-    @sslArgs `
+    -UseSSL "$useSsl" `
     @authArgs
 
 if ($LASTEXITCODE -eq 0) {
