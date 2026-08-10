@@ -73,15 +73,20 @@ stages:
         displayName: "Download Agent JAR"
         pool:
           name: ${{ parameters.pool }}
-        ${{ if ne(parameters.dbmaestroVersion, '') }}:
-          steps:
-            - checkout: self
-            - checkout: dbmaestro-cicd
-            - template: get-cli-jar.yml
-              parameters:
-                version: ${{ parameters.dbmaestroVersion }}
-                jarPath: ${{ parameters.agentJarPath }}
-                useWindows: ${{ parameters.useWindows }}
+        steps:
+          - checkout: self
+          - checkout: dbmaestro-cicd
+          # Skip invoking get-cli-jar.yml entirely when dbmaestroVersion is empty at
+          # compile time (a literal '' or the default). When it's a runtime macro
+          # like $(CLI_VERSION), this can't be decided here, so the template is
+          # still invoked — but get-cli-jar.yml resolves it at runtime and no-ops
+          # if it's actually empty.
+          - ${{ if ne(parameters.dbmaestroVersion, '') }}:
+              - template: get-cli-jar.yml
+                parameters:
+                  version: ${{ parameters.dbmaestroVersion }}
+                  jarPath: ${{ parameters.agentJarPath }}
+                  useWindows: ${{ parameters.useWindows }}
 
   - stage: DBmaestro_Build
     displayName: "DBmaestro Build & Validate"

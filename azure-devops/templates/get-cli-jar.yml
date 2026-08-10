@@ -30,25 +30,56 @@ parameters:
     default: false
 
 steps:
+  # Callers commonly pass version as a $(SomeVariable) macro reference (e.g.
+  # version: $(CLI_VERSION)) so the download can be toggled on/off via a pipeline
+  # variable without editing YAML. ${{ parameters.version }} is a compile-time
+  # substitution, so it bakes in the literal macro text and can never see whether
+  # that variable is actually empty at runtime. Resolving it into a real pipeline
+  # variable here lets every step below gate on its true, resolved value.
+  #
+  # If the referenced variable is never defined at all, Azure DevOps leaves the
+  # macro text completely unexpanded (there's nothing to substitute), so it still
+  # literally reads "$(...)" by the time this step runs. A defined variable is
+  # always substituted with its real value before the script executes, so this
+  # pattern can only ever match the undefined case — treat it the same as empty.
+  - ${{ if not(parameters.useWindows) }}:
+      - bash: |
+          VERSION="${{ parameters.version }}"
+          if [[ "$VERSION" =~ ^\$\(.*\)$ ]]; then
+            VERSION=""
+          fi
+          echo "##vso[task.setvariable variable=resolvedJarVersion]$VERSION"
+        displayName: "DBmaestro: Resolve JAR Version"
+
+  - ${{ if parameters.useWindows }}:
+      - pwsh: |
+          $version = "${{ parameters.version }}"
+          if ($version -match '^\$\(.*\)$') {
+            $version = ""
+          }
+          Write-Host "##vso[task.setvariable variable=resolvedJarVersion]$version"
+        displayName: "DBmaestro: Resolve JAR Version (Windows)"
+
   - task: Cache@2
-    displayName: "Cache DBmaestro JAR v${{ parameters.version }}"
+    displayName: "Cache DBmaestro JAR"
+    condition: ne(variables.resolvedJarVersion, '')
     inputs:
-      key: '"dbmaestro-jar-${{ parameters.version }}"'
+      key: '"dbmaestro-jar-$(resolvedJarVersion)"'
       path: $(Pipeline.Workspace)/dbm-cache
       cacheHitVar: DBM_JAR_CACHE_HIT
 
   - ${{ if not(parameters.useWindows) }}:
       - bash: |
           mkdir -p "$(dirname "${{ parameters.jarPath }}")"
-          cp "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar" "${{ parameters.jarPath }}"
+          cp "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-$(resolvedJarVersion).jar" "${{ parameters.jarPath }}"
         displayName: "DBmaestro: Copy JAR from cache"
-        condition: eq(variables.DBM_JAR_CACHE_HIT, 'true')
+        condition: and(ne(variables.resolvedJarVersion, ''), eq(variables.DBM_JAR_CACHE_HIT, 'true'))
 
       - task: Bash@3
         displayName: "DBmaestro: Download Agent JAR"
-        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
+        condition: and(ne(variables.resolvedJarVersion, ''), ne(variables.DBM_JAR_CACHE_HIT, 'true'))
         env:
-          DBMAESTRO_VERSION: ${{ parameters.version }}
+          DBMAESTRO_VERSION: $(resolvedJarVersion)
           DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
         inputs:
           targetType: filePath
@@ -56,23 +87,23 @@ steps:
 
       - bash: |
           mkdir -p "$(Pipeline.Workspace)/dbm-cache"
-          cp "${{ parameters.jarPath }}" "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar"
+          cp "${{ parameters.jarPath }}" "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-$(resolvedJarVersion).jar"
         displayName: "DBmaestro: Stage JAR for cache"
-        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
+        condition: and(ne(variables.resolvedJarVersion, ''), ne(variables.DBM_JAR_CACHE_HIT, 'true'))
 
   - ${{ if parameters.useWindows }}:
       - pwsh: |
           $dir = Split-Path "${{ parameters.jarPath }}" -Parent
           if ($dir) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-          Copy-Item "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar" "${{ parameters.jarPath }}"
+          Copy-Item "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-$(resolvedJarVersion).jar" "${{ parameters.jarPath }}"
         displayName: "DBmaestro: Copy JAR from cache (Windows)"
-        condition: eq(variables.DBM_JAR_CACHE_HIT, 'true')
+        condition: and(ne(variables.resolvedJarVersion, ''), eq(variables.DBM_JAR_CACHE_HIT, 'true'))
 
       - task: PowerShell@2
         displayName: "DBmaestro: Download Agent JAR (Windows)"
-        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
+        condition: and(ne(variables.resolvedJarVersion, ''), ne(variables.DBM_JAR_CACHE_HIT, 'true'))
         env:
-          DBMAESTRO_VERSION: ${{ parameters.version }}
+          DBMAESTRO_VERSION: $(resolvedJarVersion)
           DBMAESTRO_JAR_PATH: ${{ parameters.jarPath }}
         inputs:
           targetType: filePath
@@ -81,6 +112,6 @@ steps:
 
       - pwsh: |
           New-Item -ItemType Directory -Force -Path "$(Pipeline.Workspace)/dbm-cache" | Out-Null
-          Copy-Item "${{ parameters.jarPath }}" "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-${{ parameters.version }}.jar"
+          Copy-Item "${{ parameters.jarPath }}" "$(Pipeline.Workspace)/dbm-cache/DBmaestroAgent-$(resolvedJarVersion).jar"
         displayName: "DBmaestro: Stage JAR for cache (Windows)"
-        condition: ne(variables.DBM_JAR_CACHE_HIT, 'true')
+        condition: and(ne(variables.resolvedJarVersion, ''), ne(variables.DBM_JAR_CACHE_HIT, 'true'))

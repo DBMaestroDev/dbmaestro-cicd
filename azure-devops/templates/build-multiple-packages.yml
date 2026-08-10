@@ -95,7 +95,10 @@ jobs:
       - checkout: dbmaestro-cicd
         fetchDepth: 1
 
-      # If version is set, download (or reuse cached) the JAR. If empty, the JAR is assumed to be pre-installed on the runner.
+      # Skip invoking get-cli-jar.yml entirely when version is empty at compile time
+      # (a literal '' or the default). When version is a runtime macro like
+      # $(CLI_VERSION), this can't be decided here, so the template is still invoked —
+      # but get-cli-jar.yml resolves it at runtime and no-ops if it's actually empty.
       - ${{ if ne(parameters.version, '') }}:
         - template: get-cli-jar.yml@dbmaestro-cicd
           parameters:
