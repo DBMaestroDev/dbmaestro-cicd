@@ -195,6 +195,7 @@ Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 | `sh/detect-changed-packages` | Detects changed packages from git diff, push, or manual input | `has_packages`, `packages_list`, `matrix` |
 | `sh/create-package` | Creates a manifest + archive and uploads to DBmaestro | `package_created` |
 | `sh/precheck-package` | Runs a DBmaestro PreCheck validation | `validation_passed` |
+| `sh/get-env-packages` | Retrieves the package list for a DBmaestro environment | `packages_file` |
 | `sh/upgrade-environment` | Upgrades a DBmaestro target environment | — |
 | `sh/build-from-source-control` | Builds a package from source control | — |
 | `sh/pr-comment` | Posts a PR comment listing detected packages | — |
@@ -207,6 +208,7 @@ Secret required: `DBMAESTRO_PASSWORD` (unless using `access_token_file_path`)
 | `ps/detect-changed-packages` | Detects changed packages (PowerShell equivalent) | `has_packages`, `packages_list`, `matrix` |
 | `ps/create-package` | Creates package using PowerShell | `package_created` |
 | `ps/precheck-package` | Runs PreCheck validation using PowerShell | `validation_passed` |
+| `ps/get-env-packages` | Retrieves the package list for a DBmaestro environment using PowerShell | `packages_file` |
 | `ps/build-from-source-control` | Builds a package from source control using PowerShell | — |
 | `ps/upgrade-environment` | Upgrades environment using PowerShell | — |
 | `ps/pr-comment` | Posts PR comment | — |

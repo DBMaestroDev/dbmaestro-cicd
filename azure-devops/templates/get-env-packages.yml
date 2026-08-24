@@ -1,0 +1,109 @@
+# Azure DevOps step template: get-env-packages
+# Retrieves the package list for a DBmaestro environment.
+#
+# Usage in your azure-pipelines.yml:
+#
+#   resources:
+#     repositories:
+#       - repository: dbmaestro-cicd
+#         type: github
+#         name: DBMaestroDev/dbmaestro-cicd
+#         endpoint: github-dbmaestro
+#         ref: v1
+#
+#   steps:
+#     - checkout: self
+#     - checkout: dbmaestro-cicd
+#     - template: azure-devops/templates/get-env-packages.yml@dbmaestro-cicd
+#       parameters:
+#         projectName: "MyProject"
+#         envName: "Release Source"
+#         agentJarPath: "/home/runner/DBmaestroAgent.jar"
+#         server: "dbmaestro.example.com"
+#         user: $(DBMAESTRO_USER)
+#         password: $(DBMAESTRO_PASSWORD)
+#         # accessTokenFilePath: $(DBMAESTRO_ACCESS_TOKEN_FILE_PATH)  # alternative to user/password
+
+parameters:
+  - name: projectName
+    type: string
+  - name: envName
+    type: string
+  - name: filePath
+    type: string
+    default: "packages.json"
+  - name: agentJarPath
+    type: string
+    default: "/home/runner/DBmaestroAgent.jar"
+  - name: server
+    type: string
+  - name: user
+    type: string
+    default: ""
+  - name: password
+    type: string
+    default: ""
+  - name: accessTokenFilePath
+    type: string
+    default: ""
+  - name: useSsl
+    type: string
+    default: "True"
+  - name: authType
+    type: string
+    default: "DBmaestroAccount"
+  - name: useWindows
+    type: boolean
+    default: false
+  - name: version
+    type: string
+    default: ""
+
+steps:
+  # Skip invoking get-cli-jar.yml entirely when version is empty at compile time
+  # (a literal '' or the default). When version is a runtime macro like
+  # $(CLI_VERSION), this can't be decided here, so the template is still invoked —
+  # but get-cli-jar.yml resolves it at runtime and no-ops if it's actually empty.
+  - ${{ if ne(parameters.version, '') }}:
+      - template: get-cli-jar.yml@dbmaestro-cicd
+        parameters:
+          version: ${{ parameters.version }}
+          jarPath: ${{ parameters.agentJarPath }}
+          useWindows: ${{ parameters.useWindows }}
+
+  - ${{ if not(parameters.useWindows) }}:
+      - task: Bash@3
+        displayName: "DBmaestro: Get Environment Packages '${{ parameters.envName }}'"
+        env:
+          DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+          DBMAESTRO_ENV_NAME: ${{ parameters.envName }}
+          DBMAESTRO_FILE_PATH: ${{ parameters.filePath }}
+          DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+          DBMAESTRO_SERVER: ${{ parameters.server }}
+          DBMAESTRO_USER: ${{ parameters.user }}
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ parameters.accessTokenFilePath }}
+          DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+          DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/sh/get-env-packages.sh
+
+  - ${{ if parameters.useWindows }}:
+      - task: PowerShell@2
+        displayName: "DBmaestro: Get Environment Packages '${{ parameters.envName }}' (Windows)"
+        env:
+          DBMAESTRO_PROJECT_NAME: ${{ parameters.projectName }}
+          DBMAESTRO_ENV_NAME: ${{ parameters.envName }}
+          DBMAESTRO_FILE_PATH: ${{ parameters.filePath }}
+          DBMAESTRO_AGENT_JAR: ${{ parameters.agentJarPath }}
+          DBMAESTRO_SERVER: ${{ parameters.server }}
+          DBMAESTRO_USER: ${{ parameters.user }}
+          DBMAESTRO_PASSWORD: ${{ parameters.password }}
+          DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ parameters.accessTokenFilePath }}
+          DBMAESTRO_USE_SSL: ${{ parameters.useSsl }}
+          DBMAESTRO_AUTH_TYPE: ${{ parameters.authType }}
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)/dbmaestro-cicd/core/scripts/ps/get-env-packages.ps1
+          pwsh: true

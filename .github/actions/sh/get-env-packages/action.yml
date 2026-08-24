@@ -1,0 +1,71 @@
+# Version: v1.0
+name: 'Get DBmaestro Environment Packages'
+description: 'Retrieves the package list for a DBmaestro environment'
+inputs:
+  agent_jar_path:
+    description: 'Path to DBmaestro agent JAR file'
+    required: true
+  auth_type:
+    description: 'Authentication type'
+    required: false
+    default: 'DBmaestroAccount'
+  dbmaestro_password:
+    description: 'DBmaestro password or token'
+    required: false
+    default: ''
+  dbmaestro_server:
+    description: 'DBmaestro server hostname'
+    required: true
+  dbmaestro_user:
+    description: 'DBmaestro username'
+    required: false
+    default: ''
+  access_token_file_path:
+    description: 'Path to a file containing a DBmaestro access token (alternative to dbmaestro_user/dbmaestro_password)'
+    required: false
+    default: ''
+  project_name:
+    description: 'DBmaestro project name'
+    required: true
+  env_name:
+    description: 'DBmaestro environment name'
+    required: true
+  file_path:
+    description: 'Output file for the retrieved package list'
+    required: false
+    default: 'packages.json'
+  use_ssl:
+    description: 'Use SSL for connection'
+    required: false
+    default: 'True'
+outputs:
+  packages-file:
+    description: 'Path to the retrieved package list file'
+    value: ${{ steps.get-env-packages.outputs.packages_file }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout dbmaestro-cicd repository
+      uses: actions/checkout@v6
+      with:
+        repository: DBMaestroDev/dbmaestro-cicd
+        path: dbmaestro-cicd
+        ref: v1
+
+    - name: Get environment packages
+      id: get-env-packages
+      shell: bash
+      env:
+        DBMAESTRO_PROJECT_NAME: ${{ inputs.project_name }}
+        DBMAESTRO_ENV_NAME: ${{ inputs.env_name }}
+        DBMAESTRO_FILE_PATH: ${{ inputs.file_path }}
+        DBMAESTRO_AGENT_JAR: ${{ inputs.agent_jar_path }}
+        DBMAESTRO_SERVER: ${{ inputs.dbmaestro_server }}
+        DBMAESTRO_USER: ${{ inputs.dbmaestro_user }}
+        DBMAESTRO_PASSWORD: ${{ inputs.dbmaestro_password }}
+        DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ${{ inputs.access_token_file_path }}
+        DBMAESTRO_USE_SSL: ${{ inputs.use_ssl }}
+        DBMAESTRO_AUTH_TYPE: ${{ inputs.auth_type }}
+      run: |
+        export DBM_OUTPUT_FILE="$GITHUB_OUTPUT"
+        bash "$GITHUB_WORKSPACE/dbmaestro-cicd/core/scripts/sh/get-env-packages.sh"

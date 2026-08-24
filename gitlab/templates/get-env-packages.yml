@@ -1,0 +1,65 @@
+# GitLab CI template: get-env-packages
+# Retrieves the package list for a DBmaestro environment.
+#
+# Usage — include and extend in your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/DBMaestroDev/dbmaestro-cicd/v1/gitlab/templates/get-env-packages.yml'
+#
+#   get_env_packages:
+#     extends: .get-env-packages
+#     variables:
+#       DBMAESTRO_PROJECT_NAME: "MyProject"
+#       DBMAESTRO_ENV_NAME: "Release Source"
+#       DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+#       DBMAESTRO_SERVER: "dbmaestro.example.com"
+
+.get-env-packages:
+  variables:
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_ENV_NAME: ""
+    DBMAESTRO_FILE_PATH: "packages.json"
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DBMAESTRO_VERSION: ""
+  before_script:
+    - export DBM_OUTPUT_FILE="${CI_PROJECT_DIR}/dbm-output.env"
+  script:
+    - |
+      if [ -n "$DBMAESTRO_VERSION" ]; then
+        bash "${CI_PROJECT_DIR}/core/scripts/sh/get-cli-jar.sh"
+      fi
+    - bash "${CI_PROJECT_DIR}/core/scripts/sh/get-env-packages.sh"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env
+
+.get-env-packages-windows:
+  variables:
+    DBMAESTRO_PROJECT_NAME: ""
+    DBMAESTRO_ENV_NAME: ""
+    DBMAESTRO_FILE_PATH: "packages.json"
+    DBMAESTRO_AGENT_JAR: "/home/runner/DBmaestroAgent.jar"
+    DBMAESTRO_SERVER: ""
+    DBMAESTRO_USER: ""
+    DBMAESTRO_PASSWORD: ""
+    DBMAESTRO_ACCESS_TOKEN_FILE_PATH: ""
+    DBMAESTRO_USE_SSL: "True"
+    DBMAESTRO_AUTH_TYPE: "DBmaestroAccount"
+    DBMAESTRO_VERSION: ""
+  script:
+    - |
+      if ($env:DBMAESTRO_VERSION) {
+        $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+        pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/get-cli-jar.ps1"
+      }
+    - $env:DBM_OUTPUT_FILE = "$env:CI_PROJECT_DIR\dbm-output.env"
+    - pwsh -ExecutionPolicy Bypass -File "$env:CI_PROJECT_DIR/core/scripts/ps/get-env-packages.ps1"
+  artifacts:
+    reports:
+      dotenv: dbm-output.env

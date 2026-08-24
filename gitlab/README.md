@@ -108,6 +108,27 @@ Output: `dotenv` artifact with `validation_passed`.
 
 ---
 
+### `.get-env-packages` / `.get-env-packages-windows`
+
+Retrieves the package list for a DBmaestro environment.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DBMAESTRO_PROJECT_NAME` | Yes | — | DBmaestro project name |
+| `DBMAESTRO_ENV_NAME` | Yes | — | DBmaestro environment name |
+| `DBMAESTRO_FILE_PATH` | | `packages.json` | Output file for the retrieved package list |
+| `DBMAESTRO_AGENT_JAR` | Yes | — | Path to agent JAR |
+| `DBMAESTRO_SERVER` | Yes | — | Server in `host:port` format |
+| `DBMAESTRO_USER` | | `` | DBmaestro username (required unless `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` is set) |
+| `DBMAESTRO_PASSWORD` | | `` | DBmaestro password (masked variable; required unless `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` is set) |
+| `DBMAESTRO_ACCESS_TOKEN_FILE_PATH` | | `` | Path to a DBmaestro access-token file (alternative to `DBMAESTRO_USER`/`DBMAESTRO_PASSWORD`) |
+| `DBMAESTRO_USE_SSL` | | `True` | Enable SSL |
+| `DBMAESTRO_AUTH_TYPE` | | `DBmaestroAccount` | Authentication type |
+
+Output: `dotenv` artifact with `packages_file`.
+
+---
+
 ### `.upgrade-environment` / `.upgrade-environment-windows`
 
 Upgrades a DBmaestro target environment.

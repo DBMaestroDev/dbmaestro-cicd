@@ -154,6 +154,38 @@ Validates a package using the DBmaestro PreCheck operation.
 
 ---
 
+### `get-env-packages.yml`
+
+Retrieves the package list for a DBmaestro environment.
+
+```yaml
+steps:
+  - template: azure-devops/templates/get-env-packages.yml@dbmaestro-cicd
+    parameters:
+      projectName: 'Demo-PSQL'
+      envName: 'Release Source'
+      server: $(DBMAESTRO_SERVER)
+      user: $(DBMAESTRO_USER)
+      password: $(DBMAESTRO_PASSWORD)
+      agentJarPath: '/home/runner/DBmaestroAgent.jar'
+```
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `projectName` | Yes | — | DBmaestro project name |
+| `envName` | Yes | — | DBmaestro environment name |
+| `filePath` | | `packages.json` | Output file for the retrieved package list |
+| `server` | Yes | — | Agent server (`host:port`) |
+| `user` | | `` | DBmaestro username (required unless `accessTokenFilePath` is set) |
+| `password` | | `` | DBmaestro password (secret variable; required unless `accessTokenFilePath` is set) |
+| `accessTokenFilePath` | | `` | Path to a DBmaestro access-token file (alternative to `user`/`password`) |
+| `agentJarPath` | Yes | — | Path to agent JAR |
+| `useSsl` | | `True` | Enable SSL |
+| `authType` | | `DBmaestroAccount` | Authentication type |
+| `useWindows` | | `false` | Use PowerShell |
+
+---
+
 ### `upgrade-environment.yml`
 
 Upgrades a DBmaestro target environment.
